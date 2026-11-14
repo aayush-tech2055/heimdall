@@ -109,3 +109,17 @@ def as_user(conn: psycopg.Connection, user_id: uuid.UUID | None) -> Iterator[psy
         if conn.info.transaction_status != TransactionStatus.INERROR:
             conn.execute("reset role")
             conn.execute("select set_config('request.jwt.claims', '', true)")
+
+
+class NoCommit:
+    """Wraps the test connection for API tests: routes may call commit(), which must not
+    commit the test's transaction (it is always rolled back)."""
+
+    def __init__(self, conn: psycopg.Connection) -> None:
+        self._conn = conn
+
+    def commit(self) -> None:
+        pass
+
+    def __getattr__(self, name: str):  # noqa: ANN204
+        return getattr(self._conn, name)

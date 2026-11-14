@@ -75,8 +75,10 @@ def test_units_are_batched_with_the_union_of_their_rules():
     rules = [rule(f"R-{i:03d}", f"Rule {i}.") for i in range(1, 11)]
     search = lambda text, vec, k: [f"R-{int(text.split()[1][:-1]) + 1:03d}"]  # noqa: E731
     result, llm = run(text, rules, search)
-    assert [len(units) for units, _ in llm.calls] == [UNITS_PER_CALL, UNITS_PER_CALL, 2]
-    assert llm.calls[0][1] == ["R-001", "R-002", "R-003", "R-004"]
+    calls = sorted(llm.calls)  # batches run in parallel, so call order varies
+    assert sorted(len(units) for units, _ in calls) == [2, UNITS_PER_CALL, UNITS_PER_CALL]
+    first = next(codes for units, codes in calls if units[0] == "u1")
+    assert first == ["R-001", "R-002", "R-003", "R-004"]
     assert result.candidates == []
 
 
