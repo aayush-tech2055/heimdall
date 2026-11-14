@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
+import { AuthProvider } from "@/components/auth/auth-provider";
 import { AppShell } from "@/components/shell/app-shell";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 import "./globals.css";
 
@@ -17,7 +19,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <AppShell>{children}</AppShell>
+        <AuthProvider>
+          <TooltipProvider delayDuration={200}>
+            <AppShell>{children}</AppShell>
+          </TooltipProvider>
+        </AuthProvider>
       </body>
     </html>
   );

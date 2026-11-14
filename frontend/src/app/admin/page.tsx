@@ -1,10 +1,5 @@
-import { PageHeader } from "@/components/shell/page-header";
+import { redirect } from "next/navigation";
 
 export default function AdminPage() {
-  return (
-    <PageHeader
-      title="Admin"
-      description="Upload brand guidelines, review extracted rules and manage approved facts."
-    />
-  );
+  redirect("/admin/guidelines");
 }

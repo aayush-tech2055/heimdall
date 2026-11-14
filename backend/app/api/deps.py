@@ -6,12 +6,14 @@ the project uses ECC signing keys), or with SUPABASE_JWT_SECRET for legacy HS256
 The backend connects as the database owner, so every route checks brand and role here.
 """
 
+import ssl
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import Annotated
 from uuid import UUID
 
+import certifi
 import jwt
 import psycopg
 from fastapi import Depends, Header, HTTPException, status
@@ -36,8 +38,12 @@ class TokenVerifier:
 
     def __init__(self, supabase_url: str, jwt_secret: str = "") -> None:
         self._secret = jwt_secret
+        # certifi's CA bundle: some Python installs (python.org macOS builds) ship without one.
         self._jwks = (
-            jwt.PyJWKClient(f"{supabase_url.rstrip('/')}/auth/v1/.well-known/jwks.json")
+            jwt.PyJWKClient(
+                f"{supabase_url.rstrip('/')}/auth/v1/.well-known/jwks.json",
+                ssl_context=ssl.create_default_context(cafile=certifi.where()),
+            )
             if supabase_url
             else None
         )

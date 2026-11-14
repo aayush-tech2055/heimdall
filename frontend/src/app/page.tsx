@@ -1,28 +1,24 @@
-import Link from "next/link";
+"use client";
 
-import { PageHeader } from "@/components/shell/page-header";
-import { ROLE_LINKS } from "@/lib/roles";
+import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
+import { useAuth } from "@/components/auth/auth-provider";
+import { HOME_BY_ROLE } from "@/lib/roles";
+
+/** Sends signed-in users to their workspace and everyone else to sign in. */
 export default function Home() {
+  const { session, me, loading } = useAuth();
+  const router = useRouter();
+  useEffect(() => {
+    if (loading) return;
+    if (!session) router.replace("/login");
+    else if (me) router.replace(HOME_BY_ROLE[me.role]);
+  }, [loading, session, me, router]);
   return (
-    <>
-      <PageHeader
-        title="Heimdall"
-        description="The checkpoint between draft and publish. Choose a workspace."
-      />
-      <ul className="grid gap-4 sm:grid-cols-3">
-        {ROLE_LINKS.map(({ href, label, description }) => (
-          <li key={href}>
-            <Link
-              href={href}
-              className="hover:bg-muted focus-visible:ring-ring block rounded-lg border p-5 transition-colors focus-visible:outline-none focus-visible:ring-2"
-            >
-              <span className="font-medium">{label}</span>
-              <span className="text-muted-foreground mt-1 block text-sm">{description}</span>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </>
+    <p className="text-muted-foreground flex items-center gap-2" role="status">
+      <Loader2 className="size-4 animate-spin" aria-hidden /> Loading…
+    </p>
   );
 }

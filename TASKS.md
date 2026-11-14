@@ -129,7 +129,7 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 - [x] **4.4** `[A]` Guideline verification (decision 21), returning a report of duplicates, contradictions, vague rules and missing categories.
   *Done when:* it finds the planted vague rules, contradiction and duplicate from task 1.1.
 - [x] **4.5** `[A]` API: `POST /brands/{id}/guidelines` (upload → extract → verify → report), `GET /brands/{id}/rules?status=`, `PATCH /rules/{code}` (edit text or category), `POST /rules/approve` (bulk approve or reject).
-- [ ] **4.6** `[V]` Admin screen: upload guidelines, view extracted rules grouped by category with their page, the verification report at the top (each issue linked to its rules), edit a rule, approve or reject in bulk.
+- [x] **4.6** `[V]` Admin screen: upload guidelines, view extracted rules grouped by category with their page, the verification report at the top (each issue linked to its rules), edit a rule, approve or reject in bulk.
 
 ### Milestone 5: Facts
 - [ ] **5.1** `[A]` Fact store: add (approved immediately when an admin types it in), edit, import CSV, embed statements, entity-plus-hybrid search (decision 14).

@@ -22,7 +22,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               Nothing crosses unchecked.
             </span>
           </Link>
-          <nav aria-label="Roles">
+          <nav aria-label="Main">
             <NavLinks />
           </nav>
         </div>
