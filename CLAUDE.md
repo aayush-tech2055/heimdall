@@ -89,7 +89,7 @@ Guidance for Claude Code in this repo. **Sources of truth:** `TASKS.md` (Part 1 
 - `npm run lint` and `npm run typecheck` must pass.
 
 ## Working rules
-1. **Work through TASKS.md in order, one task at a time.** When a task's "Done when" is met, tick it (`[x]`) in TASKS.md and commit with a message that starts with the task number, e.g. `0.2: backend skeleton`.
+1. **Work through TASKS.md in order, one task at a time.** When a task's "Done when" is met, tick it (`[x]`) in TASKS.md and commit (on the feature branch, see "Git workflow") with a message that starts with the task number, e.g. `0.2: backend skeleton`.
    **Task status is tracked in Notion** (from 2026-11-14): the "Heimdall Tasks" database on the "Heimdall: Build Tracker" page (page `418b15a3b26b81bba814cf27c43a6e9c`, data source `collection://418b15a3-b26b-81aa-8bb7-000b9ed10b94`). When starting a task set its `Status` to `In progress`; when done set `Done` and the `Completed` date; use `Waiting on us` (with a `Notes` line) when blocked on a manual step. Keep TASKS.md ticks in sync. TASKS.md stays the source of truth for task scope and wording.
 2. **Never change a locked decision in TASKS.md Part 1 without asking first.** If a decision looks wrong or impossible, stop and explain why.
 3. **Never commit secrets or `.env` files.** Only `.env.example` files with empty values are committed. Use only the fictional test data in `test-data/`.
@@ -99,3 +99,11 @@ Guidance for Claude Code in this repo. **Sources of truth:** `TASKS.md` (Part 1 
 7. **Manual steps go to the user.** When a step needs a human (creating accounts, API keys, the Supabase project, the GitHub remote, deploys, user testing, review of test data), stop and give exact numbered instructions. Don't guess or work around it.
 8. **No scope creep.** Don't add features that aren't in TASKS.md without agreeing first. If time is short, follow the cut order in TASKS.md. Never cut citation validation, the creator → manager loop, redaction or the evaluation report.
 9. Owner tags (`[A]`, `[V]`, `[A+V]`) record who is responsible. Claude may implement any task, and the BUILD_LOG records which team member drove it.
+
+## Git workflow (keep the repo clean; judges read it)
+1. **Never commit directly to `main`.** `main` always builds and passes CI.
+2. **One branch per feature**, created from an up-to-date `main`: `feature/m<N>-<slug>` for a milestone (e.g. `feature/m2-database`, `feature/m3-ai-layer`). Split a large milestone into several feature branches when it helps (e.g. `feature/m6-rule-engine`, `feature/m6-judge`). Other prefixes: `fix/<topic>`, `docs/<topic>`, `chore/<topic>`, `data/<topic>` (test data).
+3. **One commit per task** on the branch: `<task id>: <summary>` (e.g. `2.1: database schema`). Non-task commits use `docs: …`, `fix: …`, `chore: …`. The TASKS.md tick, Notion update and BUILD_LOG line go in the same branch.
+4. **No AI attribution in git.** Never add `Co-Authored-By: Claude …` or any Claude/Anthropic trailer to commits, merge commits or PR descriptions. AI use is disclosed in `docs/BUILD_LOG.md` and the README instead.
+5. **Merging:** push the branch, wait for CI to pass on it, then merge into `main` with `git merge --no-ff <branch>` and a message `Merge <branch>: <what it delivers>`, push `main`, and delete the branch locally and on GitHub. (If the team switches to GitHub pull requests, use "Create a merge commit", not squash or rebase.)
+6. **Never rewrite or force-push `main`** without the user asking for it explicitly.
