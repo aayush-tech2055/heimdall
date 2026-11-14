@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     gemini_vision_model: str = "gemini-2.5-flash"
     gemini_embedding_model: str = "gemini-embedding-001"
     groq_api_key: str = ""
-    groq_model: str = "llama-3.3-70b-versatile"
+    groq_model: str = "openai/gpt-oss-120b"
     groq_whisper_model: str = "whisper-large-v3"
     openrouter_api_key: str = ""
     openrouter_model: str = ""

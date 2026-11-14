@@ -92,7 +92,7 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
   *Done when:* `uvicorn` starts, `/health` returns 200, and `pytest` runs.
 - [x] **0.3** `[V]` Frontend skeleton: Next.js (App Router, TypeScript), Tailwind, shadcn/ui, a layout shell and an empty page for each role.
   *Done when:* `npm run dev` shows the shell with navigation to the admin, creator and manager pages.
-- [ ] **0.4** `[A]` Create the Supabase project, enable `vector`, and get the Gemini, Groq and OpenRouter API keys. Write `backend/.env.example` and `frontend/.env.example`.
+- [x] **0.4** `[A]` Create the Supabase project, enable `vector`, and get the Gemini, Groq and OpenRouter API keys. Write `backend/.env.example` and `frontend/.env.example`.
   *Done when:* both example env files list every variable, and real values sit only in local `.env` files.
 - [x] **0.5** `[A+V]` Freeze the flag contract: a Pydantic `Flag` model in `backend/app/models/` and a matching TypeScript type in `frontend/`.
   *Done when:* both exist, match Part 1 exactly, and are committed.
