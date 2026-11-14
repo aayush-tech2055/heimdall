@@ -14,6 +14,8 @@ export const NAV_BY_ROLE: Record<Role, NavLink[]> = {
   admin: [
     { href: "/admin/guidelines", label: "Guidelines" },
     { href: "/admin/facts", label: "Facts" },
+    { href: "/admin/website", label: "Website check" },
+    { href: "/admin/assets", label: "Assets" },
     { href: "/admin/settings", label: "Settings" },
     { href: "/insights", label: "Insights" },
     { href: "/disclosure", label: "AI disclosure" },
