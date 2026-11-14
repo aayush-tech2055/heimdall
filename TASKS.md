@@ -88,7 +88,7 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 ### Milestone 0: Foundations
 - [ ] **0.1** `[A]` Initialise the git repo and GitHub remote, and create the folder layout from the README (`frontend/`, `backend/app/{api,review,rag,llm,processing,models}`, `backend/tests/`, `db/`, `test-data/`, `docs/`). Add `.gitignore` (Python, Node, `.env*`, cache files, `.DS_Store`).
   *Done when:* the repo is on GitHub with the structure and README; the first commit is dated inside the build window.
-- [ ] **0.2** `[A]` Backend skeleton: FastAPI app, `pyproject.toml` or `requirements.txt`, a settings module reading `.env`, `GET /health`, and pytest + ruff set up.
+- [x] **0.2** `[A]` Backend skeleton: FastAPI app, `pyproject.toml` or `requirements.txt`, a settings module reading `.env`, `GET /health`, and pytest + ruff set up.
   *Done when:* `uvicorn` starts, `/health` returns 200, and `pytest` runs.
 - [ ] **0.3** `[V]` Frontend skeleton: Next.js (App Router, TypeScript), Tailwind, shadcn/ui, a layout shell and an empty page for each role.
   *Done when:* `npm run dev` shows the shell with navigation to the admin, creator and manager pages.
