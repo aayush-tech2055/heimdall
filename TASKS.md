@@ -133,7 +133,7 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 
 ### Milestone 5: Facts
 - [x] **5.1** `[A]` Fact store: add (approved immediately when an admin types it in), edit, import CSV, embed statements, entity-plus-hybrid search (decision 14).
-- [ ] **5.2** `[A]` API: `GET/POST/PATCH /brands/{id}/facts`, `POST /brands/{id}/facts/import`.
+- [x] **5.2** `[A]` API: `GET/POST/PATCH /brands/{id}/facts`, `POST /brands/{id}/facts/import`.
 - [ ] **5.3** `[V]` Admin facts screen: a table with search, expiry badges (expired, expiring within 30 days), add, edit and CSV import.
 
 ### Milestone 6: Review engine for text (core of Round 2)
