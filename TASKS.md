@@ -108,7 +108,7 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
   *Done when:* every planted error appears in the answer key, and a teammate has spot-checked 10 items.
 
 ### Milestone 2: Database
-- [ ] **2.1** `[A]` `db/schema.sql` with these tables (all keyed to `brand_id`):
+- [x] **2.1** `[A]` `db/schema.sql` with these tables (all keyed to `brand_id`):
   `brands`, `profiles` (user ID → role: admin, creator or manager, plus brand), `rules` (+ `embedding vector(768)`, generated `tsvector`, HNSW and GIN indexes), `facts` (same), `assets` (Round 3), `approved_exceptions`, `contents` (title, format, status, creator), `content_versions` (number, storage path, extracted text), `review_units` (version, unit_id, text, location JSON), `flags` (version + the flag contract fields + status + resolution note), `comments` (version, author, body, optional flag ID), `audit_log` (actor, action, entity, before/after JSON, timestamp), `ai_calls` (provider, model, purpose, content version, ok, latency, timestamp), `brand_settings` (confidential terms, claim policy on/off).
   *Done when:* the schema runs cleanly on a fresh Supabase project.
 - [ ] **2.2** `[A]` Row-level security policies: creators see only their own content, managers and admins see their brand, and only admins write rules and facts.

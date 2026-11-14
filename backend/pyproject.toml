@@ -8,6 +8,7 @@ dependencies = [
     "uvicorn[standard]>=0.30",
     "pydantic>=2.7",
     "pydantic-settings>=2.3",
+    "psycopg[binary]>=3.2",
 ]
 
 [project.optional-dependencies]
@@ -27,6 +28,9 @@ include = ["app*"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+markers = [
+    "db: needs a real Postgres (Supabase) database; runs only when HEIMDALL_DB_TESTS=1",
+]
 
 [tool.ruff]
 line-length = 100
