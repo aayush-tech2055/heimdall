@@ -101,7 +101,7 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 - [x] **0.7** `[A+V]` Start `docs/BUILD_LOG.md`: date, who, what was done, and any AI tools or templates used. Update it every working day (needed for the contribution and disclosure requirements).
 
 ### Milestone 1: Test data (starts in parallel with M0)
-- [ ] **1.1** `[V]` Create 2 fictional brands in `test-data/brands/<brand>/`: a brand guideline (a 3–5 page PDF plus the same content as `.md`) covering tone, terminology, claims, visuals, accessibility and legal, including **2 deliberately vague rules, 1 contradiction and 1 duplicate** (to test guideline verification).
+- [x] **1.1** `[V]` Create 2 fictional brands in `test-data/brands/<brand>/`: a brand guideline (a 3–5 page PDF plus the same content as `.md`) covering tone, terminology, claims, visuals, accessibility and legal, including **2 deliberately vague rules, 1 contradiction and 1 duplicate** (to test guideline verification).
 - [ ] **1.2** `[V]` A facts sheet per brand as `facts.csv` (entity, attribute, value, unit, statement, source, valid_until), with at least 15 facts, **2 of them already expired**.
 - [ ] **1.3** `[V]` 30–40 pieces of sample content per brand (blog posts, social captions, ad scripts) with **planted errors**: banned terms, a missing disclaimer, an outdated price, an unsupported superlative, a contradicted statistic, an off-tone sentence. Include some content with no errors.
 - [ ] **1.4** `[V]` An answer key, `test-data/answer_key.json`: for each content item, the expected flags (unit text, rule or fact code, category). Clean items have an empty list.
