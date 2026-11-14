@@ -94,7 +94,7 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
   *Done when:* `npm run dev` shows the shell with navigation to the admin, creator and manager pages.
 - [ ] **0.4** `[A]` Create the Supabase project, enable `vector`, and get the Gemini, Groq and OpenRouter API keys. Write `backend/.env.example` and `frontend/.env.example`.
   *Done when:* both example env files list every variable, and real values sit only in local `.env` files.
-- [ ] **0.5** `[A+V]` Freeze the flag contract: a Pydantic `Flag` model in `backend/app/models/` and a matching TypeScript type in `frontend/`.
+- [x] **0.5** `[A+V]` Freeze the flag contract: a Pydantic `Flag` model in `backend/app/models/` and a matching TypeScript type in `frontend/`.
   *Done when:* both exist, match Part 1 exactly, and are committed.
 - [ ] **0.6** `[A]` CI: a GitHub Actions workflow that runs ruff and pytest (backend) and lint + typecheck (frontend) on every push.
   *Done when:* CI is green on `main`.
