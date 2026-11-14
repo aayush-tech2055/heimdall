@@ -5,12 +5,23 @@ from typing import Annotated, Literal
 from uuid import UUID
 
 import psycopg
-from fastapi import APIRouter, File, Form, HTTPException, Query, Response, UploadFile, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    Response,
+    UploadFile,
+    status,
+)
 from psycopg.rows import dict_row
 from pydantic import BaseModel, Field
 
 from app.api.contents import IMAGE_TYPES, StorageDep
 from app.api.deps import LLM, Admin, Conn, Emb, User, check_brand
+from app.api.ratelimit import limited
 from app.audit import audit
 from app.llm.errors import LLMUnavailableError
 from app.models.facts import FactCreate, FactUpdate
@@ -50,7 +61,11 @@ _CHANGE_COLS = (
 )
 
 
-@router.post("/brands/{brand_id}/website-check", response_model=list[FactChangeOut])
+@router.post(
+    "/brands/{brand_id}/website-check",
+    response_model=list[FactChangeOut],
+    dependencies=[Depends(limited("website check", 10))],
+)
 def website_check(
     brand_id: UUID, body: WebsiteCheck, user: Admin, conn: Conn, client: LLM
 ) -> list[dict]:

@@ -201,10 +201,10 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 - [x] **13.4** `[A]` Re-run the evaluation and compare with the Round 2 report; record the accuracy gain.
 
 ### Milestone 14: Hardening
-- [ ] **14.1** `[A]` Tests: unit tests for validation, segmentation, rule engine, expiry, the workflow state machine and permissions; one end-to-end API test of the full loop.
+- [x] **14.1** `[A]` Tests: unit tests for validation, segmentation, rule engine, expiry, the workflow state machine and permissions; one end-to-end API test of the full loop.
 - [ ] **14.2** `[V]` Error and empty states on every screen (AI unavailable, upload failed, no rules approved yet).
 - [ ] **14.3** `[V]` Accessibility audit of Heimdall's own interface: keyboard navigation, focus states, contrast, labels (axe or Lighthouse ≥ 90).
-- [ ] **14.4** `[A]` Security pass: no secrets in the repo, RLS verified, file type and size limits, rate limiting on review endpoints, prompt-injection test content in the test set.
+- [x] **14.4** `[A]` Security pass: no secrets in the repo, RLS verified, file type and size limits, rate limiting on review endpoints, prompt-injection test content in the test set.
 - [ ] **14.5** `[A]` Performance: a one-page document gets first feedback in under 60 s; record timings.
 
 ### Milestone 15: Round 3 submission

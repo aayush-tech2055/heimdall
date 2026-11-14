@@ -4,11 +4,12 @@ from datetime import datetime
 from functools import partial
 from uuid import UUID
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from app.api.contents import Runner
 from app.api.deps import Conn, Manager, User
+from app.api.ratelimit import limited
 from app.models.contents import ContentDetail
 from app.review.actions import (
     ActionError,
@@ -89,7 +90,11 @@ def _fix(conn, user, flag_id, replacement, background, run) -> ContentDetail:  #
     return _content(conn, user, content_id)
 
 
-@router.post("/flags/{flag_id}/accept", response_model=ContentDetail)
+@router.post(
+    "/flags/{flag_id}/accept",
+    response_model=ContentDetail,
+    dependencies=[Depends(limited("review", 30))],
+)
 def accept_flag(
     flag_id: UUID, user: User, conn: Conn, background: BackgroundTasks, run: Runner
 ) -> ContentDetail:
@@ -97,7 +102,11 @@ def accept_flag(
     return _fix(conn, user, flag_id, None, background, run)
 
 
-@router.post("/flags/{flag_id}/edit", response_model=ContentDetail)
+@router.post(
+    "/flags/{flag_id}/edit",
+    response_model=ContentDetail,
+    dependencies=[Depends(limited("review", 30))],
+)
 def edit_flag(
     flag_id: UUID, body: Replacement, user: User, conn: Conn, background: BackgroundTasks,
     run: Runner,
