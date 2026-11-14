@@ -118,6 +118,20 @@ export function ReviewWorkspace({
       );
   }
 
+  const PURPOSES: Record<string, string[]> = {
+    guidelines: ["judge"],
+    claims: ["claim_verification", "claim_extraction"],
+    visuals: ["visual_check"],
+  };
+  function aiLabelFor(layer: string): string | undefined {
+    for (const purpose of PURPOSES[layer] ?? []) {
+      const use = flags?.ai_usage.find((u) => u.purpose === purpose);
+      if (use)
+        return `${use.provider} ${use.model}${use.cached === use.calls ? " (cached)" : ""}`;
+    }
+    return undefined;
+  }
+
   function selectFlag(id: string) {
     setSelected(id);
     document
@@ -368,6 +382,7 @@ export function ReviewWorkspace({
                   key={flag.id}
                   flag={flag}
                   canFix={content.format === "text"}
+                  aiLabel={aiLabelFor(flag.layer)}
                   mode={
                     canEdit ? "creator" : canDecide ? "manager" : "readonly"
                   }

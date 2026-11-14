@@ -150,6 +150,7 @@ export interface VersionFlags {
   text: string;
   units: ReviewUnit[];
   flags: StoredFlag[];
+  ai_usage: AIUsage[];
 }
 
 export interface Comment {
@@ -161,4 +162,42 @@ export interface Comment {
   body: string;
   flag_id: string | null;
   created_at: string;
+}
+
+export interface AIUsage {
+  purpose: string;
+  provider: string;
+  model: string;
+  calls: number;
+  cached: number;
+}
+
+export interface BrandSettings {
+  confidential_terms: string[];
+  claim_policy_enabled: boolean;
+  readability_target: number | null;
+  claim_policy_id: string;
+  claim_policy_text: string;
+  presidio_available: boolean;
+}
+
+export interface Disclosure {
+  services: {
+    name: string;
+    role: string;
+    models: string[];
+    data_sent: string;
+    configured: boolean;
+  }[];
+  provider_order: string[];
+  redaction: string[];
+  presidio_active: boolean;
+  usage_last_30_days: {
+    provider: string;
+    model: string;
+    purpose: string;
+    calls: number;
+    cached: number;
+    failed: number;
+  }[];
 }

@@ -65,6 +65,16 @@ class StoredFlag(Flag):
     source_text: str | None  # rule text, fact statement or policy text, for the source chip
 
 
+class AIUsage(BaseModel):
+    """Which model did a step for this version (from ai_calls), for the AI-used labels."""
+
+    purpose: str  # judge | claim_extraction | claim_verification | visual_check | *_embedding
+    provider: str
+    model: str
+    calls: int
+    cached: int
+
+
 class VersionFlags(BaseModel):
     version_id: UUID
     content_id: UUID
@@ -72,3 +82,4 @@ class VersionFlags(BaseModel):
     text: str
     units: list[ReviewUnitOut]
     flags: list[StoredFlag]
+    ai_usage: list[AIUsage] = []

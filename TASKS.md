@@ -168,7 +168,7 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 
 ### Milestone 9: Privacy and AI disclosure
 - [x] **9.1** `[A]` Presidio integration (optional when not installed) plus a confidential-terms editor in the brand settings API.
-- [ ] **9.2** `[V]` An "AI used" label on every AI-generated flag and fix (provider and model, from `ai_calls`), and a disclosure page listing each service, what data is sent, and the redaction rules.
+- [x] **9.2** `[V]` An "AI used" label on every AI-generated flag and fix (provider and model, from `ai_calls`), and a disclosure page listing each service, what data is sent, and the redaction rules.
 - [ ] **9.3** `[V]` Brand settings screen: confidential terms, claim policy on/off, readability target.
 
 ### Milestone 10: Round 2 submission
