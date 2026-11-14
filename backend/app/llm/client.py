@@ -7,6 +7,7 @@
 Every provider call and every cache hit is logged (decision 25).
 """
 
+import hashlib
 import json
 import re
 import time
@@ -108,9 +109,13 @@ class LLMClient:
         purpose: str,
         brand_id: UUID | None = None,
         content_version_id: UUID | None = None,
+        images: list[bytes] | None = None,
     ) -> T:
-        """Return the model's answer to `prompt` as a validated `schema` instance."""
-        key = cache_key(schema.__name__, system, prompt)
+        """Return the model's answer to `prompt` as a validated `schema` instance.
+
+        With `images`, only providers that accept images are tried."""
+        image_keys = [hashlib.sha256(i).hexdigest() for i in images or []]
+        key = cache_key(schema.__name__, system, prompt, *image_keys)
         context = {
             "purpose": purpose,
             "brand_id": brand_id,
@@ -136,9 +141,12 @@ class LLMClient:
         for round_number in range(1, self._rounds + 1):
             round_attempts: list[tuple[str, str]] = []
             retry_after: list[float] = []
-            for provider in self._providers:
+            providers = [
+                p for p in self._providers if not images or getattr(p, "supports_images", False)
+            ]
+            for provider in providers:
                 try:
-                    result = self._ask(provider, schema, full_system, prompt, context)
+                    result = self._ask(provider, schema, full_system, prompt, context, images)
                 except RateLimitError as exc:
                     round_attempts.append((provider.name, "rate limited"))
                     if exc.retry_after is not None:
@@ -170,7 +178,13 @@ class LLMClient:
         raise LLMUnavailableError(purpose, attempts)
 
     def _ask(
-        self, provider: Provider, schema: type[T], system: str, prompt: str, context: dict
+        self,
+        provider: Provider,
+        schema: type[T],
+        system: str,
+        prompt: str,
+        context: dict,
+        images: list[bytes] | None = None,
     ) -> T:
         """One provider: a call, plus at most one repair call if the output is invalid.
 
@@ -181,7 +195,11 @@ class LLMClient:
             ask = prompt if failure is None else repair_prompt(prompt, failure[0], str(failure[1]))
             started = time.perf_counter()
             try:
-                reply = provider.complete(system, ask)
+                reply = (
+                    provider.complete(system, ask, images)
+                    if images
+                    else provider.complete(system, ask)
+                )
             except ProviderError as exc:
                 self._log(provider, started, context, ok=False, error=str(exc))
                 raise

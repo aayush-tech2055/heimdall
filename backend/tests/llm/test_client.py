@@ -223,3 +223,14 @@ def test_no_extra_round_when_a_failure_was_not_a_rate_limit():
     with pytest.raises(LLMUnavailableError):
         ask(client)
     assert sleeps == []
+
+
+def test_image_calls_skip_text_only_providers_and_cache_by_image():
+    groq = FakeProvider("groq", [GOOD])
+    gemini = FakeProvider("gemini", [GOOD, json.dumps({"label": "other", "score": 0})],
+                          supports_images=True)  # fmt: skip
+    client, _ = make_client(groq, gemini)
+    assert ask(client, images=[b"\x89PNG-a"]).label == "compatible"
+    assert groq.calls == [] and gemini.images == [[b"\x89PNG-a"]]
+    assert ask(client, images=[b"\x89PNG-a"]).label == "compatible"  # cached
+    assert ask(client, images=[b"\x89PNG-b"]).label == "other"  # different image, new call

@@ -4,6 +4,7 @@ A provider does one thing: send a system prompt and a user prompt, and return th
 Validation, repair, fallback, caching and logging live in `LLMClient`.
 """
 
+import base64
 from typing import Protocol
 
 import httpx
@@ -20,10 +21,17 @@ TIMEOUT_SECONDS = 90.0
 class Provider(Protocol):
     name: str
     model: str
+    supports_images: bool
 
-    def complete(self, system: str, prompt: str) -> str:
-        """Return the model's reply text, or raise `ProviderError` / `RateLimitError`."""
+    def complete(self, system: str, prompt: str, images: list[bytes] | None = None) -> str:
+        """Return the model's reply text, or raise `ProviderError` / `RateLimitError`.
+
+        `images` (PNG/JPEG bytes) are only sent to providers with `supports_images`."""
         ...
+
+
+def _mime(data: bytes) -> str:
+    return "image/jpeg" if data[:3] == b"\xff\xd8\xff" else "image/png"
 
 
 def _post(client: httpx.Client, name: str, url: str, **kwargs: object) -> dict:
@@ -52,21 +60,34 @@ class GeminiProvider:
     """Google Gemini `generateContent`, with JSON output mode and temperature 0."""
 
     name = "gemini"
+    supports_images = True
 
-    def __init__(self, api_key: str, model: str, client: httpx.Client | None = None) -> None:
+    def __init__(
+        self,
+        api_key: str,
+        model: str,
+        client: httpx.Client | None = None,
+        vision_model: str | None = None,
+    ) -> None:
         self.model = model
+        self.vision_model = vision_model or model
         self._client = client or httpx.Client(timeout=TIMEOUT_SECONDS)
         self._headers = {"x-goog-api-key": api_key}
 
-    def complete(self, system: str, prompt: str) -> str:
+    def complete(self, system: str, prompt: str, images: list[bytes] | None = None) -> str:
+        parts: list[dict] = [{"text": prompt}]
+        for img in images or []:
+            parts.append({"inline_data": {"mime_type": _mime(img),
+                                          "data": base64.b64encode(img).decode()}})  # fmt: skip
+        model = self.vision_model if images else self.model
         data = _post(
             self._client,
             self.name,
-            f"{GEMINI_BASE_URL}/models/{self.model}:generateContent",
+            f"{GEMINI_BASE_URL}/models/{model}:generateContent",
             headers=self._headers,
             json={
                 "systemInstruction": {"parts": [{"text": system}]},
-                "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+                "contents": [{"role": "user", "parts": parts}],
                 "generationConfig": {"temperature": 0, "responseMimeType": "application/json"},
             },
         )
@@ -93,21 +114,30 @@ class OpenAICompatibleProvider:
         *,
         json_mode: bool,
         client: httpx.Client | None = None,
+        supports_images: bool = False,
     ) -> None:
         self.name = name
         self.model = model
+        self.supports_images = supports_images
         self._url = f"{base_url.rstrip('/')}/chat/completions"
         self._json_mode = json_mode
         self._client = client or httpx.Client(timeout=TIMEOUT_SECONDS)
         self._headers = {"Authorization": f"Bearer {api_key}"}
 
-    def complete(self, system: str, prompt: str) -> str:
+    def complete(self, system: str, prompt: str, images: list[bytes] | None = None) -> str:
+        user: str | list[dict] = prompt
+        if images:
+            user = [{"type": "text", "text": prompt}] + [
+                {"type": "image_url", "image_url": {
+                    "url": f"data:{_mime(img)};base64,{base64.b64encode(img).decode()}"}}
+                for img in images
+            ]  # fmt: skip
         body: dict = {
             "model": self.model,
             "temperature": 0,
             "messages": [
                 {"role": "system", "content": system},
-                {"role": "user", "content": prompt},
+                {"role": "user", "content": user},
             ],
         }
         if self._json_mode:
@@ -126,7 +156,10 @@ def build_providers(settings: Settings, client: httpx.Client | None = None) -> l
     """Providers in `LLM_PROVIDER_ORDER`, skipping any without a key or model (decision 23)."""
     available: dict[str, Provider] = {}
     if settings.gemini_api_key and settings.gemini_model:
-        available["gemini"] = GeminiProvider(settings.gemini_api_key, settings.gemini_model, client)
+        available["gemini"] = GeminiProvider(
+            settings.gemini_api_key, settings.gemini_model, client,
+            vision_model=settings.gemini_vision_model,
+        )  # fmt: skip
     if settings.groq_api_key and settings.groq_model:
         available["groq"] = OpenAICompatibleProvider(
             "groq", GROQ_BASE_URL, settings.groq_api_key, settings.groq_model,
@@ -137,5 +170,6 @@ def build_providers(settings: Settings, client: httpx.Client | None = None) -> l
         available["openrouter"] = OpenAICompatibleProvider(
             "openrouter", OPENROUTER_BASE_URL, settings.openrouter_api_key,
             settings.openrouter_model, json_mode=False, client=client,
+            supports_images=settings.openrouter_supports_images,
         )  # fmt: skip
     return [available[name] for name in settings.provider_order if name in available]

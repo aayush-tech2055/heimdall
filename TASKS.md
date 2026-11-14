@@ -161,9 +161,9 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
   *Done when (M7):* a full loop works in the browser: admin sets rules → creator uploads → fixes → submits → manager sends back → creator fixes → manager approves, with every step in the audit log.
 
 ### Milestone 8: PDF and images
-- [ ] **8.1** `[A]` PDF content: units from text blocks with page and bounding box; images inside the PDF are extracted for layer (d).
-- [ ] **8.2** `[A]` Layer (d), visual checks: the vision model gets the image plus approved visual rules and asset descriptions, and returns flags (wrong logo version, colours outside the palette, off-brand imagery, missing alt text where it applies). Evidence is a region description; the source must be a visual rule.
-- [ ] **8.3** `[A]` Accessibility checks in code: WCAG contrast ratio for text colours when available, alt text present for images, readability score per unit (textstat) against the brand's target.
+- [x] **8.1** `[A]` PDF content: units from text blocks with page and bounding box; images inside the PDF are extracted for layer (d).
+- [x] **8.2** `[A]` Layer (d), visual checks: the vision model gets the image plus approved visual rules and asset descriptions, and returns flags (wrong logo version, colours outside the palette, off-brand imagery, missing alt text where it applies). Evidence is a region description; the source must be a visual rule.
+- [x] **8.3** `[A]` Accessibility checks in code: WCAG contrast ratio for text colours when available, alt text present for images, readability score per unit (textstat) against the brand's target.
 - [ ] **8.4** `[V]` PDF viewer in the creator and manager screens with flag highlights by page and box, and an image viewer with a flag list.
 
 ### Milestone 9: Privacy and AI disclosure
