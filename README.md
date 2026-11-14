@@ -215,8 +215,6 @@ flowchart TD
 
 ## Project structure
 
-Planned layout. It will be created during the build window.
-
 ```
 heimdall/
 ├── frontend/              # Next.js app: admin, creator and manager dashboards
@@ -232,31 +230,52 @@ heimdall/
 ├── db/
 │   └── schema.sql         # Postgres + pgvector schema
 ├── test-data/             # fictional brands and planted-error test content
-├── docs/                  # Round 1 plan, architecture notes
+├── docs/                  # Round 1 plan, build log, architecture notes
+├── .github/workflows/     # CI: ruff + pytest, lint + typecheck
 └── README.md
 ```
+
+Parts are added milestone by milestone (see `TASKS.md`); folders for later milestones may still be empty.
 
 ---
 
 ## Getting started
 
-Setup instructions will be added once the first code is in place. You will need:
+You will need:
 
-- Node.js 20+ and Python 3.11+
+- Node.js 20+ and Python 3.11 or 3.12
 - A Supabase project with the `vector` extension enabled
 - API keys for Gemini (required), and optionally Groq and OpenRouter
 
-Planned environment variables (`backend/.env`):
+**Backend** (FastAPI, http://localhost:8000):
 
 ```bash
-DATABASE_URL=postgresql://...
-GEMINI_API_KEY=
-GROQ_API_KEY=
-OPENROUTER_API_KEY=
-LLM_PROVIDER_ORDER=gemini,groq,openrouter
+cd backend
+python3.12 -m venv .venv
+.venv/bin/pip install -e ".[dev]"
+cp .env.example .env          # then fill in the values
+.venv/bin/uvicorn app.main:app --reload
+.venv/bin/pytest              # tests
+.venv/bin/ruff check . && .venv/bin/ruff format --check .
 ```
 
-> Never commit `.env` files or API keys.
+**Frontend** (Next.js, http://localhost:3000):
+
+```bash
+cd frontend
+npm install
+cp .env.example .env.local    # then fill in the values
+npm run dev
+npm run lint && npm run typecheck
+```
+
+Every variable is listed, with empty values, in `backend/.env.example` and `frontend/.env.example`.
+
+> Never commit `.env` or `.env.local` files or API keys. Only the `.env.example` templates are committed, and they stay empty.
+
+### Branches
+
+`main` always builds and passes CI. Each feature is built on its own branch (`feature/m2-database`, `feature/m3-ai-layer`, …), one commit per task (`2.1: database schema`), and merged into `main` with a merge commit once its tasks are done and CI is green. Fixes use `fix/<topic>`, documentation `docs/<topic>`, tooling `chore/<topic>`. Merged branches are deleted.
 
 ---
 
