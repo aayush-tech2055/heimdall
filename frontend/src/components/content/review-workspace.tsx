@@ -7,7 +7,11 @@ import { useMemo, useState } from "react";
 import { ContentStatusBadge } from "@/components/content/badges";
 import { CommentsPanel } from "@/components/content/comments-panel";
 import { FlagCard, type FlagAction } from "@/components/content/flag-card";
-import { ImageViewer, PdfViewer } from "@/components/content/file-viewers";
+import {
+  ImageViewer,
+  PdfViewer,
+  VideoViewer,
+} from "@/components/content/file-viewers";
 import { HighlightedText } from "@/components/content/highlighted-text";
 import { VersionHistory } from "@/components/content/version-history";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -292,6 +296,14 @@ export function ReviewWorkspace({
                 versionId={flags.version_id}
                 flags={mode === "manager" ? visible : flags.flags}
                 units={flags.units}
+                selectedId={selected}
+                onSelect={selectFlag}
+              />
+            ) : content.format === "video" ? (
+              <VideoViewer
+                versionId={flags.version_id}
+                flags={mode === "manager" ? visible : flags.flags}
+                transcript={flags.text}
                 selectedId={selected}
                 onSelect={selectFlag}
               />

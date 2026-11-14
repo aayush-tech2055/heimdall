@@ -23,6 +23,8 @@ function NewCheck({ me }: { me: Me }) {
   const [file, setFile] = useState<File | null>(null);
   const [altText, setAltText] = useState("");
   const isImage = !!file && /\.(png|jpe?g)$/i.test(file.name);
+  const isVideo = !!file && /\.(mp4|mov|webm)$/i.test(file.name);
+  const [captions, setCaptions] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,6 +40,7 @@ function NewCheck({ me }: { me: Me }) {
       if (!file) return setError("Choose a file to check.");
       form.append("file", file);
       if (isImage && altText.trim()) form.append("alt_text", altText.trim());
+      if (isVideo && captions) form.append("captions", captions);
     }
     setBusy(true);
     try {
@@ -86,18 +89,36 @@ function NewCheck({ me }: { me: Me }) {
           </TabsContent>
           <TabsContent value="file" className="space-y-2 pt-2">
             <Label htmlFor="content-file">
-              PDF, PNG or JPEG image, or a text file (.txt, .md)
+              PDF, image (PNG, JPEG), short video (MP4, MOV, WebM) or text file
+              (.txt, .md)
             </Label>
             <Input
               id="content-file"
               type="file"
-              accept=".pdf,.png,.jpg,.jpeg,.txt,.md,.markdown,application/pdf,image/png,image/jpeg,text/plain,text/markdown"
+              accept=".pdf,.png,.jpg,.jpeg,.mp4,.mov,.webm,.txt,.md,.markdown,application/pdf,image/png,image/jpeg,video/mp4,video/quicktime,video/webm,text/plain,text/markdown"
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             />
             <p className="text-muted-foreground text-sm">
               PDFs up to 20 MB, images up to 10 MB. Images and PDF pictures are
               also checked against the brand&apos;s visual rules.
             </p>
+            {isVideo && (
+              <div className="space-y-2">
+                <Label htmlFor="captions">
+                  Captions file (.srt or .vtt, optional)
+                </Label>
+                <Input
+                  id="captions"
+                  type="file"
+                  accept=".srt,.vtt"
+                  onChange={(e) => setCaptions(e.target.files?.[0] ?? null)}
+                />
+                <p className="text-muted-foreground text-sm">
+                  Videos can be up to 60 seconds and 20 MB. Speech, on-screen
+                  text and frames are all checked.
+                </p>
+              </div>
+            )}
             {isImage && (
               <div className="space-y-2">
                 <Label htmlFor="alt-text">

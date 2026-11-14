@@ -185,7 +185,7 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 - [x] **11.3** `[A]` OCR of on-screen text per frame, with timestamps (deduplicate repeated text).
 - [x] **11.4** `[A]` Run the existing layers on transcript and OCR units, and layer (d) on frames; every flag has `{start, end}`.
 - [x] **11.5** `[A]` Caption checks: captions exist, and caption text matches the transcript.
-- [ ] **11.6** `[V]` Video player with flags on a timeline; clicking a flag jumps to its timestamp.
+- [x] **11.6** `[V]` Video player with flags on a timeline; clicking a flag jumps to its timestamp.
 
 ### Milestone 12: Round 3, improvement 2: website facts and asset library
 - [ ] **12.1** `[A]` Scraper: Playwright for a list of company URLs, cleaned text per page.
