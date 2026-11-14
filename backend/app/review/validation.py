@@ -8,6 +8,9 @@ A candidate is dropped, with the reason kept, if:
   in the redacted unit the model saw)                    -> "evidence_not_found"
 * it matches an approved exception (same source,
   overlapping evidence)                                  -> "approved_exception"
+* an AI flag whose evidence lies inside text the brand
+  requires (an approved required phrase, e.g. its own
+  disclaimer)                                            -> "brand_required_text"
 * it repeats (unit, source, normalised evidence)         -> "duplicate"
 * it does not fit the flag contract                      -> "invalid_flag"
 Kept candidates become `Flag`s with absolute evidence offsets in the original text.
@@ -50,14 +53,27 @@ def _locate(candidate: Candidate, unit: Unit, redacted: Redacted | None) -> tupl
     return find_normalised(unit.text, candidate.evidence)
 
 
+def _phrase_spans(text: str, phrases: list[str]) -> list[tuple[int, int]]:
+    """Every lenient occurrence of each phrase in `text`."""
+    spans: list[tuple[int, int]] = []
+    for phrase in phrases:
+        start = 0
+        while (found := find_normalised(text, phrase, start)) is not None:
+            spans.append(found)
+            start = found[1]
+    return spans
+
+
 def validate(
     candidates: list[Candidate],
     units: list[Unit],
     redacted: dict[str, Redacted],
     exceptions: list[ApprovedException] = (),
+    required_phrases: list[str] = (),
 ) -> ValidationResult:
     result = ValidationResult()
     by_id = {u.unit_id: u for u in units}
+    protected = {u.unit_id: _phrase_spans(u.text, required_phrases) for u in units}
     seen: set[tuple[str, str, str]] = set()
     kept: list[tuple[Flag, int]] = []
 
@@ -77,6 +93,13 @@ def validate(
                 result.dropped.append((c.payload(), "evidence_not_found"))
                 continue
         evidence = unit.text[span[0] : span[1]] if span[1] > span[0] else ""
+        if (
+            c.supplied is not None
+            and evidence
+            and any(s <= span[0] and span[1] <= e for s, e in protected[c.unit_id])
+        ):
+            result.dropped.append((c.payload(), "brand_required_text"))
+            continue
         if evidence and any(
             e.source_id == c.source_id and overlaps(e.evidence, evidence) for e in exceptions
         ):

@@ -93,3 +93,16 @@ def test_flags_are_sorted_by_position_then_severity():
     assert [(f.evidence, f.severity) for f in flags] == [
         ("embarrassing", "high"), ("embarrassing", "low"), ("today", "low"),
     ]  # fmt: skip
+
+
+def test_ai_flags_inside_brand_required_text_are_dropped_but_code_flags_are_kept():
+    text = "Great beans. Contains caffeine. Not recommended for children."
+    units = segment_text(text)
+    red = {u.unit_id: redact(u.text, use_presidio=False) for u in units}
+    phrase = ["Contains caffeine. Not recommended for children."]
+    ai_inside = cand("Contains caffeine", unit_id="u1")
+    ai_outside = cand("Great beans", unit_id="u1")
+    code_inside = cand("caffeine", unit_id="u1", supplied=None, layer="rules", span=(22, 30))
+    result = validate([ai_inside, ai_outside, code_inside], units, red, [], phrase)
+    assert [f.evidence for f in result.flags] == ["Great beans", "caffeine"]
+    assert [r for _, r in result.dropped] == ["brand_required_text"]

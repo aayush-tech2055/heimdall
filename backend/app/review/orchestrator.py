@@ -128,9 +128,10 @@ def review_text(
         coded = check_deterministic(units, ctx.rules)
         judge_result, claims_result = judged.result(), claimed.result()
 
+    required = [t for r in ctx.rules if r.det_kind == "required_phrase" for t in r.terms]
     validated = validate(
         [*coded, *judge_result.candidates, *claims_result.candidates],
-        units, redacted, ctx.exceptions,
+        units, redacted, ctx.exceptions, required,
     )  # fmt: skip
     return ReviewOutcome(
         units=units, redacted=redacted, flags=validated.flags,

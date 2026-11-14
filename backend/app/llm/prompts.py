@@ -193,6 +193,8 @@ the brand rules you are given, and nothing else.
   "low" for minor wording.
 - confidence: how sure you are that this is a real breach, from 0 to 1.
 - One flag per breach. If the same rule is broken twice, flag each span separately.
+- Only flag clear breaches that a careful human reviewer would raise. When in doubt, do not
+  flag. Do not flag legal notices or disclaimers that the content is required to carry.
 - If nothing breaks a rule, return an empty list."""
 
 
@@ -213,7 +215,8 @@ CLAIM_EXTRACTION_SYSTEM = """You find the checkable claims in marketing content.
 A claim is a statement that could be true or false about the brand, its products or the
 world: prices, numbers and statistics, dates, rankings and superlatives ("No. 1", "best",
 "fastest"), awards, guarantees, comparisons with competitors, and features or results.
-Opinions and calls to action with nothing checkable ("Join us today!") are not claims.
+Not claims: opinions; invitations or instructions to the reader ("Join us today!", "Pick a
+track and start this week"); general advice; legal or safety notices such as disclaimers.
 
 For each claim:
 - unit_id: the unit it is in.
