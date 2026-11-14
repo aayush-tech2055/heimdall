@@ -173,7 +173,7 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 
 ### Milestone 10: Round 2 submission
 - [ ] **10.1** `[A]` Deploy: frontend to Vercel, backend to Render or Railway, environment secrets set, seeded with a test brand.
-- [ ] **10.2** `[A]` Demo mode: pre-run the demo content so results come from the cache; check that fallback works by disabling the Gemini key.
+- [x] **10.2** `[A]` Demo mode: pre-run the demo content so results come from the cache; check that fallback works by disabling the Gemini key.
 - [x] **10.3** `[A]` Run the evaluation (6.9) and save the report; fix the worst category.
 - [ ] **10.4** `[V]` User testing with 3–5 people outside the team, using a script of tasks; record what confused them and fix the top 3 issues.
 - [ ] **10.5** `[A+V]` Submission package: deployed demo link, repo access, architecture diagram, **list of APIs, models and datasets used**, testing evidence (eval report + user testing notes), each member's contribution (from `BUILD_LOG.md`), updated README with real setup steps.
