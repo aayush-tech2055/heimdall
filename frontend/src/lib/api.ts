@@ -77,3 +77,19 @@ export async function api<T>(path: string, options: Options = {}): Promise<T> {
   if (response.status === 204) return undefined as T;
   return (await response.json()) as T;
 }
+
+/** Fetch a file (PDF page, image) as the signed-in user; returns an object URL. */
+export async function apiBlobUrl(path: string): Promise<string> {
+  const { data } = await supabase().auth.getSession();
+  const response = await fetch(new URL(path, API_URL), {
+    headers: data.session
+      ? { Authorization: `Bearer ${data.session.access_token}` }
+      : {},
+  });
+  if (!response.ok)
+    throw new ApiError(
+      response.status,
+      `Could not load the file (${response.status})`,
+    );
+  return URL.createObjectURL(await response.blob());
+}
