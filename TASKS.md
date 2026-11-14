@@ -137,7 +137,7 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 - [x] **5.3** `[V]` Admin facts screen: a table with search, expiry badges (expired, expiring within 30 days), add, edit and CSV import.
 
 ### Milestone 6: Review engine for text (core of Round 2)
-- [ ] **6.1** `[A]` Segmentation for text: units with paragraph and character span (decision 15).
+- [x] **6.1** `[A]` Segmentation for text: units with paragraph and character span (decision 15).
 - [ ] **6.2** `[A]` Redaction (decision 16) with per-brand confidential terms from `brand_settings`.
 - [ ] **6.3** `[A]` Layer (a), the rule engine: banned terms (whole-word, case-insensitive, flag every occurrence with its span) and required phrases (checked across the whole document; if missing, one flag with empty evidence).
 - [ ] **6.4** `[A]` Layer (b): hybrid retrieval (decision 13) plus the batched judge (decisions 18–19).
