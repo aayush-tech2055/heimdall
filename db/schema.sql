@@ -196,6 +196,9 @@ create table public.content_versions (
   version_number  integer not null check (version_number >= 1),
   storage_path    text,          -- original upload in Supabase Storage (PDF, image, video)
   extracted_text  text,          -- full text the review ran on (before redaction)
+  review_started_at  timestamptz,
+  review_finished_at timestamptz,
+  review_error       text,       -- why the last review failed, if it did
   created_by      uuid references auth.users (id) on delete set null,
   created_at      timestamptz not null default now(),
   unique (content_id, version_number),
@@ -213,6 +216,7 @@ create table public.review_units (
   position    integer not null check (position >= 0),       -- reading order
   text        text not null,
   location    jsonb not null,   -- {paragraph, char_start, char_end} | {page, bbox} | {start, end} | {image_id, region}
+  retrieved_rules text[] not null default '{}',  -- rule codes given to the judge (evaluation)
   created_at  timestamptz not null default now(),
   unique (version_id, unit_id),
   foreign key (version_id, brand_id)
