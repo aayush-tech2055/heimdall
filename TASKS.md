@@ -205,7 +205,7 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 - [ ] **14.2** `[V]` Error and empty states on every screen (AI unavailable, upload failed, no rules approved yet).
 - [ ] **14.3** `[V]` Accessibility audit of Heimdall's own interface: keyboard navigation, focus states, contrast, labels (axe or Lighthouse ≥ 90).
 - [x] **14.4** `[A]` Security pass: no secrets in the repo, RLS verified, file type and size limits, rate limiting on review endpoints, prompt-injection test content in the test set.
-- [ ] **14.5** `[A]` Performance: a one-page document gets first feedback in under 60 s; record timings.
+- [x] **14.5** `[A]` Performance: a one-page document gets first feedback in under 60 s; record timings.
 
 ### Milestone 15: Round 3 submission
 - [ ] **15.1** `[V]` Demo video (3–5 minutes): the full loop, guideline verification, a video review, a website fact change, the insights dashboard.
