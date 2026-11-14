@@ -17,6 +17,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# Optional: names and places are redacted too (then: python -m spacy download en_core_web_sm)
+privacy = [
+    "presidio-analyzer>=2.2",
+]
 dev = [
     "pytest>=8.2",
     "ruff>=0.6",

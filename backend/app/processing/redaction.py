@@ -73,14 +73,22 @@ class Redacted:
 
 @lru_cache(maxsize=1)
 def _presidio():  # noqa: ANN202 - optional dependency
+    """Presidio's analyzer with a small spaCy model, or None when it is not installed."""
     try:
         from presidio_analyzer import AnalyzerEngine  # type: ignore[import-not-found]
+        from presidio_analyzer.nlp_engine import NlpEngineProvider  # type: ignore[import-not-found]
     except ImportError:
         return None
+    from app.config import get_settings
+
+    model = get_settings().presidio_spacy_model
     try:
-        return AnalyzerEngine()
+        nlp = NlpEngineProvider(nlp_configuration={
+            "nlp_engine_name": "spacy", "models": [{"lang_code": "en", "model_name": model}],
+        }).create_engine()  # fmt: skip
+        return AnalyzerEngine(nlp_engine=nlp, supported_languages=["en"])
     except Exception:  # noqa: BLE001 - missing spaCy model etc.
-        log.warning("Presidio is installed but could not start; skipping PERSON/LOCATION")
+        log.warning("Presidio is installed but spaCy model %r is missing; skipping names", model)
         return None
 
 

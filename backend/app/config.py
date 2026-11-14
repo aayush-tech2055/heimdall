@@ -35,6 +35,9 @@ class Settings(BaseSettings):
     openrouter_model: str = ""
     openrouter_supports_images: bool = True  # the default free model is vision-language
 
+    # Redaction (decision 16): spaCy model Presidio uses for PERSON / LOCATION, if installed
+    presidio_spacy_model: str = "en_core_web_sm"
+
     # LLM cache (decision 24)
     llm_cache_path: str = ".cache/llm_cache.sqlite3"
 

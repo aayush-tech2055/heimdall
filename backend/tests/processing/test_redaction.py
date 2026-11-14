@@ -57,3 +57,13 @@ def test_offsets_map_back_to_the_original():
 def test_no_detections_is_identity():
     r = redact("Plain text.", use_presidio=False)
     assert r.text == "Plain text." and r.to_original(0, 5) == (0, 5)
+
+
+@pytest.mark.skipif(not __import__("app.processing.redaction", fromlist=["x"]).presidio_available(),
+                    reason="Presidio is optional and not installed")  # fmt: skip
+def test_presidio_redacts_names_but_not_exempt_brand_terms():
+    r = redact(
+        "Congrats to Priya Sharma on finishing AcmeLearn Pro.", exempt_terms=["AcmeLearn Pro"]
+    )
+    assert "Priya Sharma" not in r.text and "[PERSON]" in r.text
+    assert "AcmeLearn Pro" in r.text
