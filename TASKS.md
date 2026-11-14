@@ -149,7 +149,7 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 - [ ] **6.9** `[A]` Evaluation script `backend/eval/run_eval.py`: runs every test item, compares the flags with the answer key, and reports recall, precision, retrieval recall (was the expected rule in the retrieved top-k?) and flags without a valid source (must be 0), per category. It writes `docs/eval/<date>.md`.
 
 ### Milestone 7: Creator and manager workflow
-- [ ] **7.1** `[A]` The workflow state machine from Part 1, enforced in the API (an invalid transition returns 409). Every transition is written to `audit_log`.
+- [x] **7.1** `[A]` The workflow state machine from Part 1, enforced in the API (an invalid transition returns 409). Every transition is written to `audit_log`.
 - [ ] **7.2** `[A]` Flag actions: `POST /flags/{id}/accept` (apply the fix to the text and create a new version), `/edit`, `/dismiss` (reason required). Re-running the review on the new version keeps resolved flags resolved.
 - [ ] **7.3** `[A]` Manager actions: `POST /contents/{id}/approve`, `/request-changes` (comment required), `POST /flags/{id}/except` (reason required, creates an `approved_exceptions` row).
 - [ ] **7.4** `[A]` Comments: `GET/POST /versions/{id}/comments`, optionally tied to a flag.
