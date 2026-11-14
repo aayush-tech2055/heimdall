@@ -141,7 +141,7 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 - [x] **6.2** `[A]` Redaction (decision 16) with per-brand confidential terms from `brand_settings`.
 - [x] **6.3** `[A]` Layer (a), the rule engine: banned terms (whole-word, case-insensitive, flag every occurrence with its span) and required phrases (checked across the whole document; if missing, one flag with empty evidence).
 - [x] **6.4** `[A]` Layer (b): hybrid retrieval (decision 13) plus the batched judge (decisions 18–19).
-- [ ] **6.5** `[A]` Layer (c): claim extraction (keep only claims that are real quotes) → fact lookup → verdicts. Expired supported facts are flagged as outdated, contradicted claims cite the fact, unsupported claims cite `SYS-CLAIM-001`, and a "contradicted" verdict that cites no real fact is dropped.
+- [x] **6.5** `[A]` Layer (c): claim extraction (keep only claims that are real quotes) → fact lookup → verdicts. Expired supported facts are flagged as outdated, contradicted claims cite the fact, unsupported claims cite `SYS-CLAIM-001`, and a "contradicted" verdict that cites no real fact is dropped.
 - [ ] **6.6** `[A]` Citation validation (decision 20), including absolute evidence offsets for text.
 - [ ] **6.7** `[A]` Orchestrator `review_content(version_id)`: units → redact → (a), (b), (c) → validate → sort by position, then severity → save units, flags and dropped flags → set status to `creator_review`. Runs as a FastAPI background task.
 - [ ] **6.8** `[A]` API: `POST /contents` (upload text or file → new version → start the review), `GET /contents/{id}` (status, versions), `GET /versions/{id}/flags`.
