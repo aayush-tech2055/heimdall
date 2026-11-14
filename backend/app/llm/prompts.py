@@ -103,7 +103,9 @@ def _units_section(units: Sequence[UnitRef]) -> str:
 RULE_EXTRACTION_SYSTEM = f"""You turn one page of a brand guideline into a list of rules.
 
 A rule is one instruction that a reviewer could check a piece of marketing content against.
-- Split sentences that contain several independent instructions into separate rules.
+- Usually one bullet point or sentence of the guideline is one rule. Split it only when it
+  mixes an exact word list with other instructions (the word list becomes its own rule) or
+  covers two different categories.
 - Keep each rule close to the guideline's own wording; do not add requirements.
 - Skip text that is not an instruction: titles, introductions, tables of contents, history.
 - Do not number the rules or invent rule codes; the system assigns codes and pages.
@@ -111,10 +113,16 @@ A rule is one instruction that a reviewer could check a piece of marketing conte
 {CATEGORY_GUIDE}
 
 check_type:
-- "deterministic" only when the rule is an exact word list: words or phrases that must never
-  appear (det_kind "banned_terms") or an exact phrase that must appear (det_kind
-  "required_phrase"). Put each exact word or phrase in "terms", as written in the guideline.
-- "semantic" for everything else (det_kind null, terms empty).
+- "deterministic" with det_kind "banned_terms" only when the guideline lists exact words,
+  phrases or spellings that must never appear (for example "Never use these words: ..." or
+  "Never write X or Y"). Put each banned word or spelling in "terms", exactly as written.
+- "deterministic" with det_kind "required_phrase" only when the guideline gives exact text
+  that every piece of content must contain (for example "must end with the line ...").
+  Put that exact text in "terms".
+- Never put the brand's own correct name or product names in "terms".
+- "semantic" for everything else, including rules whose quoted words are only examples of a
+  broader idea (for example "never make health claims such as 'cures headaches'"): det_kind
+  null, terms empty.
 
 examples_bad / examples_good: copy examples only if the guideline gives them; never invent.
 always_on: true only for rules that apply to every piece of content whatever its topic

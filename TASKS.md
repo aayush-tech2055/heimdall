@@ -123,7 +123,7 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 
 ### Milestone 4: Guideline ingestion and verification
 - [x] **4.1** `[A]` Parsing: PDF to pages with PyMuPDF; pasted text to page-sized parts split on paragraphs.
-- [ ] **4.2** `[A]` Rule extraction: one LLM call per page, then codes, page, source and `pending` status set in code (decisions 5–8).
+- [x] **4.2** `[A]` Rule extraction: one LLM call per page, then codes, page, source and `pending` status set in code (decisions 5–8).
   *Done when:* on a test brand guide, every rule appears once with the correct page.
 - [ ] **4.3** `[A]` Embed and store rules as `pending`.
 - [ ] **4.4** `[A]` Guideline verification (decision 21), returning a report of duplicates, contradictions, vague rules and missing categories.
