@@ -8,6 +8,10 @@ class ProviderError(Exception):
 class RateLimitError(ProviderError):
     """The provider rejected the call with a rate limit (HTTP 429 or quota exhausted)."""
 
+    def __init__(self, message: str, retry_after: float | None = None) -> None:
+        super().__init__(message)
+        self.retry_after = retry_after
+
 
 class LLMUnavailableError(RuntimeError):
     """No provider produced a valid answer. The message lists what happened with each one."""

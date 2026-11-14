@@ -25,7 +25,7 @@ from app.models.llm import (
     ClaimVerification,
     FactExtraction,
     JudgeOutput,
-    PairVerdict,
+    PairChecks,
     RuleExtraction,
     VaguenessCheck,
 )
@@ -138,20 +138,26 @@ def rule_extraction(page_text: str, *, page: int, source_doc: str) -> Prompt:
     return Prompt("rule_extraction", RuleExtraction, RULE_EXTRACTION_SYSTEM, prompt)
 
 
-PAIR_CHECK_SYSTEM = """You compare two rules from the same brand guideline.
+PAIR_CHECK_SYSTEM = """You compare pairs of rules from the same brand guideline.
 
-Label the pair:
+Label every pair, using its pair_id:
 - "duplicate": both rules require the same thing (one may be worded differently or be a
   subset that adds nothing).
-- "contradiction": content cannot satisfy both rules at the same time.
+- "contradiction": some content could not satisfy both rules at the same time (for example
+  one rule requires something that the other forbids for the same kind of content).
 - "compatible": anything else, including rules that are related but can both be followed.
 
-Explain your label in one or two plain sentences that name both rule codes."""
+Explain each label in one or two plain sentences that name both rule codes."""
 
 
-def pair_check(rule_a: RuleRef, rule_b: RuleRef) -> Prompt:
-    prompt = "Compare these two rules.\n\n" + _rules_section([rule_a, rule_b])
-    return Prompt("pair_check", PairVerdict, PAIR_CHECK_SYSTEM, prompt)
+def pair_check(pairs: Sequence[tuple[str, RuleRef, RuleRef]]) -> Prompt:
+    """Label up to ~10 candidate pairs in one call (decision 21)."""
+    blocks = [
+        f'<pair id="{pair_id}">\n{_rule_block(a)}\n{_rule_block(b)}\n</pair>'
+        for pair_id, a, b in pairs
+    ]
+    prompt = "Label each pair of rules.\n\n" + "\n\n".join(blocks)
+    return Prompt("pair_check", PairChecks, PAIR_CHECK_SYSTEM, prompt)
 
 
 VAGUENESS_SYSTEM = """You review brand guideline rules for testability.

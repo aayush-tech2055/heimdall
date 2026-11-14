@@ -36,8 +36,13 @@ class RuleExtraction(_Out):
 
 
 class PairVerdict(_Out):
+    pair_id: str
     label: Literal["duplicate", "contradiction", "compatible"]
     explanation: str = Field(min_length=1)
+
+
+class PairChecks(_Out):
+    results: list[PairVerdict]
 
 
 class VagueRule(_Out):

@@ -41,7 +41,7 @@ These were decided during planning. Follow them unless the team explicitly chang
 18. **Batching:** send about 4 units per LLM call, with the union of their retrieved rules.
 19. **Judge instructions:** flag only against the supplied rule codes; quote evidence exactly, character for character, using the shortest span; give a fix that keeps the creator's intent; severity `high` for legal, factual or reputational risk, `medium` for a clear breach, `low` for minor wording.
 20. **Citation validation drops a flag if:** its unit is unknown; its source wasn't supplied; its evidence isn't found in the unit (matching ignores case, whitespace and curly-versus-straight quotes); or it matches an approved exception (same rule code, overlapping evidence). It also removes duplicates by (unit, source, normalised evidence). Dropped flags are kept with a reason, for debugging and evaluation.
-21. **Guideline verification:** (1) compare rule pairs whose cosine similarity is ≥ 0.88, and the LLM classifies each pair as `duplicate`, `contradiction` or `compatible`; (2) the LLM marks vague, untestable semantic rules and suggests a rewrite; (3) code lists missing categories from `tone, terminology, claims, visuals, accessibility, legal`.
+21. **Guideline verification:** (1) compare rule pairs whose cosine similarity is ≥ 0.75, and the LLM classifies each pair as `duplicate`, `contradiction` or `compatible`, about 20 pairs per call (changed from ≥ 0.88 on 2026-11-15: with Gemini embeddings 0.88 caught only 1 of the 4 planted problems; contradictions scored 0.76–0.80); (2) the LLM marks vague, untestable semantic rules and suggests a rewrite; (3) code lists missing categories from `tone, terminology, claims, visuals, accessibility, legal`.
 
 ### AI layer
 22. **Every model call goes through one function** (e.g. `LLMClient.json(schema, system, prompt)`), which: checks the cache → tries providers in order → validates the JSON against a Pydantic schema → asks the same provider once to repair invalid output → falls through to the next provider on a rate limit, error or invalid output.
@@ -126,7 +126,7 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 - [x] **4.2** `[A]` Rule extraction: one LLM call per page, then codes, page, source and `pending` status set in code (decisions 5–8).
   *Done when:* on a test brand guide, every rule appears once with the correct page.
 - [x] **4.3** `[A]` Embed and store rules as `pending`.
-- [ ] **4.4** `[A]` Guideline verification (decision 21), returning a report of duplicates, contradictions, vague rules and missing categories.
+- [x] **4.4** `[A]` Guideline verification (decision 21), returning a report of duplicates, contradictions, vague rules and missing categories.
   *Done when:* it finds the planted vague rules, contradiction and duplicate from task 1.1.
 - [ ] **4.5** `[A]` API: `POST /brands/{id}/guidelines` (upload → extract → verify → report), `GET /brands/{id}/rules?status=`, `PATCH /rules/{code}` (edit text or category), `POST /rules/approve` (bulk approve or reject).
 - [ ] **4.6** `[V]` Admin screen: upload guidelines, view extracted rules grouped by category with their page, the verification report at the top (each issue linked to its rules), edit a rule, approve or reject in bulk.

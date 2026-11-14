@@ -153,6 +153,17 @@ create table public.assets (
 );
 create index assets_brand_idx on public.assets (brand_id, kind);
 
+-- The latest guideline verification reports (task 4.4).
+create table public.guideline_reports (
+  id          uuid primary key default gen_random_uuid(),
+  brand_id    uuid not null references public.brands (id) on delete cascade,
+  source_doc  text,
+  report      jsonb not null,   -- VerificationReport: duplicates, contradictions, vague, missing_categories
+  created_by  uuid references auth.users (id) on delete set null,
+  created_at  timestamptz not null default now()
+);
+create index guideline_reports_brand_idx on public.guideline_reports (brand_id, created_at desc);
+
 -- ---------------------------------------------------------------------------
 -- Content, versions, review units
 -- ---------------------------------------------------------------------------
@@ -347,5 +358,6 @@ alter table public.approved_exceptions enable row level security;
 alter table public.comments            enable row level security;
 alter table public.audit_log           enable row level security;
 alter table public.ai_calls            enable row level security;
+alter table public.guideline_reports   enable row level security;
 
 commit;
