@@ -146,7 +146,7 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 - [x] **6.7** `[A]` Orchestrator `review_content(version_id)`: units → redact → (a), (b), (c) → validate → sort by position, then severity → save units, flags and dropped flags → set status to `creator_review`. Runs as a FastAPI background task.
 - [x] **6.8** `[A]` API: `POST /contents` (upload text or file → new version → start the review), `GET /contents/{id}` (status, versions), `GET /versions/{id}/flags`.
   *Done when:* uploading a test blog post returns cited flags within 60 seconds, and every flag passes validation.
-- [ ] **6.9** `[A]` Evaluation script `backend/eval/run_eval.py`: runs every test item, compares the flags with the answer key, and reports recall, precision, retrieval recall (was the expected rule in the retrieved top-k?) and flags without a valid source (must be 0), per category. It writes `docs/eval/<date>.md`.
+- [x] **6.9** `[A]` Evaluation script `backend/eval/run_eval.py`: runs every test item, compares the flags with the answer key, and reports recall, precision, retrieval recall (was the expected rule in the retrieved top-k?) and flags without a valid source (must be 0), per category. It writes `docs/eval/<date>.md`.
 
 ### Milestone 7: Creator and manager workflow
 - [x] **7.1** `[A]` The workflow state machine from Part 1, enforced in the API (an invalid transition returns 409). Every transition is written to `audit_log`.
