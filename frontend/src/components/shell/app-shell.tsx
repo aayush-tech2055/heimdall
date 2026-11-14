@@ -17,7 +17,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             href="/"
             className="focus-visible:ring-ring rounded-md focus-visible:outline-none focus-visible:ring-2"
           >
-            <span className="text-lg font-semibold tracking-tight">Heimdall</span>
+            <span className="text-lg font-semibold tracking-tight">
+              Heimdall
+            </span>
             <span className="text-muted-foreground ml-2 hidden text-sm sm:inline">
               Nothing crosses unchecked.
             </span>

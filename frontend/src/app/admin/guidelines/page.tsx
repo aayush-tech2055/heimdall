@@ -31,7 +31,9 @@ function GuidelinesWorkspace({ me }: { me: Me }) {
     try {
       const [r, rep] = await Promise.all([
         api<Rule[]>(`/brands/${me.brand_id}/rules`),
-        api<VerificationReport | null>(`/brands/${me.brand_id}/guidelines/report`),
+        api<VerificationReport | null>(
+          `/brands/${me.brand_id}/guidelines/report`,
+        ),
       ]);
       setRules(r);
       setReport(rep);
@@ -51,8 +53,12 @@ function GuidelinesWorkspace({ me }: { me: Me }) {
   );
   const highlighted = useMemo(() => {
     const codes = new Set<string>();
-    report?.duplicates.forEach((p) => (codes.add(p.rule_a), codes.add(p.rule_b)));
-    report?.contradictions.forEach((p) => (codes.add(p.rule_a), codes.add(p.rule_b)));
+    report?.duplicates.forEach(
+      (p) => (codes.add(p.rule_a), codes.add(p.rule_b)),
+    );
+    report?.contradictions.forEach(
+      (p) => (codes.add(p.rule_a), codes.add(p.rule_b)),
+    );
     report?.vague.forEach((v) => codes.add(v.rule_code));
     return codes;
   }, [report]);
@@ -67,7 +73,9 @@ function GuidelinesWorkspace({ me }: { me: Me }) {
     try {
       replace(await api<Rule[]>("/rules/approve", { json: { codes, action } }));
       setSelected(new Set());
-      setNotice(`${codes.length} rule${codes.length === 1 ? "" : "s"} ${action}d.`);
+      setNotice(
+        `${codes.length} rule${codes.length === 1 ? "" : "s"} ${action}d.`,
+      );
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Could not update rules");
     }
@@ -75,7 +83,9 @@ function GuidelinesWorkspace({ me }: { me: Me }) {
 
   async function useRewrite(code: string, text: string) {
     try {
-      replace([await api<Rule>(`/rules/${code}`, { method: "PATCH", json: { text } })]);
+      replace([
+        await api<Rule>(`/rules/${code}`, { method: "PATCH", json: { text } }),
+      ]);
       setNotice(`${code} rewritten. Re-run the check to update the report.`);
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Could not update the rule");
@@ -87,16 +97,22 @@ function GuidelinesWorkspace({ me }: { me: Me }) {
     setError(null);
     try {
       setReport(
-        await api<VerificationReport>(`/brands/${me.brand_id}/guidelines/verify`, { method: "POST" }),
+        await api<VerificationReport>(
+          `/brands/${me.brand_id}/guidelines/verify`,
+          { method: "POST" },
+        ),
       );
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Could not re-run the check");
+      setError(
+        e instanceof ApiError ? e.message : "Could not re-run the check",
+      );
     } finally {
       setRechecking(false);
     }
   }
 
-  const counts = (s: Filter) => (rules ?? []).filter((r) => s === "all" || r.status === s).length;
+  const counts = (s: Filter) =>
+    (rules ?? []).filter((r) => s === "all" || r.status === s).length;
 
   return (
     <div className="space-y-6">
@@ -132,23 +148,36 @@ function GuidelinesWorkspace({ me }: { me: Me }) {
           <h2 id="rules-h" className="text-xl font-semibold">
             Rules
           </h2>
-          <Button variant="outline" onClick={recheck} disabled={rechecking || !rules?.length}>
-            {rechecking ? <Loader2 className="animate-spin" aria-hidden /> : <RefreshCw aria-hidden />}
+          <Button
+            variant="outline"
+            onClick={recheck}
+            disabled={rechecking || !rules?.length}
+          >
+            {rechecking ? (
+              <Loader2 className="animate-spin" aria-hidden />
+            ) : (
+              <RefreshCw aria-hidden />
+            )}
             Re-run verification
           </Button>
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)}>
             <TabsList>
-              {(["pending", "approved", "rejected", "all"] as Filter[]).map((f) => (
-                <TabsTrigger key={f} value={f} className="capitalize">
-                  {f} ({counts(f)})
-                </TabsTrigger>
-              ))}
+              {(["pending", "approved", "rejected", "all"] as Filter[]).map(
+                (f) => (
+                  <TabsTrigger key={f} value={f} className="capitalize">
+                    {f} ({counts(f)})
+                  </TabsTrigger>
+                ),
+              )}
             </TabsList>
           </Tabs>
           <div className="flex gap-2">
-            <Button disabled={!selected.size} onClick={() => setStatus([...selected], "approve")}>
+            <Button
+              disabled={!selected.size}
+              onClick={() => setStatus([...selected], "approve")}
+            >
               Approve selected ({selected.size})
             </Button>
             <Button
@@ -161,8 +190,12 @@ function GuidelinesWorkspace({ me }: { me: Me }) {
           </div>
         </div>
         {rules === null ? (
-          <p className="text-muted-foreground flex items-center gap-2" role="status">
-            <Loader2 className="size-4 animate-spin" aria-hidden /> Loading rules…
+          <p
+            className="text-muted-foreground flex items-center gap-2"
+            role="status"
+          >
+            <Loader2 className="size-4 animate-spin" aria-hidden /> Loading
+            rules…
           </p>
         ) : (
           <RuleList
@@ -203,5 +236,9 @@ function GuidelinesWorkspace({ me }: { me: Me }) {
 }
 
 export default function AdminGuidelinesPage() {
-  return <RoleGate roles={["admin"]}>{(me) => <GuidelinesWorkspace me={me} />}</RoleGate>;
+  return (
+    <RoleGate roles={["admin"]}>
+      {(me) => <GuidelinesWorkspace me={me} />}
+    </RoleGate>
+  );
 }

@@ -52,7 +52,8 @@ export interface ImageLocation {
   region?: BBox | null;
 }
 
-export type FlagLocation = TextLocation | PdfLocation | VideoLocation | ImageLocation;
+export type FlagLocation =
+  TextLocation | PdfLocation | VideoLocation | ImageLocation;
 
 /** One issue found in one review unit, citing exactly one source. */
 export interface Flag {
@@ -72,7 +73,10 @@ export interface Flag {
   layer: Layer;
 }
 
-export const isTextLocation = (l: FlagLocation): l is TextLocation => "paragraph" in l;
+export const isTextLocation = (l: FlagLocation): l is TextLocation =>
+  "paragraph" in l;
 export const isPdfLocation = (l: FlagLocation): l is PdfLocation => "page" in l;
-export const isVideoLocation = (l: FlagLocation): l is VideoLocation => "start" in l;
-export const isImageLocation = (l: FlagLocation): l is ImageLocation => "image_id" in l;
+export const isVideoLocation = (l: FlagLocation): l is VideoLocation =>
+  "start" in l;
+export const isImageLocation = (l: FlagLocation): l is ImageLocation =>
+  "image_id" in l;
