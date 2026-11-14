@@ -150,9 +150,9 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 
 ### Milestone 7: Creator and manager workflow
 - [x] **7.1** `[A]` The workflow state machine from Part 1, enforced in the API (an invalid transition returns 409). Every transition is written to `audit_log`.
-- [ ] **7.2** `[A]` Flag actions: `POST /flags/{id}/accept` (apply the fix to the text and create a new version), `/edit`, `/dismiss` (reason required). Re-running the review on the new version keeps resolved flags resolved.
-- [ ] **7.3** `[A]` Manager actions: `POST /contents/{id}/approve`, `/request-changes` (comment required), `POST /flags/{id}/except` (reason required, creates an `approved_exceptions` row).
-- [ ] **7.4** `[A]` Comments: `GET/POST /versions/{id}/comments`, optionally tied to a flag.
+- [x] **7.2** `[A]` Flag actions: `POST /flags/{id}/accept` (apply the fix to the text and create a new version), `/edit`, `/dismiss` (reason required). Re-running the review on the new version keeps resolved flags resolved.
+- [x] **7.3** `[A]` Manager actions: `POST /contents/{id}/approve`, `/request-changes` (comment required), `POST /flags/{id}/except` (reason required, creates an `approved_exceptions` row).
+- [x] **7.4** `[A]` Comments: `GET/POST /versions/{id}/comments`, optionally tied to a flag.
 - [ ] **7.5** `[V]` Sign-in with Supabase Auth, and routing by role.
 - [ ] **7.6** `[V]` Creator upload screen: paste text or upload a file, choose a brand, and see the processing state.
 - [ ] **7.7** `[V]` Creator review screen: the content with highlighted evidence spans (colour by severity), a flag list beside it (category, severity, source chip that shows the rule or fact text on hover, explanation, suggested fix), Accept / Edit / Dismiss-with-reason, and "Submit for approval" once no high-severity flags are open (or each one has a reason).
