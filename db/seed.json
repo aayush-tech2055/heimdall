@@ -1,0 +1,17 @@
+{
+  "brand": {
+    "name": "AcmeLearn",
+    "slug": "acmelearn"
+  },
+  "settings": {
+    "confidential_terms": ["Project Falcon", "AcmeLearn Labs"],
+    "claim_policy_enabled": true,
+    "readability_target": 60
+  },
+  "users": [
+    { "email": "admin@acmelearn.example", "role": "admin", "display_name": "Ada Admin" },
+    { "email": "manager@acmelearn.example", "role": "manager", "display_name": "Mona Manager" },
+    { "email": "creator@acmelearn.example", "role": "creator", "display_name": "Cara Creator" },
+    { "email": "creator2@acmelearn.example", "role": "creator", "display_name": "Cole Creator" }
+  ]
+}
