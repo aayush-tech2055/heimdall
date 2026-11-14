@@ -98,12 +98,13 @@ Guidance for Claude Code in this repo. **Sources of truth:** `TASKS.md` (Part 1 
 6. **Add a line to `docs/BUILD_LOG.md` for each working session:** date, who, what was done, and the AI tools used (Claude Code, model).
 7. **Manual steps go to the user.** When a step needs a human (creating accounts, API keys, the Supabase project, the GitHub remote, deploys, user testing, review of test data), stop and give exact numbered instructions. Don't guess or work around it.
 8. **No scope creep.** Don't add features that aren't in TASKS.md without agreeing first. If time is short, follow the cut order in TASKS.md. Never cut citation validation, the creator → manager loop, redaction or the evaluation report.
-9. Owner tags (`[A]`, `[V]`, `[A+V]`) record who is responsible. Claude may implement any task, and the BUILD_LOG records which team member drove it.
+9. Owner tags (`[A]`, `[V]`, `[A+V]`) record who is responsible. Claude implements every task, including `[V]` and `[A+V]` ones (agreed 2026-11-14), and the BUILD_LOG records which team member drove it. Steps only a human can do (user testing, teammate spot checks, accounts) still go to the user.
 
 ## Git workflow (keep the repo clean; judges read it)
 1. **Never commit directly to `main`.** `main` always builds and passes CI.
 2. **One branch per feature**, created from an up-to-date `main`: `feature/m<N>-<slug>` for a milestone (e.g. `feature/m2-database`, `feature/m3-ai-layer`). Split a large milestone into several feature branches when it helps (e.g. `feature/m6-rule-engine`, `feature/m6-judge`). Other prefixes: `fix/<topic>`, `docs/<topic>`, `chore/<topic>`, `data/<topic>` (test data).
 3. **One commit per task** on the branch: `<task id>: <summary>` (e.g. `2.1: database schema`). Non-task commits use `docs: …`, `fix: …`, `chore: …`. The TASKS.md tick, Notion update and BUILD_LOG line go in the same branch.
 4. **No AI attribution in git.** Never add `Co-Authored-By: Claude …` or any Claude/Anthropic trailer to commits, merge commits or PR descriptions. AI use is disclosed in `docs/BUILD_LOG.md` and the README instead.
+   **Credit both team members:** every commit and merge commit is authored by the local git user (`aayush-tech2055`) and ends with the trailer `Co-authored-by: Avaneja Rikhta <213068188+avaneja@users.noreply.github.com>` (GitHub user `avaneja`; the noreply address credits them without exposing an email).
 5. **Merging:** push the branch, wait for CI to pass on it, then merge into `main` with `git merge --no-ff <branch>` and a message `Merge <branch>: <what it delivers>`, push `main`, and delete the branch locally and on GitHub. (If the team switches to GitHub pull requests, use "Create a merge commit", not squash or rebase.)
 6. **Never rewrite or force-push `main`** without the user asking for it explicitly.
