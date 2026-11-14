@@ -66,6 +66,7 @@ class BrandContext:
     exempt_terms: list[str] = field(default_factory=list)  # brand and product names
     readability_target: float | None = None
     assets: list[str] = field(default_factory=list)  # asset library descriptions (layer d)
+    disclaimers: list[str] = field(default_factory=list)  # approved disclaimer texts (fixes)
 
 
 @dataclass
@@ -86,7 +87,8 @@ def load_brand_context(conn: psycopg.Connection, brand_id: UUID) -> BrandContext
         (brand_id,),
     ).fetchone()
     assets = conn.execute(
-        "select kind, name, description from public.assets where brand_id = %s order by name",
+        "select kind, name, description, text_content from public.assets where brand_id = %s "
+        "order by name",
         (brand_id,),
     ).fetchall()
     exceptions = conn.execute(
@@ -106,7 +108,8 @@ def load_brand_context(conn: psycopg.Connection, brand_id: UUID) -> BrandContext
         exceptions=[ApprovedException(s, e) for s, e in exceptions],
         exempt_terms=[n[0] for n in names],
         readability_target=settings[2] if settings else None,
-        assets=[f"{kind}: {name}. {desc}".strip() for kind, name, desc in assets],
+        assets=[f"{kind}: {name}. {desc}".strip() for kind, name, desc, _ in assets],
+        disclaimers=[text for kind, _, _, text in assets if kind == "disclaimer" and text],
     )
 
 
@@ -176,6 +179,12 @@ def review_text(
         ]  # fmt: skip
         judge_result, claims_result, visual = judged.result(), claimed.result(), seen.result()
 
+    for c in coded:  # a missing required phrase: suggest the approved disclaimer that has it
+        if c.allow_empty_evidence and c.suggested_fix:
+            match = next((d for d in ctx.disclaimers
+                          if normalise(c.suggested_fix) in normalise(d)), None)  # fmt: skip
+            if match:
+                c.suggested_fix = match
     required = [t for r in ctx.rules if r.det_kind == "required_phrase" for t in r.terms]
     validated = validate(
         [*coded, *judge_result.candidates, *claims_result.candidates, *visual],

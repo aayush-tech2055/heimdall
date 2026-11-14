@@ -141,6 +141,9 @@ create policy approved_exceptions_manager_delete on public.approved_exceptions
 create policy guideline_reports_select on public.guideline_reports
   for select to authenticated using (private.has_brand_role(brand_id, '{admin,manager}'));
 
+create policy fact_changes_select on public.fact_changes
+  for select to authenticated using (private.has_brand_role(brand_id, '{admin}'));
+
 -- ---------------------------------------------------------------------------
 -- Content and review results: creators see their own, managers/admins their brand
 -- ---------------------------------------------------------------------------

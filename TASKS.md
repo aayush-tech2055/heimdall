@@ -188,10 +188,10 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 - [x] **11.6** `[V]` Video player with flags on a timeline; clicking a flag jumps to its timestamp.
 
 ### Milestone 12: Round 3, improvement 2: website facts and asset library
-- [ ] **12.1** `[A]` Scraper: Playwright for a list of company URLs, cleaned text per page.
-- [ ] **12.2** `[A]` Fact extraction from pages, then a **diff in code** against approved facts by (entity, attribute) with normalised values: `new` or `changed` with old value → new value.
-- [ ] **12.3** `[A]` Approval: approved changes are written; changed facts **keep their fact code** so old citations stay valid.
-- [ ] **12.4** `[A]` Assets: upload logos, disclaimers, product descriptions and templates with a description; used by layer (d) and by fixes (a missing disclaimer → insert the approved text).
+- [x] **12.1** `[A]` Scraper: Playwright for a list of company URLs, cleaned text per page.
+- [x] **12.2** `[A]` Fact extraction from pages, then a **diff in code** against approved facts by (entity, attribute) with normalised values: `new` or `changed` with old value → new value.
+- [x] **12.3** `[A]` Approval: approved changes are written; changed facts **keep their fact code** so old citations stay valid.
+- [x] **12.4** `[A]` Assets: upload logos, disclaimers, product descriptions and templates with a description; used by layer (d) and by fixes (a missing disclaimer → insert the approved text).
 - [ ] **12.5** `[V]` Admin screens: "Check website" with a reviewable list of changes (accept or reject each), and an asset library.
 
 ### Milestone 13: Round 3, improvement 3: insights and guideline health

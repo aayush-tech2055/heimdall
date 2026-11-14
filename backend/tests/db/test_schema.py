@@ -18,7 +18,7 @@ pytestmark = pytest.mark.db
 TABLES = {
     "brands", "profiles", "brand_settings", "rules", "facts", "assets", "approved_exceptions",
     "contents", "content_versions", "review_units", "flags", "dropped_flags", "comments",
-    "audit_log", "ai_calls", "guideline_reports",
+    "audit_log", "ai_calls", "guideline_reports", "fact_changes",
 }  # fmt: skip
 
 

@@ -14,12 +14,17 @@ dependencies = [
     "pyjwt[crypto]>=2.8",
     "python-multipart>=0.0.9",
     "certifi>=2024.2",
+    "beautifulsoup4>=4.12",
 ]
 
 [project.optional-dependencies]
 # Optional: names and places are redacted too (then: python -m spacy download en_core_web_sm)
 privacy = [
     "presidio-analyzer>=2.2",
+]
+# Optional: render JavaScript-heavy pages in the website check (then: playwright install chromium)
+browser = [
+    "playwright>=1.40",
 ]
 dev = [
     "pytest>=8.2",
