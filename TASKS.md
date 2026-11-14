@@ -86,19 +86,19 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 ## Part 2: Tasks
 
 ### Milestone 0: Foundations
-- [ ] **0.1** `[A]` Initialise the git repo and GitHub remote, and create the folder layout from the README (`frontend/`, `backend/app/{api,review,rag,llm,processing,models}`, `backend/tests/`, `db/`, `test-data/`, `docs/`). Add `.gitignore` (Python, Node, `.env*`, cache files, `.DS_Store`).
+- [x] **0.1** `[A]` Initialise the git repo and GitHub remote, and create the folder layout from the README (`frontend/`, `backend/app/{api,review,rag,llm,processing,models}`, `backend/tests/`, `db/`, `test-data/`, `docs/`). Add `.gitignore` (Python, Node, `.env*`, cache files, `.DS_Store`).
   *Done when:* the repo is on GitHub with the structure and README; the first commit is dated inside the build window.
-- [ ] **0.2** `[A]` Backend skeleton: FastAPI app, `pyproject.toml` or `requirements.txt`, a settings module reading `.env`, `GET /health`, and pytest + ruff set up.
+- [x] **0.2** `[A]` Backend skeleton: FastAPI app, `pyproject.toml` or `requirements.txt`, a settings module reading `.env`, `GET /health`, and pytest + ruff set up.
   *Done when:* `uvicorn` starts, `/health` returns 200, and `pytest` runs.
-- [ ] **0.3** `[V]` Frontend skeleton: Next.js (App Router, TypeScript), Tailwind, shadcn/ui, a layout shell and an empty page for each role.
+- [x] **0.3** `[V]` Frontend skeleton: Next.js (App Router, TypeScript), Tailwind, shadcn/ui, a layout shell and an empty page for each role.
   *Done when:* `npm run dev` shows the shell with navigation to the admin, creator and manager pages.
-- [ ] **0.4** `[A]` Create the Supabase project, enable `vector`, and get the Gemini, Groq and OpenRouter API keys. Write `backend/.env.example` and `frontend/.env.example`.
+- [x] **0.4** `[A]` Create the Supabase project, enable `vector`, and get the Gemini, Groq and OpenRouter API keys. Write `backend/.env.example` and `frontend/.env.example`.
   *Done when:* both example env files list every variable, and real values sit only in local `.env` files.
-- [ ] **0.5** `[A+V]` Freeze the flag contract: a Pydantic `Flag` model in `backend/app/models/` and a matching TypeScript type in `frontend/`.
+- [x] **0.5** `[A+V]` Freeze the flag contract: a Pydantic `Flag` model in `backend/app/models/` and a matching TypeScript type in `frontend/`.
   *Done when:* both exist, match Part 1 exactly, and are committed.
-- [ ] **0.6** `[A]` CI: a GitHub Actions workflow that runs ruff and pytest (backend) and lint + typecheck (frontend) on every push.
+- [x] **0.6** `[A]` CI: a GitHub Actions workflow that runs ruff and pytest (backend) and lint + typecheck (frontend) on every push.
   *Done when:* CI is green on `main`.
-- [ ] **0.7** `[A+V]` Start `docs/BUILD_LOG.md`: date, who, what was done, and any AI tools or templates used. Update it every working day (needed for the contribution and disclosure requirements).
+- [x] **0.7** `[A+V]` Start `docs/BUILD_LOG.md`: date, who, what was done, and any AI tools or templates used. Update it every working day (needed for the contribution and disclosure requirements).
 
 ### Milestone 1: Test data (starts in parallel with M0)
 - [ ] **1.1** `[V]` Create 2 fictional brands in `test-data/brands/<brand>/`: a brand guideline (a 3–5 page PDF plus the same content as `.md`) covering tone, terminology, claims, visuals, accessibility and legal, including **2 deliberately vague rules, 1 contradiction and 1 duplicate** (to test guideline verification).
