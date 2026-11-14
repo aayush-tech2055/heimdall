@@ -98,7 +98,7 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
   *Done when:* both exist, match Part 1 exactly, and are committed.
 - [ ] **0.6** `[A]` CI: a GitHub Actions workflow that runs ruff and pytest (backend) and lint + typecheck (frontend) on every push.
   *Done when:* CI is green on `main`.
-- [ ] **0.7** `[A+V]` Start `docs/BUILD_LOG.md`: date, who, what was done, and any AI tools or templates used. Update it every working day (needed for the contribution and disclosure requirements).
+- [x] **0.7** `[A+V]` Start `docs/BUILD_LOG.md`: date, who, what was done, and any AI tools or templates used. Update it every working day (needed for the contribution and disclosure requirements).
 
 ### Milestone 1: Test data (starts in parallel with M0)
 - [ ] **1.1** `[V]` Create 2 fictional brands in `test-data/brands/<brand>/`: a brand guideline (a 3–5 page PDF plus the same content as `.md`) covering tone, terminology, claims, visuals, accessibility and legal, including **2 deliberately vague rules, 1 contradiction and 1 duplicate** (to test guideline verification).
