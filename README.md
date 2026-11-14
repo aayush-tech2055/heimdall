@@ -273,6 +273,7 @@ npm run lint && npm run typecheck
 
 ```bash
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/schema.sql    # tables, indexes, RLS switched on
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/policies.sql  # who can read and write what
 cd backend
 HEIMDALL_DB_TESTS=1 .venv/bin/pytest tests/db               # opt-in; each test is rolled back
 ```
