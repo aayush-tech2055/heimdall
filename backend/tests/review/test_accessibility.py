@@ -76,3 +76,31 @@ def test_hard_units_are_flagged_with_their_hardest_sentence():
     assert [(f.unit_id, f.source_id, f.severity) for f in flags] == [("u2", "R-022", "low")]
     assert flags[0].evidence.startswith("Notwithstanding")
     assert check_readability(segment_text(hard), RULES, target=None) == []
+
+
+def test_caption_checks_use_a_video_caption_rule_not_social_media_captions():
+    from app.review.accessibility import check_captions, find_rule
+    from app.review.segment import Unit
+
+    social = rule("R-030", "Social media captions must not mention prices.", "legal")
+    video = rule("R-031", "Every video needs captions that match what is said.")
+    assert find_rule([social], "captions") is None
+    assert find_rule([social, video], "captions") is video
+    speech = [
+        Unit(
+            "s1",
+            0,
+            "Learn Python with AcmeLearn and build your first project today.",
+            {"start": 0.0, "end": 6.0, "source": "speech"},
+        )
+    ]
+    missing = check_captions(speech, None, [social, video])
+    assert [(f.source_id, f.evidence, f.allow_empty_evidence) for f in missing] == [
+        ("R-031", "", True)
+    ]
+    good = [(0.0, 6.0, "Learn Python with AcmeLearn and build your first project today.")]
+    assert check_captions(speech, good, [video]) == []
+    bad = [(0.0, 6.0, "Hello there.")]
+    (flag,) = check_captions(speech, bad, [video])
+    assert "cover only" in flag.explanation
+    assert check_captions(speech, None, [social]) == []

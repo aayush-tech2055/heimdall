@@ -39,6 +39,7 @@ Brewbird Coffee roasts single-estate Indian coffee in small batches and delivers
 - Product photos must show the real packaging; never show a competitor's cup or bag.
 - Every image needs alt text that describes the product and the setting.
 - Never put text over a busy photo; text must have a contrast ratio of at least 4.5:1.
+- Every video must have captions that match what is said.
 - Never refer to coffee as a drug or an addiction.
 
 <!-- page -->

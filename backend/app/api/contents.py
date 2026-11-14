@@ -1,9 +1,11 @@
 """Content API (task 6.8): upload, status, versions and flags."""
 
+import tempfile
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
 from functools import partial
+from pathlib import Path
 from typing import Annotated
 from uuid import UUID
 
@@ -28,6 +30,9 @@ from app.audit import audit
 from app.models.contents import ContentDetail, ContentStatus, ContentSummary, VersionFlags
 from app.processing.documents import DocumentError
 from app.processing.pdf_content import parse_pdf_content
+from app.processing.video import MAX_SECONDS as MAX_VIDEO_SECONDS
+from app.processing.video import VideoError
+from app.processing.video import duration as video_duration
 from app.review.content_store import (
     NotFoundError,
     add_version,
@@ -68,6 +73,12 @@ Runner = Annotated[ReviewRunner, Depends(review_runner)]
 
 MAX_PDF_BYTES = 20 * 1024 * 1024
 MAX_IMAGE_BYTES = 10 * 1024 * 1024
+MAX_VIDEO_BYTES = 20 * 1024 * 1024
+MAX_CAPTION_BYTES = 512 * 1024
+SUFFIXES = {
+    "application/pdf": "pdf", "image/png": "png", "image/jpeg": "jpg",
+    "video/mp4": "mp4", "video/quicktime": "mov", "video/webm": "webm",
+}  # fmt: skip
 IMAGE_TYPES = {b"\x89PNG": "image/png", b"\xff\xd8\xff": "image/jpeg"}
 
 
@@ -93,6 +104,12 @@ def _read_upload(file: UploadFile | None, text: str | None) -> Upload:
             except DocumentError as exc:
                 raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(exc)) from exc
             return Upload("pdf", pdf.text, data, "application/pdf", file.filename)
+        video = _video_mime(data)
+        if video:
+            if len(data) > MAX_VIDEO_BYTES:
+                raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "Video is over 20 MB")
+            _check_video_length(data)
+            return Upload("video", "", data, video, file.filename)
         mime = next((m for magic, m in IMAGE_TYPES.items() if data.startswith(magic)), None)
         if mime:
             if len(data) > MAX_IMAGE_BYTES:
@@ -118,6 +135,41 @@ def _read_upload(file: UploadFile | None, text: str | None) -> Upload:
     return Upload("text", text)
 
 
+def _video_mime(data: bytes) -> str | None:
+    if data[4:8] == b"ftyp":
+        return "video/quicktime" if data[8:10] == b"qt" else "video/mp4"
+    if data.startswith(b"\x1a\x45\xdf\xa3"):
+        return "video/webm"
+    return None
+
+
+def _check_video_length(data: bytes) -> None:
+    """Refuse clips over 60 s at upload time (decision: clips <= 60 s)."""
+    with tempfile.NamedTemporaryFile() as f:
+        f.write(data)
+        f.flush()
+        try:
+            seconds = video_duration(Path(f.name))
+        except VideoError as exc:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(exc)) from exc
+    if seconds > MAX_VIDEO_SECONDS + 0.5:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            f"The clip is {seconds:.0f} s long; videos can be at most {MAX_VIDEO_SECONDS:.0f} s",
+        )
+
+
+def _read_captions(captions: UploadFile | None) -> bytes | None:
+    if captions is None or not captions.filename:
+        return None
+    if not captions.filename.lower().endswith((".srt", ".vtt")):
+        raise HTTPException(status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, "Captions must be .srt or .vtt")
+    data = captions.file.read(MAX_CAPTION_BYTES + 1)
+    if len(data) > MAX_CAPTION_BYTES:
+        raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "Captions file is too large")
+    return data
+
+
 def storage_dep() -> Storage:
     return get_storage()
 
@@ -127,20 +179,23 @@ StorageDep = Annotated[Storage, Depends(storage_dep)]
 
 def _store_file(
     conn: psycopg.Connection, store: Storage, brand_id: UUID, content_id: UUID,
-    version_id: UUID, up: Upload, alt_text: str | None,
+    version_id: UUID, up: Upload, alt_text: str | None, captions: bytes | None = None,
 ) -> None:  # fmt: skip
     if up.data is None:
         return
-    suffix = {"application/pdf": "pdf", "image/png": "png", "image/jpeg": "jpg"}[up.mime]
+    suffix = SUFFIXES[up.mime]
     path = f"{brand_id}/{content_id}/{version_id}.{suffix}"
+    captions_path = f"{brand_id}/{content_id}/{version_id}.captions.vtt" if captions else None
     try:
         store.upload(path, up.data, up.mime)
+        if captions:
+            store.upload(captions_path, captions, "text/vtt")
     except StorageError as exc:
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, str(exc)) from exc
     conn.execute(
-        "update public.content_versions set storage_path = %s, mime_type = %s, alt_text = %s "
-        "where id = %s",
-        (path, up.mime, (alt_text or "").strip() or None, version_id),
+        "update public.content_versions set storage_path = %s, mime_type = %s, alt_text = %s, "
+        "captions_path = %s where id = %s",
+        (path, up.mime, (alt_text or "").strip() or None, captions_path, version_id),
     )
 
 
@@ -155,13 +210,16 @@ def upload_content(
     text: Annotated[str | None, Form()] = None,
     file: Annotated[UploadFile | None, File()] = None,
     alt_text: Annotated[str | None, Form(max_length=1000)] = None,
+    captions: Annotated[UploadFile | None, File()] = None,
 ) -> ContentDetail:
-    """Upload text, a PDF or an image → new content, version 1 → review in the background."""
+    """Upload text, a PDF, an image or a short video → new content, version 1 → review in the
+    background."""
     up = _read_upload(file, text)
+    caption_bytes = _read_captions(captions) if up.fmt == "video" else None
     content_id, version_id = create_content(
         conn, user, title=title.strip(), fmt=up.fmt, text=up.text
     )
-    _store_file(conn, store, user.brand_id, content_id, version_id, up, alt_text)
+    _store_file(conn, store, user.brand_id, content_id, version_id, up, alt_text, caption_bytes)
     audit(conn, brand_id=user.brand_id, actor_id=user.id, action="content.create",
           entity_type="content", entity_id=str(content_id),
           after={"status": "draft", "format": up.fmt})  # fmt: skip
@@ -182,6 +240,7 @@ def upload_version(
     text: Annotated[str | None, Form()] = None,
     file: Annotated[UploadFile | None, File()] = None,
     alt_text: Annotated[str | None, Form(max_length=1000)] = None,
+    captions: Annotated[UploadFile | None, File()] = None,
 ) -> ContentDetail:
     """A corrected text or file as a new version of the same content (checked again)."""
     content = _content_or_404(conn, user, content_id)
@@ -198,7 +257,8 @@ def upload_version(
     except InvalidTransitionError as exc:
         raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
     version_id = add_version(conn, user, content_id, up.text)
-    _store_file(conn, store, user.brand_id, content_id, version_id, up, alt_text)
+    caption_bytes = _read_captions(captions) if up.fmt == "video" else None
+    _store_file(conn, store, user.brand_id, content_id, version_id, up, alt_text, caption_bytes)
     conn.commit()
     background.add_task(partial(run, version_id, user.id))
     return _content_or_404(conn, user, content_id)

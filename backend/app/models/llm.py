@@ -114,6 +114,10 @@ class VisualCheck(_Out):
     flags: list[VisualFlag]
 
 
+class ScreenText(_Out):
+    text: str = Field(description="All text visible in the frame, in reading order; '' if none")
+
+
 # --- Website facts (task 12.2) --------------------------------------------------------------
 
 

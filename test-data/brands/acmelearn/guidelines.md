@@ -41,6 +41,7 @@ AcmeLearn is an online learning platform that helps people across India build pr
 - Every image must have alt text that describes what the image shows.
 - Write so that a 14-year-old can follow: keep sentences under 25 words and explain any technical term the first time you use it.
 - Use inclusive, gender-neutral language: write "everyone" or "folks", not "guys".
+- Every video must have captions that match what is said.
 
 <!-- page -->
 

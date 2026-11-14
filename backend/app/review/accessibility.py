@@ -25,6 +25,8 @@ MIN_WORDS_FOR_READABILITY = 20
 _RULE_WORDS = {
     "contrast": ("contrast",),
     "alt": ("alt text", "alt-text", "alternative text"),
+    # Video captions, not "social media captions": needs a word about video, speech or sound.
+    "captions": ("subtitle", "closed caption"),
     "readability": ("reading level", "readab", "year-old", "plain language", "sentences under",
                     "easy to read", "everyday words"),
 }  # fmt: skip
@@ -54,7 +56,16 @@ def find_rule(rules: list[Rule], kind: str) -> Rule | None:
     """The brand's approved rule that a code check enforces, by its wording."""
     words = _RULE_WORDS[kind]
     for r in rules:
-        if r.status == "approved" and any(w in r.text.lower() for w in words):
+        text = r.text.lower()
+        if r.status != "approved":
+            continue
+        if any(w in text for w in words):
+            return r
+        if (
+            kind == "captions"
+            and "caption" in text
+            and any(w in text for w in ("video", "speech", "spoken", "said", "audio", "sound"))
+        ):
             return r
     return None
 
@@ -131,4 +142,45 @@ def check_readability(
                          "Use shorter sentences and everyday words."),
             suggested_fix=None, confidence=0.9, layer="rules",
         ))  # fmt: skip
+    return out
+
+
+def _words(text: str) -> set[str]:
+    return set(re.findall(r"[a-z0-9']+", text.lower()))
+
+
+def check_captions(
+    speech: list[Unit], cues: list[tuple[float, float, str]] | None, rules: list[Rule]
+) -> list[Candidate]:
+    """Task 11.5: captions exist (`cues` is None when no captions file was given) and match
+    the speech: in each transcript unit's time window, at least 60% of the spoken words must
+    appear in the captions."""
+    rule = find_rule(rules, "captions")
+    if rule is None or not speech:
+        return []
+    if cues is None:
+        first = speech[0]
+        return [Candidate(
+            unit_id=first.unit_id, source_type="rule", source_id=rule.rule_code,
+            category="accessibility", severity="medium", evidence="",
+            explanation="This video has speech but no captions file.",
+            suggested_fix="Upload captions (SRT or WebVTT) that match what is said.",
+            confidence=1.0, layer="rules", allow_empty_evidence=True, span=(0, 0),
+        )]  # fmt: skip
+    out: list[Candidate] = []
+    for u in speech:
+        start, end = u.location["start"], u.location["end"]
+        shown = " ".join(t for s, e, t in cues if s < end and e > start)
+        spoken = _words(u.text)
+        if len(spoken) < 4:
+            continue
+        coverage = len(spoken & _words(shown)) / len(spoken)
+        if coverage < 0.6:
+            out.append(Candidate(
+                unit_id=u.unit_id, source_type="rule", source_id=rule.rule_code,
+                category="accessibility", severity="medium", evidence=u.text,
+                explanation=(f"The captions here cover only {coverage:.0%} of what is said"
+                             + (f" (captions: “{shown[:120]}”)." if shown else " (no captions).")),
+                suggested_fix=None, confidence=0.9, layer="rules", span=(0, len(u.text)),
+            ))  # fmt: skip
     return out

@@ -180,11 +180,11 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 - [ ] **10.6** `[A+V]` Name the **three Round 3 improvements** in the submission (video review; website import + asset library; insights + guideline health with measured accuracy gains).
 
 ### Milestone 11: Round 3, improvement 1: video
-- [ ] **11.1** `[A]` FFmpeg: extract audio, and sample frames every 2 s (clips up to 60 s).
-- [ ] **11.2** `[A]` Speech-to-text with Groq Whisper (segments with timestamps), then units in ~15 s windows.
-- [ ] **11.3** `[A]` OCR of on-screen text per frame, with timestamps (deduplicate repeated text).
-- [ ] **11.4** `[A]` Run the existing layers on transcript and OCR units, and layer (d) on frames; every flag has `{start, end}`.
-- [ ] **11.5** `[A]` Caption checks: captions exist, and caption text matches the transcript.
+- [x] **11.1** `[A]` FFmpeg: extract audio, and sample frames every 2 s (clips up to 60 s).
+- [x] **11.2** `[A]` Speech-to-text with Groq Whisper (segments with timestamps), then units in ~15 s windows.
+- [x] **11.3** `[A]` OCR of on-screen text per frame, with timestamps (deduplicate repeated text).
+- [x] **11.4** `[A]` Run the existing layers on transcript and OCR units, and layer (d) on frames; every flag has `{start, end}`.
+- [x] **11.5** `[A]` Caption checks: captions exist, and caption text matches the transcript.
 - [ ] **11.6** `[V]` Video player with flags on a timeline; clicking a flag jumps to its timestamp.
 
 ### Milestone 12: Round 3, improvement 2: website facts and asset library

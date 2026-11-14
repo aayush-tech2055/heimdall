@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 
 from pydantic import ValidationError
 
-from app.models.flag import Flag, ImageLocation, PdfLocation, TextLocation
+from app.models.flag import Flag, ImageLocation, PdfLocation, TextLocation, VideoLocation
 from app.processing.redaction import Redacted
 from app.review.candidates import Candidate
 from app.review.segment import Unit
@@ -62,10 +62,12 @@ def _location(
 ) -> tuple[TextLocation | PdfLocation | ImageLocation, tuple]:
     """The flag location for the unit's format, and a sort key (reading order)."""
     loc = unit.location
+    if "start" in loc:  # video: transcript, on-screen text or a frame
+        return VideoLocation(start=loc["start"], end=loc["end"]), (loc["start"], unit.position)
     if "image_id" in loc:
         region = c.extra.get("region")
         region = tuple(region) if region and len(region) == 4 else None
-        return ImageLocation(image_id=loc["image_id"], region=region), (unit.position, 0)
+        return ImageLocation(image_id=loc["image_id"], region=region), (unit.position, 0.0)
     if "page" in loc:
         box = evidence_box(unit.unit_id, *span) if evidence_box and span[1] > span[0] else None
         return PdfLocation(page=loc["page"], bbox=tuple(box or loc["bbox"])), (

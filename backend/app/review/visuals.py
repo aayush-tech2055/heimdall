@@ -27,6 +27,8 @@ class ImageInput:
     page: int | None = None
     bbox: tuple[float, float, float, float] | None = None
     alt_text: str | None = None
+    start: float | None = None  # video frames: the 2-second window they stand for
+    end: float | None = None
 
 
 def visual_rules(rules: list[Rule]) -> list[Rule]:
