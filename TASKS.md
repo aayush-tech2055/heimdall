@@ -113,7 +113,7 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
   *Done when:* the schema runs cleanly on a fresh Supabase project.
 - [x] **2.2** `[A]` Row-level security policies: creators see only their own content, managers and admins see their brand, and only admins write rules and facts.
   *Done when:* a test with two users confirms a creator cannot read another creator's content.
-- [ ] **2.3** `[A]` A seed script that loads one test brand plus users with each role.
+- [x] **2.3** `[A]` A seed script that loads one test brand plus users with each role.
 
 ### Milestone 3: AI layer
 - [ ] **3.1** `[A]` `llm/` module: the `LLMClient.json()` behaviour from decisions 22–26 (Gemini, Groq and OpenRouter providers; schema in the prompt; strip code fences; repair once; fallback; SQLite cache; per-call logging to `ai_calls`).

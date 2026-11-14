@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     supabase_service_role_key: str = ""
     supabase_jwt_secret: str = ""
 
+    # Seed script (task 2.3): password for the seeded demo users
+    seed_user_password: str = ""
+
     # AI providers (decision 23: tried in this order, providers without a key are skipped)
     llm_provider_order: str = "gemini,groq,openrouter"
     gemini_api_key: str = ""

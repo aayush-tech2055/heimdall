@@ -275,8 +275,11 @@ npm run lint && npm run typecheck
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/schema.sql    # tables, indexes, RLS switched on
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/policies.sql  # who can read and write what
 cd backend
+.venv/bin/python -m scripts.seed                            # AcmeLearn + one user per role (db/seed.json)
 HEIMDALL_DB_TESTS=1 .venv/bin/pytest tests/db               # opt-in; each test is rolled back
 ```
+
+The seed needs `SEED_USER_PASSWORD` in `backend/.env`; every seeded user (`admin@`, `manager@`, `creator@`, `creator2@acmelearn.example`) signs in with it. It is safe to re-run.
 
 Every variable is listed, with empty values, in `backend/.env.example` and `frontend/.env.example`.
 
