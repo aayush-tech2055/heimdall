@@ -86,7 +86,7 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 ## Part 2: Tasks
 
 ### Milestone 0: Foundations
-- [ ] **0.1** `[A]` Initialise the git repo and GitHub remote, and create the folder layout from the README (`frontend/`, `backend/app/{api,review,rag,llm,processing,models}`, `backend/tests/`, `db/`, `test-data/`, `docs/`). Add `.gitignore` (Python, Node, `.env*`, cache files, `.DS_Store`).
+- [x] **0.1** `[A]` Initialise the git repo and GitHub remote, and create the folder layout from the README (`frontend/`, `backend/app/{api,review,rag,llm,processing,models}`, `backend/tests/`, `db/`, `test-data/`, `docs/`). Add `.gitignore` (Python, Node, `.env*`, cache files, `.DS_Store`).
   *Done when:* the repo is on GitHub with the structure and README; the first commit is dated inside the build window.
 - [x] **0.2** `[A]` Backend skeleton: FastAPI app, `pyproject.toml` or `requirements.txt`, a settings module reading `.env`, `GET /health`, and pytest + ruff set up.
   *Done when:* `uvicorn` starts, `/health` returns 200, and `pytest` runs.
@@ -96,7 +96,7 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
   *Done when:* both example env files list every variable, and real values sit only in local `.env` files.
 - [x] **0.5** `[A+V]` Freeze the flag contract: a Pydantic `Flag` model in `backend/app/models/` and a matching TypeScript type in `frontend/`.
   *Done when:* both exist, match Part 1 exactly, and are committed.
-- [ ] **0.6** `[A]` CI: a GitHub Actions workflow that runs ruff and pytest (backend) and lint + typecheck (frontend) on every push.
+- [x] **0.6** `[A]` CI: a GitHub Actions workflow that runs ruff and pytest (backend) and lint + typecheck (frontend) on every push.
   *Done when:* CI is green on `main`.
 - [x] **0.7** `[A+V]` Start `docs/BUILD_LOG.md`: date, who, what was done, and any AI tools or templates used. Update it every working day (needed for the contribution and disclosure requirements).
 

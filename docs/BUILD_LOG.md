@@ -6,3 +6,4 @@ This log is the record for the contribution and AI-disclosure requirements.
 | Date | Who | What was done | AI tools / templates |
 |------|-----|---------------|----------------------|
 | 2026-11-14 | Aayush `[A]` | M0 foundations: git repo and folder layout (0.1), FastAPI skeleton with settings, `/health`, pytest + ruff (0.2), Next.js shell with admin/creator/manager pages (0.3), `.env.example` files (0.4), frozen `Flag` contract in Pydantic + TypeScript with a sync test (0.5), GitHub Actions CI workflow (0.6), this log (0.7). | Claude Code (Claude Opus 5.5); templates: `create-next-app@15.5.4`, `shadcn@3.3.1` |
+| 2026-11-14 | Aayush `[A]` | Pushed to GitHub (`aayush-tech2055/heimdall`); first CI run green on `main` (0.1, 0.6). Created the Notion build tracker (81 tasks from TASKS.md) and recorded the tracking rule in CLAUDE.md. | Claude Code (Claude Opus 5.5); Notion MCP |
