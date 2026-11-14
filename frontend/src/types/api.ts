@@ -1,6 +1,6 @@
 /** API shapes (mirror backend/app/models). The Flag contract lives in ./flag.ts. */
 
-import type { Category } from "@/types/flag";
+import type { Category, Flag } from "@/types/flag";
 
 export type Role = "admin" | "creator" | "manager";
 
@@ -81,3 +81,84 @@ export type FactInput = Omit<
   Fact,
   "fact_code" | "status" | "expiry" | "updated_at"
 >;
+
+export type ContentStatus =
+  | "draft"
+  | "checking"
+  | "creator_review"
+  | "manager_review"
+  | "changes_requested"
+  | "approved";
+export type FlagStatus =
+  "open" | "accepted" | "edited" | "dismissed" | "excepted";
+
+export interface FlagCounts {
+  open: number;
+  open_high: number;
+  resolved: number;
+}
+
+export interface ContentSummary {
+  id: string;
+  title: string;
+  format: string;
+  status: ContentStatus;
+  creator_id: string;
+  creator_name: string | null;
+  created_at: string;
+  updated_at: string;
+  latest_version_id: string | null;
+  latest_version_number: number | null;
+  counts: FlagCounts;
+}
+
+export interface VersionInfo {
+  id: string;
+  version_number: number;
+  created_at: string;
+  review_started_at: string | null;
+  review_finished_at: string | null;
+  review_error: string | null;
+  counts: FlagCounts;
+}
+
+export interface ContentDetail extends ContentSummary {
+  versions: VersionInfo[];
+  text: string | null;
+  review_error: string | null;
+}
+
+export interface ReviewUnit {
+  unit_id: string;
+  position: number;
+  text: string;
+  location: Record<string, unknown>;
+}
+
+export interface StoredFlag extends Flag {
+  id: string;
+  status: FlagStatus;
+  resolution_note: string | null;
+  resolved_at: string | null;
+  source_text: string | null;
+}
+
+export interface VersionFlags {
+  version_id: string;
+  content_id: string;
+  version_number: number;
+  text: string;
+  units: ReviewUnit[];
+  flags: StoredFlag[];
+}
+
+export interface Comment {
+  id: string;
+  version_id: string;
+  author_id: string;
+  author_name: string | null;
+  author_role: string | null;
+  body: string;
+  flag_id: string | null;
+  created_at: string;
+}
