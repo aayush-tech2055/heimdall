@@ -195,8 +195,8 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 - [x] **12.5** `[V]` Admin screens: "Check website" with a reviewable list of changes (accept or reject each), and an asset library.
 
 ### Milestone 13: Round 3, improvement 3: insights and guideline health
-- [ ] **13.1** `[A]` Insight queries: flags by category, severity, rule and creator over time; the most broken rules; average time to approval; how often content is sent back.
-- [ ] **13.2** `[A]` Guideline health: dismissal rate per rule; rules dismissed in at least 40% of cases (with at least 5 flags) are marked "probably unclear", with the most common dismissal reasons.
+- [x] **13.1** `[A]` Insight queries: flags by category, severity, rule and creator over time; the most broken rules; average time to approval; how often content is sent back.
+- [x] **13.2** `[A]` Guideline health: dismissal rate per rule; rules dismissed in at least 40% of cases (with at least 5 flags) are marked "probably unclear", with the most common dismissal reasons.
 - [ ] **13.3** `[V]` Insights dashboard (Recharts): trends, top broken rules, guideline health list linking to each rule's edit screen.
 - [ ] **13.4** `[A]` Re-run the evaluation and compare with the Round 2 report; record the accuracy gain.
 
