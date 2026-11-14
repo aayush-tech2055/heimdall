@@ -198,7 +198,7 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 - [x] **13.1** `[A]` Insight queries: flags by category, severity, rule and creator over time; the most broken rules; average time to approval; how often content is sent back.
 - [x] **13.2** `[A]` Guideline health: dismissal rate per rule; rules dismissed in at least 40% of cases (with at least 5 flags) are marked "probably unclear", with the most common dismissal reasons.
 - [x] **13.3** `[V]` Insights dashboard (Recharts): trends, top broken rules, guideline health list linking to each rule's edit screen.
-- [ ] **13.4** `[A]` Re-run the evaluation and compare with the Round 2 report; record the accuracy gain.
+- [x] **13.4** `[A]` Re-run the evaluation and compare with the Round 2 report; record the accuracy gain.
 
 ### Milestone 14: Hardening
 - [ ] **14.1** `[A]` Tests: unit tests for validation, segmentation, rule engine, expiry, the workflow state machine and permissions; one end-to-end API test of the full loop.
