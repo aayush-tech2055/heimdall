@@ -90,6 +90,7 @@ Guidance for Claude Code in this repo. **Sources of truth:** `TASKS.md` (Part 1 
 
 ## Working rules
 1. **Work through TASKS.md in order, one task at a time.** When a task's "Done when" is met, tick it (`[x]`) in TASKS.md and commit with a message that starts with the task number, e.g. `0.2: backend skeleton`.
+   **Task status is tracked in Notion** (from 2026-11-14): the "Heimdall Tasks" database on the "Heimdall: Build Tracker" page (page `418b15a3b26b81bba814cf27c43a6e9c`, data source `collection://418b15a3-b26b-81aa-8bb7-000b9ed10b94`). When starting a task set its `Status` to `In progress`; when done set `Done` and the `Completed` date; use `Waiting on us` (with a `Notes` line) when blocked on a manual step. Keep TASKS.md ticks in sync. TASKS.md stays the source of truth for task scope and wording.
 2. **Never change a locked decision in TASKS.md Part 1 without asking first.** If a decision looks wrong or impossible, stop and explain why.
 3. **Never commit secrets or `.env` files.** Only `.env.example` files with empty values are committed. Use only the fictional test data in `test-data/`.
 4. **Write tests for backend logic as you go**, in the same task, not later.
