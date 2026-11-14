@@ -1,0 +1,182 @@
+[
+  {
+    "id": "acme-01",
+    "kind": "social",
+    "title": "First website",
+    "text": "Build your first website with AcmeLearn, one short lesson at a time. Start today at acmelearn.example. T&Cs apply."
+  },
+  {
+    "id": "acme-02",
+    "kind": "social",
+    "title": "Python on a budget",
+    "text": "Looking for a cheap way to learn Python? AcmeLearn has you covered. Start at acmelearn.example. T&Cs apply."
+  },
+  {
+    "id": "acme-03",
+    "kind": "blog",
+    "title": "Why learners choose AcmeLearn",
+    "text": "Why learners choose AcmeLearn\n\nAcmeLearn now has over 3 million registered learners across India. Each of them started with a single lesson, and so can you. Pick a course, finish one lesson a day, and build a project you can show. T&Cs apply."
+  },
+  {
+    "id": "acme-04",
+    "kind": "ad",
+    "title": "No. 1 app",
+    "text": "AcmeLearn is India's No. 1 learning app. Join today. T&Cs apply."
+  },
+  {
+    "id": "acme-05",
+    "kind": "email",
+    "title": "Annual plan offer",
+    "text": "Hi there,\n\nSave more with an annual AcmeLearn Plus plan for just ₹2,999 a year. Upgrade from your account page.\n\nT&Cs apply."
+  },
+  {
+    "id": "acme-06",
+    "kind": "social",
+    "title": "First project",
+    "text": "Your first Python project is one lesson away. Start learning on AcmeLearn today."
+  },
+  {
+    "id": "acme-07",
+    "kind": "social",
+    "title": "For loops",
+    "text": "Still can't write a for loop? Honestly, that's embarrassing. Fix it with AcmeLearn. T&Cs apply."
+  },
+  {
+    "id": "acme-08",
+    "kind": "blog",
+    "title": "Three habits",
+    "text": "Three habits that help you finish a course\n\nSet a small goal for each day, like one lesson or one exercise. Keep your notes in one place so you can review them before a project. When you get stuck, ask a question in the AcmeLearn community; someone has been where you are. Small steps add up. T&Cs apply."
+  },
+  {
+    "id": "acme-09",
+    "kind": "ad",
+    "title": "Data Science Track",
+    "text": "Finish the AcmeLearn Data Science Track and land a ₹12 LPA job within six months. T&Cs apply."
+  },
+  {
+    "id": "acme-10",
+    "kind": "social",
+    "title": "Switching",
+    "text": "Switching from Coursify? AcmeLearn makes it easy to pick up where you left off. T&Cs apply."
+  },
+  {
+    "id": "acme-11",
+    "kind": "email",
+    "title": "Welcome",
+    "text": "Welcome to Acme Learn! Your account is ready. Start with your first lesson today. T&Cs apply."
+  },
+  {
+    "id": "acme-12",
+    "kind": "ad",
+    "title": "Pro trial",
+    "text": "AcmeLearn Pro costs ₹599 a month and comes with a 7-day free trial. Start yours at acmelearn.example. T&Cs apply."
+  },
+  {
+    "id": "acme-13",
+    "kind": "social",
+    "title": "Plus price",
+    "text": "AcmeLearn Plus is now ₹299 a month. Start learning today. #LearnWithAcmeLearn T&Cs apply."
+  },
+  {
+    "id": "acme-14",
+    "kind": "blog",
+    "title": "Upgrading",
+    "text": "Thinking about upgrading? The premium plan is worth a look if you want feedback on your projects. T&Cs apply."
+  },
+  {
+    "id": "acme-15",
+    "kind": "social",
+    "title": "SQL lessons",
+    "text": "Hey guys, new SQL lessons just dropped on AcmeLearn. Dive in! #LearnWithAcmeLearn T&Cs apply."
+  },
+  {
+    "id": "acme-16",
+    "kind": "ad",
+    "title": "Festive sale",
+    "text": "Festive sale: 40% off AcmeLearn Pro for new learners. T&Cs apply."
+  },
+  {
+    "id": "acme-17",
+    "kind": "blog",
+    "title": "What learners say",
+    "text": "What learners say\n\nLearners rate the AcmeLearn app 4.9 stars on the Play Store, and many tell us the daily lessons keep them going. T&Cs apply."
+  },
+  {
+    "id": "acme-18",
+    "kind": "social",
+    "title": "Beginners",
+    "text": "Every expert was once a beginner. Pick one lesson today and see where it takes you. #LearnWithAcmeLearn T&Cs apply."
+  },
+  {
+    "id": "acme-19",
+    "kind": "blog",
+    "title": "Projects",
+    "text": "Our students build projects they are proud of. Pick a track and start your first one this week. T&Cs apply."
+  },
+  {
+    "id": "acme-20",
+    "kind": "ad",
+    "title": "Learn now",
+    "text": "Learn to code NOW!!! Start your first AcmeLearn lesson today. T&Cs apply."
+  },
+  {
+    "id": "acme-21",
+    "kind": "blog",
+    "title": "AcmeLearn in numbers",
+    "text": "AcmeLearn in numbers\n\nAcmeLearn offers 350 courses in 6 Indian languages, and more than 2 million learners have registered since we started in 2019. T&Cs apply."
+  },
+  {
+    "id": "acme-22",
+    "kind": "social",
+    "title": "Excel tip",
+    "text": "One Excel hack for tidier spreadsheets. Watch the lesson on AcmeLearn."
+  },
+  {
+    "id": "acme-23",
+    "kind": "email",
+    "title": "Next lesson",
+    "text": "Hi there,\n\nYour next lesson in Intro to SQL covers joins, with a short exercise at the end. Pick it up whenever you're ready.\n\nT&Cs apply."
+  },
+  {
+    "id": "acme-24",
+    "kind": "ad",
+    "title": "Award",
+    "text": "AcmeLearn: winner of the Global EdTech Award 2026. T&Cs apply."
+  },
+  {
+    "id": "acme-25",
+    "kind": "blog",
+    "title": "Start today",
+    "text": "Everyone else is already ahead of you. If you don't start today, you'll be left behind for good. Start a course on AcmeLearn. T&Cs apply."
+  },
+  {
+    "id": "acme-26",
+    "kind": "social",
+    "title": "Cricket project",
+    "text": "New in the Data Science Track: a project where you analyse cricket scores. Try it this weekend. #LearnWithAcmeLearn T&Cs apply."
+  },
+  {
+    "id": "acme-27",
+    "kind": "ad",
+    "title": "Free trial",
+    "text": "Try AcmeLearn Pro free for 30 days. T&Cs apply."
+  },
+  {
+    "id": "acme-28",
+    "kind": "blog",
+    "title": "Python basics",
+    "text": "This is Python for dummies, explained in plain words. You will write your first script in the first lesson. T&Cs apply."
+  },
+  {
+    "id": "acme-29",
+    "kind": "email",
+    "title": "Plus plan",
+    "text": "Hi there,\n\nAcmeLearn Plus costs ₹299 a month. Upgrade from your account page whenever you're ready.\n\nT&Cs apply."
+  },
+  {
+    "id": "acme-30",
+    "kind": "script",
+    "title": "Completion voiceover",
+    "text": "9 out of 10 learners finish their course on AcmeLearn. Start yours today. T&Cs apply."
+  }
+]

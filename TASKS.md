@@ -103,7 +103,7 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 ### Milestone 1: Test data (starts in parallel with M0)
 - [x] **1.1** `[V]` Create 2 fictional brands in `test-data/brands/<brand>/`: a brand guideline (a 3–5 page PDF plus the same content as `.md`) covering tone, terminology, claims, visuals, accessibility and legal, including **2 deliberately vague rules, 1 contradiction and 1 duplicate** (to test guideline verification).
 - [x] **1.2** `[V]` A facts sheet per brand as `facts.csv` (entity, attribute, value, unit, statement, source, valid_until), with at least 15 facts, **2 of them already expired**.
-- [ ] **1.3** `[V]` 30–40 pieces of sample content per brand (blog posts, social captions, ad scripts) with **planted errors**: banned terms, a missing disclaimer, an outdated price, an unsupported superlative, a contradicted statistic, an off-tone sentence. Include some content with no errors.
+- [x] **1.3** `[V]` 30–40 pieces of sample content per brand (blog posts, social captions, ad scripts) with **planted errors**: banned terms, a missing disclaimer, an outdated price, an unsupported superlative, a contradicted statistic, an off-tone sentence. Include some content with no errors.
 - [ ] **1.4** `[V]` An answer key, `test-data/answer_key.json`: for each content item, the expected flags (unit text, rule or fact code, category). Clean items have an empty list.
   *Done when:* every planted error appears in the answer key, and a teammate has spot-checked 10 items.
 
