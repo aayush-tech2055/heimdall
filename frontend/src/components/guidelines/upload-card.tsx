@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Upload } from "lucide-react";
+import { Loader2, Upload, X } from "lucide-react";
 import { useState } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -17,7 +17,8 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { api, ApiError } from "@/lib/api";
-import type { GuidelineUploadResult } from "@/types/api";
+import { GUIDELINE_JOB_EVENT } from "@/lib/use-guideline-jobs";
+import type { GuidelineJob } from "@/types/api";
 
 /** Kinds of guideline file the backend can read (app/processing/documents.py). */
 const GUIDELINE_FILES = [
@@ -39,12 +40,13 @@ const GUIDELINE_FILES = [
 
 export function UploadCard({
   brandId,
-  onDone,
+  onStarted,
 }: {
   brandId: string;
-  onDone: (result: GuidelineUploadResult) => void;
+  onStarted: (job: GuidelineJob) => void;
 }) {
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [inputKey, setInputKey] = useState(0);
   const [text, setText] = useState("");
   const [mode, setMode] = useState("file");
   const [busy, setBusy] = useState(false);
@@ -55,20 +57,23 @@ export function UploadCard({
     setError(null);
     const form = new FormData();
     if (mode === "file") {
-      if (!file) return setError("Choose a file first.");
-      form.append("file", file);
+      if (!files.length) return setError("Choose at least one file.");
+      if (files.length > 10)
+        return setError("Upload at most 10 files at once.");
+      files.forEach((f) => form.append("files", f));
     } else {
       if (!text.trim()) return setError("Paste some guideline text first.");
       form.append("text", text);
     }
     setBusy(true);
     try {
-      onDone(
-        await api<GuidelineUploadResult>(`/brands/${brandId}/guidelines`, {
-          form,
-        }),
-      );
-      setFile(null);
+      const job = await api<GuidelineJob>(`/brands/${brandId}/guidelines`, {
+        form,
+      });
+      window.dispatchEvent(new Event(GUIDELINE_JOB_EVENT));
+      onStarted(job);
+      setFiles([]);
+      setInputKey((k) => k + 1);
       setText("");
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Upload failed");
@@ -86,7 +91,9 @@ export function UploadCard({
         <CardDescription>
           Heimdall splits the guideline into one rule per instruction, then
           checks it for duplicates, contradictions, vague rules and missing
-          categories. New rules stay pending until you approve them.
+          categories. Extraction runs in the background, so you can keep working
+          (for example import facts) while it runs. New rules stay pending until
+          you approve them.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -97,21 +104,58 @@ export function UploadCard({
               <TabsTrigger value="text">Paste text</TabsTrigger>
             </TabsList>
             <TabsContent value="file" className="space-y-2 pt-2">
-              <Label htmlFor="guideline-file">Guideline file</Label>
+              <Label htmlFor="guideline-file">Guideline files</Label>
               <Input
+                key={inputKey}
                 id="guideline-file"
                 type="file"
+                multiple
                 accept={GUIDELINE_FILES}
                 aria-describedby="guideline-file-help"
-                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                onChange={(e) => {
+                  const chosen = Array.from(e.target.files ?? []);
+                  setFiles((prev) => {
+                    const seen = new Set(prev.map((f) => f.name + f.size));
+                    return [
+                      ...prev,
+                      ...chosen.filter((f) => !seen.has(f.name + f.size)),
+                    ];
+                  });
+                  setInputKey((k) => k + 1);
+                }}
               />
+              {files.length > 0 && (
+                <ul className="space-y-1 text-sm" aria-label="Chosen files">
+                  {files.map((f) => (
+                    <li
+                      key={f.name + f.size}
+                      className="bg-muted flex items-center justify-between gap-2 rounded-md px-2 py-1"
+                    >
+                      <span className="truncate">{f.name}</span>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        className="size-7"
+                        aria-label={`Remove ${f.name}`}
+                        onClick={() =>
+                          setFiles((prev) => prev.filter((x) => x !== f))
+                        }
+                      >
+                        <X aria-hidden />
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
               <p
                 id="guideline-file-help"
                 className="text-sm text-muted-foreground"
               >
-                PDF, Word (.docx), PowerPoint (.pptx), text (.txt, .md) or CSV,
-                up to 10 MB. For a CSV, put one rule per row; a header row such
-                as &ldquo;Category, Rule&rdquo; helps.
+                One or more files (up to 10, each up to 10 MB): PDF, Word
+                (.docx), PowerPoint (.pptx), text (.txt, .md) or CSV. You can
+                pick files several times. For a CSV, put one rule per row; a
+                header row such as &ldquo;Category, Rule&rdquo; helps.
               </p>
             </TabsContent>
             <TabsContent value="text" className="space-y-2 pt-2">
@@ -137,8 +181,10 @@ export function UploadCard({
               <Upload aria-hidden />
             )}
             {busy
-              ? "Extracting and checking rules… (about a minute)"
-              : "Upload and extract rules"}
+              ? "Uploading…"
+              : mode === "file" && files.length > 1
+                ? `Upload ${files.length} files and extract rules`
+                : "Upload and extract rules"}
           </Button>
         </form>
       </CardContent>

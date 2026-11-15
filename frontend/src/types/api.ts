@@ -53,11 +53,18 @@ export interface VerificationReport {
   rules_checked: number;
 }
 
-export interface GuidelineUploadResult {
-  source_doc: string;
-  pages: number;
-  rules: Rule[];
-  report: VerificationReport;
+export type GuidelineJobStatus = "queued" | "running" | "done" | "failed";
+
+/** A guideline upload of one or more files, extracted in the background. */
+export interface GuidelineJob {
+  id: string;
+  status: GuidelineJobStatus;
+  files: { name: string; pages: number }[];
+  files_done: number;
+  rules_added: number;
+  error: string | null;
+  created_at: string;
+  finished_at: string | null;
 }
 
 export type FactStatus = "pending" | "approved" | "rejected";

@@ -164,6 +164,22 @@ create table public.guideline_reports (
 );
 create index guideline_reports_brand_idx on public.guideline_reports (brand_id, created_at desc);
 
+-- Guideline uploads run in the background; one row per upload of one or more files (006).
+create table public.guideline_jobs (
+  id           uuid primary key default gen_random_uuid(),
+  brand_id     uuid not null references public.brands (id) on delete cascade,
+  status       text not null default 'queued'
+                 check (status in ('queued', 'running', 'done', 'failed')),
+  files        jsonb not null,            -- [{"name": "guide.pdf", "pages": 6}, ...]
+  files_done   integer not null default 0 check (files_done >= 0),
+  rules_added  integer not null default 0 check (rules_added >= 0),
+  error        text,
+  created_by   uuid references auth.users (id) on delete set null,
+  created_at   timestamptz not null default now(),
+  finished_at  timestamptz
+);
+create index guideline_jobs_brand_idx on public.guideline_jobs (brand_id, created_at desc);
+
 -- Fact changes found on the brand's website (task 12.3).
 create table public.fact_changes (
   id          uuid primary key default gen_random_uuid(),
@@ -386,6 +402,7 @@ alter table public.comments            enable row level security;
 alter table public.audit_log           enable row level security;
 alter table public.ai_calls            enable row level security;
 alter table public.guideline_reports   enable row level security;
+alter table public.guideline_jobs      enable row level security;
 alter table public.fact_changes        enable row level security;
 
 commit;
