@@ -48,6 +48,9 @@ class ContentDetail(ContentSummary):
     versions: list[VersionInfo]
     text: str | None  # the latest version's text
     review_error: str | None
+    # The latest version was made by the creator's fix round (not checked by AI): no more
+    # fixes; submit it, or upload a revised version to have it checked again.
+    fixes_applied: bool = False
 
 
 class ReviewUnitOut(BaseModel):

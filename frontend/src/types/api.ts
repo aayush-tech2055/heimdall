@@ -126,6 +126,8 @@ export interface ContentDetail extends ContentSummary {
   versions: VersionInfo[];
   text: string | null;
   review_error: string | null;
+  /** The latest version came from the creator's one fix round (not checked by AI again). */
+  fixes_applied: boolean;
 }
 
 export interface ReviewUnit {

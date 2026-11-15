@@ -1,20 +1,11 @@
 "use client";
 
-import {
-  Bot,
-  Check,
-  Code2,
-  Loader2,
-  Pencil,
-  ShieldCheck,
-  X,
-} from "lucide-react";
+import { Bot, Check, Code2, Pencil, ShieldCheck, X } from "lucide-react";
 import { useState } from "react";
 
 import { FlagStatusBadge, SeverityBadge } from "@/components/content/badges";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -67,6 +58,8 @@ export function FlagCard({
   aiLabel,
   picked,
   onPick,
+  stagedEdit,
+  onStageEdit,
 }: {
   flag: StoredFlag;
   mode: "creator" | "manager" | "readonly";
@@ -74,9 +67,12 @@ export function FlagCard({
   canFix?: boolean;
   /** Which provider and model produced this flag (from the AI call log). */
   aiLabel?: string;
-  /** Ticked for "Accept selected fixes"; the box shows only when onPick is given. */
+  /** Chosen for the fix round ("Accept fix" pressed); toggles only when onPick is given. */
   picked?: boolean;
   onPick?: (on: boolean) => void;
+  /** The creator's own wording for this flag in the fix round, if any. */
+  stagedEdit?: string;
+  onStageEdit?: (text: string | null) => void;
   selected: boolean;
   busy: boolean;
   onSelect: () => void;
@@ -102,14 +98,6 @@ export function FlagCard({
       )}
     >
       <div className="flex flex-wrap items-center gap-2">
-        {onPick && (
-          <Checkbox
-            aria-label={`Select the fix for ${flag.source_id}: ${flag.evidence || "missing text"}`}
-            checked={picked ?? false}
-            onClick={(e) => e.stopPropagation()}
-            onCheckedChange={(v) => onPick(v === true)}
-          />
-        )}
         <SeverityBadge severity={flag.severity} />
         <Badge variant="secondary" className="capitalize">
           {flag.category}
@@ -153,28 +141,30 @@ export function FlagCard({
           className="flex flex-wrap gap-2 pt-1"
           onClick={(e) => e.stopPropagation()}
         >
-          {canFix && flag.suggested_fix && (
-            <Button
-              size="sm"
-              disabled={busy}
-              onClick={() => onAction({ kind: "accept" })}
-            >
-              {busy ? (
-                <Loader2 className="animate-spin" aria-hidden />
-              ) : (
+          {canFix &&
+            flag.suggested_fix &&
+            onPick &&
+            stagedEdit === undefined && (
+              <Button
+                size="sm"
+                variant={picked ? "default" : "outline"}
+                aria-pressed={picked ?? false}
+                disabled={busy}
+                onClick={() => onPick(!picked)}
+              >
                 <Check aria-hidden />
-              )}
-              Accept fix
-            </Button>
-          )}
-          {canFix && (
+                {picked ? "Fix chosen" : "Accept fix"}
+              </Button>
+            )}
+          {canFix && onStageEdit && (
             <Button
               size="sm"
               variant="outline"
               disabled={busy}
               onClick={() => setPanel(panel === "edit" ? null : "edit")}
             >
-              <Pencil aria-hidden /> Edit
+              <Pencil aria-hidden />{" "}
+              {stagedEdit === undefined ? "Edit wording" : "Change wording"}
             </Button>
           )}
           <Button
@@ -202,13 +192,29 @@ export function FlagCard({
           </div>
         )}
 
+      {stagedEdit !== undefined && panel !== "edit" && (
+        <p
+          className="rounded-md bg-amber-50 p-2"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <span className="font-medium">Your wording: </span>“{stagedEdit}”{" "}
+          <button
+            type="button"
+            className="underline underline-offset-2"
+            onClick={() => onStageEdit?.(null)}
+          >
+            Remove
+          </button>
+        </p>
+      )}
       {panel === "edit" && (
         <form
           className="space-y-2"
           onClick={(e) => e.stopPropagation()}
           onSubmit={(e) => {
             e.preventDefault();
-            onAction({ kind: "edit", text });
+            if (onStageEdit) onStageEdit(text);
+            else onAction({ kind: "edit", text });
             setPanel(null);
           }}
         >
@@ -221,7 +227,7 @@ export function FlagCard({
             onChange={(e) => setText(e.target.value)}
           />
           <Button size="sm" type="submit" disabled={busy}>
-            Apply and re-check
+            Use this wording
           </Button>
         </form>
       )}

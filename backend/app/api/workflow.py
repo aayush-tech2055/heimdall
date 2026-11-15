@@ -1,15 +1,13 @@
 """Workflow API: flag actions (7.2), manager actions (7.3), comments (7.4)."""
 
 from datetime import datetime
-from functools import partial
+from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
-from app.api.contents import Runner
 from app.api.deps import Conn, Manager, User
-from app.api.ratelimit import limited
 from app.models.contents import ContentDetail
 from app.review.actions import (
     ActionError,
@@ -19,7 +17,6 @@ from app.review.actions import (
     fix_flag,
     fix_many,
     list_comments,
-    open_high_flags,
 )
 from app.review.content_store import NotFoundError, get_content, version_flags
 from app.review.workflow import InvalidTransitionError, transition
@@ -36,9 +33,11 @@ class Replacement(BaseModel):
 
 
 class FixSelection(BaseModel):
-    """Flags whose suggested fixes to accept; omitted or null means every open flag with a fix."""
+    """Flags whose suggested fixes to accept (omitted or null: every open flag with a fix),
+    and flags the creator rewords instead ({flag id: new wording})."""
 
     flag_ids: list[UUID] | None = Field(default=None, max_length=500)
+    edits: dict[UUID, Annotated[str, Field(max_length=5000)]] = Field(default={}, max_length=500)
 
 
 class BulkFixOut(BaseModel):
@@ -91,61 +90,36 @@ def _content(conn, user, content_id: UUID) -> ContentDetail:  # noqa: ANN001
 # --- 7.2 flag actions (creator) -------------------------------------------------------------
 
 
-def _fix(conn, user, flag_id, replacement, background, run) -> ContentDetail:  # noqa: ANN001
+def _fix(conn, user, flag_id, replacement) -> ContentDetail:  # noqa: ANN001
     try:
-        content_id, version_id = fix_flag(conn, user, flag_id, replacement)
-        transition(conn, content_id, "checking", actor_id=user.id,
-                   detail={"version_id": str(version_id)})  # fmt: skip
-    except (NotFoundError, ActionError, InvalidTransitionError) as exc:
+        content_id, _ = fix_flag(conn, user, flag_id, replacement)
+    except (NotFoundError, ActionError) as exc:
         raise _fail(exc) from exc
     conn.commit()
-    background.add_task(partial(run, version_id, user.id))
     return _content(conn, user, content_id)
 
 
-@router.post(
-    "/flags/{flag_id}/accept",
-    response_model=ContentDetail,
-    dependencies=[Depends(limited("review", 30))],
-)
-def accept_flag(
-    flag_id: UUID, user: User, conn: Conn, background: BackgroundTasks, run: Runner
-) -> ContentDetail:
-    """Apply the suggested fix, creating a new version that is checked again."""
-    return _fix(conn, user, flag_id, None, background, run)
+@router.post("/flags/{flag_id}/accept", response_model=ContentDetail)
+def accept_flag(flag_id: UUID, user: User, conn: Conn) -> ContentDetail:
+    """Apply one suggested fix as the creator's fix round (new version, not checked again)."""
+    return _fix(conn, user, flag_id, None)
 
 
-@router.post(
-    "/flags/{flag_id}/edit",
-    response_model=ContentDetail,
-    dependencies=[Depends(limited("review", 30))],
-)
-def edit_flag(
-    flag_id: UUID, body: Replacement, user: User, conn: Conn, background: BackgroundTasks,
-    run: Runner,
-) -> ContentDetail:  # fmt: skip
-    """Replace the flagged words with the creator's own text (new version, checked again)."""
-    return _fix(conn, user, flag_id, body.text, background, run)
+@router.post("/flags/{flag_id}/edit", response_model=ContentDetail)
+def edit_flag(flag_id: UUID, body: Replacement, user: User, conn: Conn) -> ContentDetail:
+    """Replace the flagged words with the creator's own text (new version, not checked again)."""
+    return _fix(conn, user, flag_id, body.text)
 
 
-@router.post(
-    "/contents/{content_id}/accept-fixes",
-    response_model=BulkFixOut,
-    dependencies=[Depends(limited("review", 30))],
-)
-def accept_fixes(
-    content_id: UUID, body: FixSelection, user: User, conn: Conn, background: BackgroundTasks,
-    run: Runner,
-) -> BulkFixOut:  # fmt: skip
-    """Accept several suggested fixes (or all of them) at once: one new version, one re-check."""
+@router.post("/contents/{content_id}/accept-fixes", response_model=BulkFixOut)
+def accept_fixes(content_id: UUID, body: FixSelection, user: User, conn: Conn) -> BulkFixOut:
+    """The creator's one fix round: chosen suggested fixes plus reworded ones, all applied at
+    once into one new version. The AI does not check it again; the manager decides the rest."""
     try:
-        result = fix_many(conn, user, content_id, body.flag_ids)
-        transition(conn, content_id, "checking", actor_id=user.id,
-                   detail={"version_id": str(result.version_id)})  # fmt: skip
-    except (NotFoundError, ActionError, InvalidTransitionError) as exc:
+        result = fix_many(conn, user, content_id, body.flag_ids, body.edits)
+    except (NotFoundError, ActionError) as exc:
         raise _fail(exc) from exc
     conn.commit()
-    background.add_task(partial(run, result.version_id, user.id))
     return BulkFixOut(
         content=_content(conn, user, content_id), applied=result.applied, skipped=result.skipped
     )
@@ -161,17 +135,11 @@ def dismiss(flag_id: UUID, body: Reason, user: User, conn: Conn) -> None:
 
 @router.post("/contents/{content_id}/submit", response_model=ContentDetail)
 def submit_for_approval(content_id: UUID, user: User, conn: Conn) -> ContentDetail:
-    """Creator sends the content to a manager once no high-severity flag is open."""
+    """Creator sends the content to a manager. Open flags (including high-severity ones) go
+    with it: the manager sees them and decides."""
     content = _content(conn, user, content_id)
     if user.role != "creator" or content.creator_id != user.id:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Only the creator can submit")
-    high = open_high_flags(conn, content_id)
-    if high:
-        raise HTTPException(
-            status.HTTP_409_CONFLICT,
-            f"{high} high-severity flag{'s are' if high > 1 else ' is'} still open: fix or "
-            "dismiss with a reason first",
-        )
     try:
         transition(conn, content_id, "manager_review", actor_id=user.id)
     except InvalidTransitionError as exc:

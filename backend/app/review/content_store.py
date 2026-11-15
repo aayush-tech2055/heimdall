@@ -93,6 +93,9 @@ def get_content(conn: psycopg.Connection, user: CurrentUser, content_id: UUID) -
             "versions": [VersionInfo.model_validate(_summary(v)) for v in versions],
             "text": latest["extracted_text"] if latest else None,
             "review_error": latest["review_error"] if latest else None,
+            "fixes_applied": bool(
+                latest and len(versions) > 1 and latest["review_started_at"] is None
+            ),
         }
     )
 

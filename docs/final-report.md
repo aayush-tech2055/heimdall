@@ -24,8 +24,10 @@ cited it stays linked. An asset library holds logos and approved text such as di
 60 seconds. The review shows the content with every problem highlighted (page boxes for PDFs,
 regions for images, a timeline for video), and a card per flag: severity, category, the cited
 source (hover to read it), whether code or AI found it and which model, the explanation and a
-suggested fix. The creator accepts the fix (a new version, checked again), edits it, or dismisses
-the flag with a reason, then submits for approval once no high-severity flag is open.
+suggested fix. The creator gets one fix round per check: they choose which fixes to accept,
+reword any they prefer, and apply them all at once (one new version, not checked by AI again),
+or dismiss a flag with a reason. Then they submit, and the manager decides on anything still
+open. To have the AI check the script again, the creator uploads a revised version.
 
 **Manager: deciding.** A queue of content waiting for approval; the review shows only unresolved
 and dismissed flags with their reasons. The manager approves, sends back with a comment, or

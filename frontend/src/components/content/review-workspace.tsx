@@ -59,6 +59,7 @@ export function ReviewWorkspace({
   const [decision, setDecision] = useState("");
   const [commentKey, setCommentKey] = useState(0);
   const [picked, setPicked] = useState<Set<string>>(new Set());
+  const [edits, setEdits] = useState<Map<string, string>>(new Map());
 
   const oldVersion = !!viewing && viewing !== content?.latest_version_id;
   const visible = useMemo(() => {
@@ -102,6 +103,7 @@ export function ReviewWorkspace({
       const result = await fn();
       setNotice(typeof label === "function" ? label(result) : label);
       setPicked(new Set());
+      setEdits(new Map());
       setCommentKey((k) => k + 1);
       await reload();
     } catch (e) {
@@ -113,11 +115,11 @@ export function ReviewWorkspace({
 
   function onAction(flag: StoredFlag, action: FlagAction) {
     if (action.kind === "accept")
-      void run("Fix applied. Checking the new version…", () =>
+      void run("Fix applied in a new version.", () =>
         api<ContentDetail>(`/flags/${flag.id}/accept`, { method: "POST" }),
       );
     if (action.kind === "edit")
-      void run("Edit applied. Checking the new version…", () =>
+      void run("Your wording applied in a new version.", () =>
         api<ContentDetail>(`/flags/${flag.id}/edit`, {
           json: { text: action.text },
         }),
@@ -163,25 +165,36 @@ export function ReviewWorkspace({
   const canDecide =
     mode === "manager" && !oldVersion && content.status === "manager_review";
   const openHigh = content.counts.open_high;
-  const fixable =
-    canEdit && content.format === "text"
-      ? visible.filter((f) => f.status === "open" && f.suggested_fix)
-      : [];
-  const pickedFixable = fixable.filter((f) => picked.has(f.id));
+  // One fix round per AI check: on a checked text version the creator chooses fixes (and
+  // may reword any open flag), then applies them all at once. The fixed version is not
+  // checked again; it is submitted, or a revised script is uploaded for a new check.
+  const canFixRound =
+    canEdit && content.format === "text" && !content.fixes_applied;
+  const fixable = canFixRound
+    ? visible.filter((f) => f.status === "open" && f.suggested_fix)
+    : [];
+  const pickedFixable = fixable.filter(
+    (f) => picked.has(f.id) && !edits.has(f.id),
+  );
   const allPicked =
-    fixable.length > 0 && pickedFixable.length === fixable.length;
+    fixable.length > 0 &&
+    fixable.every((f) => picked.has(f.id) || edits.has(f.id));
+  const chosenCount = pickedFixable.length + edits.size;
 
-  function acceptFixes(ids: string[] | null) {
+  function applyFixes(all: boolean) {
+    const ids = all
+      ? fixable.filter((f) => !edits.has(f.id)).map((f) => f.id)
+      : pickedFixable.map((f) => f.id);
     void run(
       (out: { applied: string[]; skipped: string[] }) =>
-        `${out.applied.length} fix${out.applied.length === 1 ? "" : "es"} applied in one new version. Checking it…` +
+        `${out.applied.length} fix${out.applied.length === 1 ? "" : "es"} applied in version ${(content!.latest_version_number ?? 1) + 1}. Review it, then submit it to your manager.` +
         (out.skipped.length
-          ? ` ${out.skipped.length} overlapped a more serious fix on the same words and were left for the re-check.`
+          ? ` ${out.skipped.length} overlapped a more serious fix on the same words and stay open for your manager.`
           : ""),
       () =>
         api<{ applied: string[]; skipped: string[] }>(
           `/contents/${content!.id}/accept-fixes`,
-          { json: { flag_ids: ids } },
+          { json: { flag_ids: ids, edits: Object.fromEntries(edits) } },
         ),
     );
   }
@@ -214,14 +227,14 @@ export function ReviewWorkspace({
             content.status === "creator_review" &&
             !oldVersion && (
               <Button
-                disabled={busy || openHigh > 0}
+                disabled={busy}
                 onClick={() =>
                   run("Sent to your manager for approval.", () =>
                     api(`/contents/${content.id}/submit`, { method: "POST" }),
                   )
                 }
               >
-                <Send aria-hidden /> Submit for approval
+                <Send aria-hidden /> Submit to manager
               </Button>
             )}
           {mode === "creator" && content.status === "changes_requested" && (
@@ -242,11 +255,28 @@ export function ReviewWorkspace({
 
       {mode === "creator" &&
         content.status === "creator_review" &&
+        !oldVersion &&
         openHigh > 0 && (
           <p className="text-sm">
-            Resolve {openHigh} high-severity flag{openHigh === 1 ? "" : "s"}{" "}
-            (accept, edit, or dismiss with a reason) before you submit.
+            {openHigh} high-severity flag{openHigh === 1 ? " is" : "s are"}{" "}
+            still open. You can still submit: your manager will see{" "}
+            {openHigh === 1 ? "it" : "them"} and decide.
           </p>
+        )}
+      {mode === "creator" &&
+        content.fixes_applied &&
+        !oldVersion &&
+        canEdit && (
+          <Alert>
+            <CheckCircle2 className="size-4 text-green-700" aria-hidden />
+            <AlertTitle>Your fixes are applied</AlertTitle>
+            <AlertDescription>
+              This version was made from your fixes and is not checked by AI
+              again. Submit it to your manager, who decides on anything still
+              open. To have the script checked again, upload a revised script
+              below.
+            </AlertDescription>
+          </Alert>
         )}
       {content.status === "checking" && (
         <Alert role="status">
@@ -402,6 +432,39 @@ export function ReviewWorkspace({
                 onSelect={selectFlag}
               />
             )}
+            {canEdit && content.format === "text" && (
+              <form
+                className="bg-muted space-y-2 rounded-md p-3"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const el = e.currentTarget.elements.namedItem(
+                    "revised",
+                  ) as HTMLTextAreaElement | null;
+                  const text = el?.value.trim();
+                  if (!text) return;
+                  const form = new FormData();
+                  form.append("text", text);
+                  void run(
+                    "Revised script uploaded. The AI is checking it…",
+                    () => api(`/contents/${content.id}/versions`, { form }),
+                  );
+                }}
+              >
+                <Label htmlFor="revised">
+                  Want the AI to check it again? Paste a revised script. It
+                  becomes a new version and gets a new check.
+                </Label>
+                <Textarea id="revised" name="revised" rows={4} />
+                <Button
+                  size="sm"
+                  type="submit"
+                  variant="outline"
+                  disabled={busy}
+                >
+                  Upload revised script
+                </Button>
+              </form>
+            )}
             {canEdit && content.format !== "text" && (
               <form
                 className="bg-muted space-y-2 rounded-md p-3"
@@ -462,16 +525,16 @@ export function ReviewWorkspace({
                 </div>
               )}
             </div>
-            {fixable.length > 0 && (
+            {canFixRound && (fixable.length > 0 || edits.size > 0) && (
               <div
                 className="bg-muted flex flex-wrap items-center gap-2 rounded-md p-2"
                 role="group"
-                aria-label="Accept several fixes at once"
+                aria-label="Your fix round"
               >
                 <Button
                   size="sm"
                   variant="outline"
-                  disabled={busy}
+                  disabled={busy || fixable.length === 0}
                   aria-pressed={allPicked}
                   onClick={() =>
                     setPicked(
@@ -479,27 +542,29 @@ export function ReviewWorkspace({
                     )
                   }
                 >
-                  {allPicked ? "Clear selection" : "Select all"}
+                  {allPicked ? "Clear selection" : "Choose all fixes"}
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
-                  disabled={busy || pickedFixable.length === 0}
-                  onClick={() => acceptFixes(pickedFixable.map((f) => f.id))}
+                  disabled={busy || chosenCount === 0}
+                  onClick={() => applyFixes(false)}
                 >
-                  Accept selected fixes ({pickedFixable.length})
+                  Apply chosen fixes ({chosenCount})
                 </Button>
                 <Button
                   size="sm"
-                  disabled={busy}
-                  onClick={() => acceptFixes(null)}
+                  disabled={busy || fixable.length + edits.size === 0}
+                  onClick={() => applyFixes(true)}
                 >
-                  <CheckCheck aria-hidden /> Accept all fixes ({fixable.length})
+                  <CheckCheck aria-hidden /> Apply all suggested fixes (
+                  {fixable.filter((f) => !edits.has(f.id)).length + edits.size})
                 </Button>
                 <p className="w-full text-xs">
-                  All chosen fixes go into one new version, which is checked
-                  once. Flags without a suggested fix still need an edit or a
-                  dismissal.
+                  You can apply fixes <strong>once</strong>. Choose them (or
+                  reword any flag with &ldquo;Edit wording&rdquo;), then apply.
+                  The fixed script is not checked by AI again: submit it, and
+                  your manager decides on anything left.
                 </p>
               </div>
             )}
@@ -514,7 +579,7 @@ export function ReviewWorkspace({
                 <FlagCard
                   key={flag.id}
                   flag={flag}
-                  canFix={content.format === "text"}
+                  canFix={canFixRound}
                   aiLabel={aiLabelFor(flag.layer)}
                   picked={picked.has(flag.id)}
                   onPick={
@@ -524,6 +589,18 @@ export function ReviewWorkspace({
                             const next = new Set(prev);
                             if (on) next.add(flag.id);
                             else next.delete(flag.id);
+                            return next;
+                          })
+                      : undefined
+                  }
+                  stagedEdit={edits.get(flag.id)}
+                  onStageEdit={
+                    canFixRound
+                      ? (text) =>
+                          setEdits((prev) => {
+                            const next = new Map(prev);
+                            if (text === null) next.delete(flag.id);
+                            else next.set(flag.id, text);
                             return next;
                           })
                       : undefined
@@ -541,7 +618,6 @@ export function ReviewWorkspace({
           </section>
         </div>
       )}
-
 
       <div className="grid gap-6 lg:grid-cols-2">
         {(flags?.version_id ?? content.latest_version_id) && (

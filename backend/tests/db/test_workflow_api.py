@@ -103,27 +103,32 @@ def test_full_loop(loop):
     c = api.get(f"/contents/{cid}").json()
     assert c["status"] == "creator_review" and c["counts"]["open_high"] == 1
 
-    # Submitting with an open high-severity flag is refused.
-    blocked = api.post(f"/contents/{cid}/submit")
-    assert blocked.status_code == 409 and "high-severity" in blocked.json()["detail"]
-
     # A manager cannot approve before submission (invalid transition).
     as_("manager")
     assert api.post(f"/contents/{cid}/approve", json={}).status_code == 409
     as_("creator")
 
-    # Accept the fix: new version 2 with the fixed text, reviewed again.
+    # Accept the fix: version 2 with the fixed text, NOT checked again; its flags are carried
+    # over with their positions moved to the new text.
     tone = next(f for f in flags_of(api, c) if f["source_id"] == "R-001")
     accepted = api.post(f"/flags/{tone['id']}/accept")
     assert accepted.status_code == 200, accepted.text
     c = api.get(f"/contents/{cid}").json()
     assert c["latest_version_number"] == 2 and c["status"] == "creator_review"
+    assert c["fixes_applied"] is True
     assert c["text"] == "Everyone starts somewhere. A cheap course."
-    assert [f["source_id"] for f in flags_of(api, c)] == ["R-002"]  # only "cheap" is left
-    # Accepting an old version's flag is refused.
+    v2 = {f["source_id"]: f for f in flags_of(api, c)}
+    assert v2["R-001"]["status"] == "accepted" and v2["R-002"]["status"] == "open"
+    loc = v2["R-002"]["location"]
+    assert c["text"][loc["evidence_start"] : loc["evidence_end"]] == "cheap"
+    # One fix round only: the old version's flag and the new version's flags are refused.
     assert api.post(f"/flags/{tone['id']}/accept").status_code == 409
+    again = api.post(
+        f"/contents/{cid}/accept-fixes", json={"edits": {v2["R-002"]["id"]: "affordable"}}
+    )
+    assert again.status_code == 409 and "already applied" in again.json()["detail"]
 
-    # Submit (only a medium flag is open).
+    # Submit.
     assert api.post(f"/contents/{cid}/submit").json()["status"] == "manager_review"
 
     # Manager sends it back with a comment.
@@ -139,7 +144,7 @@ def test_full_loop(loop):
     # Creator reopens, dismisses the remaining flag with a reason, comments, resubmits.
     as_("creator")
     assert api.post(f"/contents/{cid}/reopen").json()["status"] == "creator_review"
-    cheap = flags_of(api, c)[0]
+    cheap = next(f for f in flags_of(api, c) if f["source_id"] == "R-002")
     assert api.post(f"/flags/{cheap['id']}/dismiss", json={"reason": ""}).status_code == 422
     assert (
         api.post(
@@ -191,8 +196,7 @@ def test_full_loop(loop):
         "content.create",
         "content.submit",
         "content.review_done",
-        "content.new_version",
-        "content.review_done",
+        "flag.fix_round",  # the creator's fixes: a new version, not checked again
         "content.submit_for_approval",
         "content.request_changes",
         "content.reopen",
@@ -212,7 +216,7 @@ def test_another_creator_cannot_act_on_flags(loop, db):
     assert api.post(f"/flags/{flag['id']}/accept").status_code == 404
 
 
-def test_accept_all_fixes_makes_one_new_version(loop):
+def test_fix_round_applies_accepted_and_reworded_fixes_at_once(loop):
     api, users, current, db = loop
     c = api.post(
         "/contents",
@@ -220,30 +224,51 @@ def test_accept_all_fixes_makes_one_new_version(loop):
     ).json()
     cid = c["id"]
     c = api.get(f"/contents/{cid}").json()
-    flags = flags_of(api, c)
-    assert {f["source_id"] for f in flags} == {"R-001", "R-002"}
+    flags = {f["source_id"]: f for f in flags_of(api, c)}
+    tone, cheap = flags["R-001"], flags["R-002"]
 
-    # A manager can't accept a creator's fixes; an unknown flag id is refused.
+    # A manager can't run a creator's fix round; an unknown flag id is refused; a flag with
+    # no suggested fix can only be reworded.
     current.update(user=users["manager"])
     assert api.post(f"/contents/{cid}/accept-fixes", json={}).status_code == 403
     current.update(user=users["creator"])
-    bad = api.post(
-        f"/contents/{cid}/accept-fixes",
-        json={"flag_ids": ["00000000-0000-0000-0000-000000000000"]},
-    )
+    url = f"/contents/{cid}/accept-fixes"
+    bad = api.post(url, json={"flag_ids": ["00000000-0000-0000-0000-000000000000"]})
     assert bad.status_code == 409
+    assert api.post(url, json={"flag_ids": [cheap["id"]]}).status_code == 422
 
-    # All fixes: only R-001 has a suggested fix (banned words have none), so one is applied.
-    out = api.post(f"/contents/{cid}/accept-fixes", json={})
+    # All suggested fixes plus the creator's own wording for "cheap", in one version.
+    out = api.post(url, json={"edits": {cheap["id"]: "low-cost"}})
     assert out.status_code == 200, out.text
     body = out.json()
-    tone = next(f for f in flags if f["source_id"] == "R-001")
-    assert body["applied"] == [tone["id"]] and body["skipped"] == []
+    assert set(body["applied"]) == {tone["id"], cheap["id"]} and body["skipped"] == []
+    assert body["content"]["status"] == "creator_review"  # not checked again
     c = api.get(f"/contents/{cid}").json()
-    assert c["latest_version_number"] == 2 and c["status"] == "creator_review"
-    assert c["text"] == "Everyone starts somewhere. A cheap course."
-    assert [f["source_id"] for f in flags_of(api, c)] == ["R-002"]
+    assert c["latest_version_number"] == 2 and c["fixes_applied"] is True
+    assert c["text"] == "Everyone starts somewhere. A low-cost course."
+    v2 = {f["source_id"]: f for f in flags_of(api, c)}
+    assert v2["R-001"]["status"] == "accepted"
+    assert v2["R-002"]["status"] == "edited"
+    assert v2["R-002"]["resolution_note"] == "Replaced with: low-cost"
+    assert db.execute(
+        "select review_started_at from public.content_versions where id = %s",
+        (c["latest_version_id"],),
+    ).fetchone() == (None,)
 
-    # Nothing left with a fix on the new version.
-    again = api.post(f"/contents/{cid}/accept-fixes", json={})
-    assert again.status_code == 422
+    # No second round; a revised upload is checked again and allows a new round.
+    assert api.post(url, json={}).status_code == 409
+    revised = api.post(
+        f"/contents/{cid}/versions", data={"text": "That is embarrassing. Great course."}
+    )
+    assert revised.status_code == 201, revised.text
+    c = api.get(f"/contents/{cid}").json()
+    assert c["latest_version_number"] == 3 and c["fixes_applied"] is False
+    assert [f["source_id"] for f in flags_of(api, c)] == ["R-001"]
+
+
+def test_submit_with_open_high_flags_leaves_them_to_the_manager(loop):
+    api, users, current, _ = loop
+    c = api.post("/contents", data={"title": "Direct", "text": "That is embarrassing."}).json()
+    assert api.get(f"/contents/{c['id']}").json()["counts"]["open_high"] == 1
+    sent = api.post(f"/contents/{c['id']}/submit")
+    assert sent.status_code == 200 and sent.json()["status"] == "manager_review"
