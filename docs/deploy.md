@@ -15,9 +15,10 @@ Never paste them into the repository.
 1. Sign in at https://dashboard.render.com with GitHub and allow access to the `heimdall` repo.
 2. **New → Blueprint**, pick the `heimdall` repo, branch `main`. Render reads `render.yaml`.
 3. It asks for the secret values. Copy each from `backend/.env`:
-   `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`,
+   `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`,
    `GEMINI_API_KEY`, `GROQ_API_KEY`, `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`.
-   For `CORS_ORIGINS` enter `http://localhost:3000` for now (changed in step 3).
+   (`SUPABASE_JWT_SECRET` is not needed: sign-in tokens are checked against Supabase's public
+   keys.) For `CORS_ORIGINS` enter `http://localhost:3000` for now (changed in step 3).
 4. **Apply**. The first build takes 5–10 minutes. When it is live, open
    `https://<service>.onrender.com/health`; it must show `{"status":"ok",...}`. Copy that base URL.
 
