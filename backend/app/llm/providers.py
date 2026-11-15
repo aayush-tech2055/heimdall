@@ -32,13 +32,20 @@ def _post(client: httpx.Client, name: str, url: str, **kwargs: object) -> dict:
     except httpx.HTTPError as exc:
         raise ProviderError(f"{name} request failed: {exc.__class__.__name__}") from exc
     if resp.status_code == 429:
-        raise RateLimitError(f"{name} rate limited (HTTP 429)")
+        raise RateLimitError(f"{name} rate limited (HTTP 429)", _retry_after(resp))
     if resp.is_error:
         raise ProviderError(f"{name} HTTP {resp.status_code}: {resp.text[:200]}")
     try:
         return resp.json()
     except ValueError as exc:
         raise ProviderError(f"{name} returned a non-JSON response") from exc
+
+
+def _retry_after(resp: httpx.Response) -> float | None:
+    try:
+        return float(resp.headers["retry-after"])
+    except (KeyError, ValueError):
+        return None
 
 
 class GeminiProvider:

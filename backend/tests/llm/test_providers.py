@@ -122,3 +122,10 @@ def test_build_providers_follows_order_and_skips_missing_keys():
 def test_openrouter_needs_a_model_name():
     settings = _settings(openrouter_api_key="o", openrouter_model="")
     assert build_providers(settings) == []
+
+
+def test_retry_after_header_is_carried_on_rate_limit():
+    handler = lambda r: httpx.Response(429, headers={"retry-after": "7"}, json={})  # noqa: E731
+    with pytest.raises(RateLimitError) as exc_info:
+        GeminiProvider("k", "m", client_for(handler)).complete("s", "p")
+    assert exc_info.value.retry_after == 7.0

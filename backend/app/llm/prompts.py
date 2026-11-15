@@ -25,7 +25,7 @@ from app.models.llm import (
     ClaimVerification,
     FactExtraction,
     JudgeOutput,
-    PairVerdict,
+    PairChecks,
     RuleExtraction,
     VaguenessCheck,
 )
@@ -103,7 +103,9 @@ def _units_section(units: Sequence[UnitRef]) -> str:
 RULE_EXTRACTION_SYSTEM = f"""You turn one page of a brand guideline into a list of rules.
 
 A rule is one instruction that a reviewer could check a piece of marketing content against.
-- Split sentences that contain several independent instructions into separate rules.
+- Usually one bullet point or sentence of the guideline is one rule. Split it only when it
+  mixes an exact word list with other instructions (the word list becomes its own rule) or
+  covers two different categories.
 - Keep each rule close to the guideline's own wording; do not add requirements.
 - Skip text that is not an instruction: titles, introductions, tables of contents, history.
 - Do not number the rules or invent rule codes; the system assigns codes and pages.
@@ -111,10 +113,16 @@ A rule is one instruction that a reviewer could check a piece of marketing conte
 {CATEGORY_GUIDE}
 
 check_type:
-- "deterministic" only when the rule is an exact word list: words or phrases that must never
-  appear (det_kind "banned_terms") or an exact phrase that must appear (det_kind
-  "required_phrase"). Put each exact word or phrase in "terms", as written in the guideline.
-- "semantic" for everything else (det_kind null, terms empty).
+- "deterministic" with det_kind "banned_terms" only when the guideline lists exact words,
+  phrases or spellings that must never appear (for example "Never use these words: ..." or
+  "Never write X or Y"). Put each banned word or spelling in "terms", exactly as written.
+- "deterministic" with det_kind "required_phrase" only when the guideline gives exact text
+  that every piece of content must contain (for example "must end with the line ...").
+  Put that exact text in "terms".
+- Never put the brand's own correct name or product names in "terms".
+- "semantic" for everything else, including rules whose quoted words are only examples of a
+  broader idea (for example "never make health claims such as 'cures headaches'"): det_kind
+  null, terms empty.
 
 examples_bad / examples_good: copy examples only if the guideline gives them; never invent.
 always_on: true only for rules that apply to every piece of content whatever its topic
@@ -130,20 +138,26 @@ def rule_extraction(page_text: str, *, page: int, source_doc: str) -> Prompt:
     return Prompt("rule_extraction", RuleExtraction, RULE_EXTRACTION_SYSTEM, prompt)
 
 
-PAIR_CHECK_SYSTEM = """You compare two rules from the same brand guideline.
+PAIR_CHECK_SYSTEM = """You compare pairs of rules from the same brand guideline.
 
-Label the pair:
+Label every pair, using its pair_id:
 - "duplicate": both rules require the same thing (one may be worded differently or be a
   subset that adds nothing).
-- "contradiction": content cannot satisfy both rules at the same time.
+- "contradiction": some content could not satisfy both rules at the same time (for example
+  one rule requires something that the other forbids for the same kind of content).
 - "compatible": anything else, including rules that are related but can both be followed.
 
-Explain your label in one or two plain sentences that name both rule codes."""
+Explain each label in one or two plain sentences that name both rule codes."""
 
 
-def pair_check(rule_a: RuleRef, rule_b: RuleRef) -> Prompt:
-    prompt = "Compare these two rules.\n\n" + _rules_section([rule_a, rule_b])
-    return Prompt("pair_check", PairVerdict, PAIR_CHECK_SYSTEM, prompt)
+def pair_check(pairs: Sequence[tuple[str, RuleRef, RuleRef]]) -> Prompt:
+    """Label up to ~10 candidate pairs in one call (decision 21)."""
+    blocks = [
+        f'<pair id="{pair_id}">\n{_rule_block(a)}\n{_rule_block(b)}\n</pair>'
+        for pair_id, a, b in pairs
+    ]
+    prompt = "Label each pair of rules.\n\n" + "\n\n".join(blocks)
+    return Prompt("pair_check", PairChecks, PAIR_CHECK_SYSTEM, prompt)
 
 
 VAGUENESS_SYSTEM = """You review brand guideline rules for testability.

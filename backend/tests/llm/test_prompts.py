@@ -24,7 +24,7 @@ FACTS = [FactRef("F-007", "Pro plan", "price", "599", "INR/month", "Pro costs Rs
 def all_prompts() -> dict[str, prompts.Prompt]:
     return {
         "rule_extraction": prompts.rule_extraction(INJECTION, page=4, source_doc="guide.pdf"),
-        "pair_check": prompts.pair_check(RULES[0], RULES[1]),
+        "pair_check": prompts.pair_check([("p1", RULES[0], RULES[1])]),
         "vagueness_check": prompts.vagueness_check(RULES),
         "judge": prompts.judge(UNITS, RULES),
         "claim_extraction": prompts.claim_extraction(UNITS),
@@ -101,3 +101,9 @@ def test_prompt_round_trip_through_the_client():
     result = client.json(p.schema, p.system, p.prompt, purpose=p.purpose)
     assert result.flags[0].rule_code == "R-001"
     assert provider.calls[0][1] == p.prompt
+
+
+def test_pair_check_batches_pairs_with_ids():
+    p = prompts.pair_check([("p1", RULES[0], RULES[1]), ("p2", RULES[1], RULES[0])])
+    assert '<pair id="p1">' in p.prompt and '<pair id="p2">' in p.prompt
+    assert p.prompt.count("[R-001]") == 2

@@ -183,3 +183,43 @@ def test_parse_output_tolerates_fences_and_chatter(reply):
 
 def test_strip_code_fences_leaves_plain_text_alone():
     assert strip_code_fences('{"a": "```"}') == '{"a": "```"}'
+
+
+# --- Rate-limit rounds (every provider busy) -------------------------------------------------
+
+
+def _limited(name, retry_after=None):
+    return RateLimitError(f"{name} rate limited (HTTP 429)", retry_after)
+
+
+def test_when_every_provider_is_rate_limited_the_chain_is_retried_after_a_wait():
+    sleeps: list[float] = []
+    gemini = FakeProvider("gemini", [_limited("gemini"), GOOD])
+    groq = FakeProvider("groq", [_limited("groq", retry_after=12)])
+    client = LLMClient([gemini, groq], SQLiteCache(":memory:"), MemoryCallLogger(),
+                       rate_limit_wait=5, sleep=sleeps.append)  # fmt: skip
+    assert ask(client).label == "compatible"
+    assert sleeps == [12]  # Retry-After (12 s) beats the 5 s backoff
+    assert len(gemini.calls) == 2 and len(groq.calls) == 1
+
+
+def test_rate_limit_rounds_give_up_with_a_clear_error_and_capped_waits():
+    sleeps: list[float] = []
+    gemini = FakeProvider("gemini", [_limited("gemini", retry_after=90)] * 3)
+    client = LLMClient([gemini], SQLiteCache(":memory:"), MemoryCallLogger(),
+                       rate_limit_rounds=3, rate_limit_wait=5, sleep=sleeps.append)  # fmt: skip
+    with pytest.raises(LLMUnavailableError, match="gemini: rate limited"):
+        ask(client)
+    assert sleeps == [30.0, 30.0]  # two waits between three rounds, each capped at 30 s
+    assert len(gemini.calls) == 3
+
+
+def test_no_extra_round_when_a_failure_was_not_a_rate_limit():
+    sleeps: list[float] = []
+    gemini = FakeProvider("gemini", [_limited("gemini")])
+    groq = FakeProvider("groq", [ProviderError("groq HTTP 500")])
+    client = LLMClient([gemini, groq], SQLiteCache(":memory:"), MemoryCallLogger(),
+                       sleep=sleeps.append)  # fmt: skip
+    with pytest.raises(LLMUnavailableError):
+        ask(client)
+    assert sleeps == []

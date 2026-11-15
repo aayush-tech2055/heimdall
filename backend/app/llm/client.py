@@ -10,6 +10,7 @@ Every provider call and every cache hit is logged (decision 25).
 import json
 import re
 import time
+from collections.abc import Callable
 from typing import TypeVar
 from uuid import UUID
 
@@ -82,10 +83,17 @@ class LLMClient:
         providers: list[Provider],
         cache: SQLiteCache,
         logger: CallLogger,
+        *,
+        rate_limit_rounds: int = 3,
+        rate_limit_wait: float = 5.0,
+        sleep: Callable[[float], None] = time.sleep,
     ) -> None:
         self._providers = providers
         self._cache = cache
         self._logger = logger
+        self._rounds = max(1, rate_limit_rounds)
+        self._wait = rate_limit_wait
+        self._sleep = sleep
 
     @property
     def provider_names(self) -> list[str]:
@@ -125,24 +133,40 @@ class LLMClient:
 
         full_system = f"{system}\n\n{CONTENT_GUARD}\n\n{schema_instructions(schema)}"
         attempts: list[tuple[str, str]] = []
-        for provider in self._providers:
-            try:
-                result = self._ask(provider, schema, full_system, prompt, context)
-            except RateLimitError:
-                attempts.append((provider.name, "rate limited"))
-                continue
-            except ProviderError as exc:
-                attempts.append((provider.name, str(exc)))
-                continue
-            except InvalidOutputError as exc:
-                attempts.append((provider.name, f"invalid output after one repair ({exc})"))
-                continue
-            self._cache.set(
-                key,
-                {"provider": provider.name, "model": provider.model,
-                 "output": result.model_dump(mode="json")},
-            )  # fmt: skip
-            return result
+        for round_number in range(1, self._rounds + 1):
+            round_attempts: list[tuple[str, str]] = []
+            retry_after: list[float] = []
+            for provider in self._providers:
+                try:
+                    result = self._ask(provider, schema, full_system, prompt, context)
+                except RateLimitError as exc:
+                    round_attempts.append((provider.name, "rate limited"))
+                    if exc.retry_after is not None:
+                        retry_after.append(exc.retry_after)
+                    continue
+                except ProviderError as exc:
+                    round_attempts.append((provider.name, str(exc)))
+                    continue
+                except InvalidOutputError as exc:
+                    round_attempts.append(
+                        (provider.name, f"invalid output after one repair ({exc})")
+                    )
+                    continue
+                self._cache.set(
+                    key,
+                    {"provider": provider.name, "model": provider.model,
+                     "output": result.model_dump(mode="json")},
+                )  # fmt: skip
+                return result
+            attempts = round_attempts
+            all_rate_limited = bool(round_attempts) and all(
+                reason == "rate limited" for _, reason in round_attempts
+            )
+            if not all_rate_limited or round_number == self._rounds:
+                break
+            # Every provider is busy: wait, then try the whole chain again.
+            backoff = self._wait * 3 ** (round_number - 1)
+            self._sleep(min(30.0, max([backoff, *retry_after])))
         raise LLMUnavailableError(purpose, attempts)
 
     def _ask(
