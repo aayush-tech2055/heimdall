@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FilterTabs } from "@/components/ui/filter-tabs";
 import { api, ApiError } from "@/lib/api";
 import type { Fact, FactStatus, Me } from "@/types/api";
 
@@ -196,17 +196,17 @@ function FactsWorkspace({ me }: { me: Me }) {
         </Alert>
       )}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)}>
-          <TabsList>
-            {(["all", "pending", "approved", "rejected"] as Filter[]).map(
-              (f) => (
-                <TabsTrigger key={f} value={f} className="capitalize">
-                  {f} ({count(f)})
-                </TabsTrigger>
-              ),
-            )}
-          </TabsList>
-        </Tabs>
+        <FilterTabs
+          label="Filter facts by status"
+          value={filter}
+          onChange={setFilter}
+          options={(["all", "pending", "approved", "rejected"] as Filter[]).map(
+            (f) => ({
+              value: f,
+              label: `${f[0].toUpperCase()}${f.slice(1)} (${count(f)})`,
+            }),
+          )}
+        />
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative">
             <Search

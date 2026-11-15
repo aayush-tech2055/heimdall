@@ -7,7 +7,7 @@ import { RoleGate } from "@/components/auth/role-gate";
 import { ContentTable } from "@/components/content/content-table";
 import { PageHeader } from "@/components/shell/page-header";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FilterTabs } from "@/components/ui/filter-tabs";
 import { api, ApiError } from "@/lib/api";
 import type { ContentStatus, ContentSummary, Me } from "@/types/api";
 
@@ -51,18 +51,15 @@ function Queue({ me }: { me: Me }) {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-      <Tabs
+      <FilterTabs
+        label="Filter by status"
         value={tab}
-        onValueChange={(v) => setTab(v as ContentStatus | "all")}
-      >
-        <TabsList>
-          {TABS.map((t) => (
-            <TabsTrigger key={t.value} value={t.value}>
-              {t.label} ({count(t.value)})
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+        onChange={setTab}
+        options={TABS.map((t) => ({
+          value: t.value,
+          label: `${t.label} (${count(t.value)})`,
+        }))}
+      />
       {items === null ? (
         <p
           className="text-muted-foreground flex items-center gap-2"

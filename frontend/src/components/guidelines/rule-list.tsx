@@ -12,7 +12,7 @@ import { CATEGORIES } from "@/types/flag";
 const STATUS_STYLE: Record<RuleStatus, string> = {
   pending: "bg-amber-100 text-amber-900 border-amber-300",
   approved: "bg-green-100 text-green-900 border-green-300",
-  rejected: "bg-muted text-muted-foreground",
+  rejected: "bg-neutral-100 text-neutral-700 border-neutral-300",
 };
 
 export function StatusBadge({ status }: { status: RuleStatus }) {
@@ -80,7 +80,7 @@ export function RuleList({
                     className={cn(
                       "flex scroll-mt-24 gap-3 p-3",
                       highlighted.has(rule.rule_code) && "bg-amber-50",
-                      rule.status === "rejected" && "opacity-70",
+                      rule.status === "rejected" && "bg-muted/40",
                     )}
                   >
                     <Checkbox

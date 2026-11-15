@@ -81,7 +81,7 @@ export function FlagStatusBadge({ status }: { status: FlagStatus }) {
       className={cn(
         status === "open"
           ? "border-foreground/30"
-          : "bg-muted text-muted-foreground",
+          : "bg-neutral-100 text-neutral-700 border-neutral-300",
       )}
     >
       {FLAG_STATUS[status]}

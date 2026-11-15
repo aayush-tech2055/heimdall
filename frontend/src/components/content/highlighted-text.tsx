@@ -115,7 +115,7 @@ export function HighlightedText({
               className={cn(
                 "cursor-pointer rounded-sm text-inherit underline decoration-2 underline-offset-4",
                 SEVERITY_STYLE[worst.severity].mark,
-                dismissed && "bg-transparent decoration-dotted opacity-70",
+                dismissed && "bg-transparent decoration-dotted",
                 selected && "ring-ring ring-2",
               )}
             >
