@@ -25,7 +25,10 @@ export function RoleGate({
 
   if (loading || !session) {
     return (
-      <p className="text-muted-foreground flex items-center gap-2" role="status">
+      <p
+        className="text-muted-foreground flex items-center gap-2"
+        role="status"
+      >
         <Loader2 className="size-4 animate-spin" aria-hidden /> Loading…
       </p>
     );
@@ -34,7 +37,9 @@ export function RoleGate({
     return (
       <Alert variant="destructive">
         <AlertTitle>Could not load your account</AlertTitle>
-        <AlertDescription>{error ?? "No Heimdall profile for this account."}</AlertDescription>
+        <AlertDescription>
+          {error ?? "No Heimdall profile for this account."}
+        </AlertDescription>
       </Alert>
     );
   }
@@ -43,7 +48,8 @@ export function RoleGate({
       <Alert>
         <AlertTitle>Not available for your role</AlertTitle>
         <AlertDescription>
-          This page is for {roles.join(" or ")} users. You are signed in as {me.role}.
+          This page is for {roles.join(" or ")} users. You are signed in as{" "}
+          {me.role}.
         </AlertDescription>
       </Alert>
     );

@@ -59,3 +59,25 @@ export interface GuidelineUploadResult {
   rules: Rule[];
   report: VerificationReport;
 }
+
+export type FactStatus = "pending" | "approved" | "rejected";
+export type Expiry = "valid" | "expiring" | "expired" | "no_expiry";
+
+export interface Fact {
+  fact_code: string;
+  entity: string;
+  attribute: string;
+  value: string;
+  unit: string | null;
+  statement: string;
+  source: string | null;
+  valid_until: string | null;
+  status: FactStatus;
+  expiry: Expiry;
+  updated_at: string;
+}
+
+export type FactInput = Omit<
+  Fact,
+  "fact_code" | "status" | "expiry" | "updated_at"
+>;

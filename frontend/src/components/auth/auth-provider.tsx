@@ -1,7 +1,14 @@
 "use client";
 
 import type { Session } from "@supabase/supabase-js";
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import { api, ApiError } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
@@ -36,7 +43,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(null);
     } catch (e) {
       setMe(null);
-      setError(e instanceof ApiError ? e.message : "Could not load your profile");
+      setError(
+        e instanceof ApiError ? e.message : "Could not load your profile",
+      );
     } finally {
       setLoading(false);
     }
@@ -60,7 +69,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       error,
       signIn: async (email, password) => {
         setLoading(true);
-        const { error: signInError } = await supabase().auth.signInWithPassword({ email, password });
+        const { error: signInError } = await supabase().auth.signInWithPassword(
+          { email, password },
+        );
         if (signInError) {
           setLoading(false);
           throw new Error(signInError.message);

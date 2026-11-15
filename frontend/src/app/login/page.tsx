@@ -7,7 +7,13 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { HOME_BY_ROLE } from "@/lib/roles";
@@ -44,7 +50,9 @@ export default function LoginPage() {
           <CardTitle>
             <h1>Sign in to Heimdall</h1>
           </CardTitle>
-          <CardDescription>Use the account your brand admin gave you.</CardDescription>
+          <CardDescription>
+            Use the account your brand admin gave you.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
@@ -75,7 +83,11 @@ export default function LoginPage() {
                 <AlertDescription>{error ?? profileError}</AlertDescription>
               </Alert>
             )}
-            <Button type="submit" className="w-full" disabled={submitting || (loading && !!me)}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={submitting || (loading && !!me)}
+            >
               {submitting && <Loader2 className="animate-spin" aria-hidden />}
               Sign in
             </Button>

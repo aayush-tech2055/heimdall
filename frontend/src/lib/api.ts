@@ -26,7 +26,9 @@ function describe(detail: unknown): string {
   if (typeof detail === "string") return detail;
   if (Array.isArray(detail)) {
     return detail
-      .map((d) => (typeof d === "object" && d && "msg" in d ? String(d.msg) : String(d)))
+      .map((d) =>
+        typeof d === "object" && d && "msg" in d ? String(d.msg) : String(d),
+      )
       .join("; ");
   }
   return "Something went wrong";
@@ -36,7 +38,8 @@ function describe(detail: unknown): string {
 export async function api<T>(path: string, options: Options = {}): Promise<T> {
   const { data } = await supabase().auth.getSession();
   const headers: Record<string, string> = {};
-  if (data.session) headers.Authorization = `Bearer ${data.session.access_token}`;
+  if (data.session)
+    headers.Authorization = `Bearer ${data.session.access_token}`;
   let body: BodyInit | undefined;
   if (options.form) body = options.form;
   else if (options.json !== undefined) {
@@ -45,7 +48,8 @@ export async function api<T>(path: string, options: Options = {}): Promise<T> {
   }
   const url = new URL(path, API_URL);
   for (const [key, value] of Object.entries(options.query ?? {})) {
-    if (value !== undefined && value !== null && value !== "") url.searchParams.set(key, String(value));
+    if (value !== undefined && value !== null && value !== "")
+      url.searchParams.set(key, String(value));
   }
   let response: Response;
   try {
@@ -56,7 +60,10 @@ export async function api<T>(path: string, options: Options = {}): Promise<T> {
       signal: options.signal,
     });
   } catch {
-    throw new ApiError(0, "Cannot reach the Heimdall API. Is the backend running?");
+    throw new ApiError(
+      0,
+      "Cannot reach the Heimdall API. Is the backend running?",
+    );
   }
   if (!response.ok) {
     let message = `${response.status} ${response.statusText}`;

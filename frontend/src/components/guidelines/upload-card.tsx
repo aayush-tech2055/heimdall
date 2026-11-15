@@ -5,7 +5,13 @@ import { useState } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -39,7 +45,11 @@ export function UploadCard({
     }
     setBusy(true);
     try {
-      onDone(await api<GuidelineUploadResult>(`/brands/${brandId}/guidelines`, { form }));
+      onDone(
+        await api<GuidelineUploadResult>(`/brands/${brandId}/guidelines`, {
+          form,
+        }),
+      );
       setFile(null);
       setText("");
     } catch (e) {
@@ -56,9 +66,9 @@ export function UploadCard({
           <h2>Upload guidelines</h2>
         </CardTitle>
         <CardDescription>
-          Heimdall splits the guideline into one rule per instruction, then checks it for
-          duplicates, contradictions, vague rules and missing categories. New rules stay pending
-          until you approve them.
+          Heimdall splits the guideline into one rule per instruction, then
+          checks it for duplicates, contradictions, vague rules and missing
+          categories. New rules stay pending until you approve them.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -69,7 +79,9 @@ export function UploadCard({
               <TabsTrigger value="text">Paste text</TabsTrigger>
             </TabsList>
             <TabsContent value="pdf" className="space-y-2 pt-2">
-              <Label htmlFor="guideline-file">Guideline PDF (up to 10 MB)</Label>
+              <Label htmlFor="guideline-file">
+                Guideline PDF (up to 10 MB)
+              </Label>
               <Input
                 id="guideline-file"
                 type="file"
@@ -94,8 +106,14 @@ export function UploadCard({
             </Alert>
           )}
           <Button type="submit" disabled={busy}>
-            {busy ? <Loader2 className="animate-spin" aria-hidden /> : <Upload aria-hidden />}
-            {busy ? "Extracting and checking rules… (about a minute)" : "Upload and extract rules"}
+            {busy ? (
+              <Loader2 className="animate-spin" aria-hidden />
+            ) : (
+              <Upload aria-hidden />
+            )}
+            {busy
+              ? "Extracting and checking rules… (about a minute)"
+              : "Upload and extract rules"}
           </Button>
         </form>
       </CardContent>

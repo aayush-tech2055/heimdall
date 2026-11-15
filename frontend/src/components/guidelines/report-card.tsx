@@ -1,10 +1,22 @@
 "use client";
 
-import { AlertTriangle, CheckCircle2, Copy, HelpCircle, Layers } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Copy,
+  HelpCircle,
+  Layers,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import type { PairIssue, VerificationReport } from "@/types/api";
 
 function RuleLink({ code }: { code: string }) {
@@ -19,13 +31,17 @@ function RuleLink({ code }: { code: string }) {
 }
 
 function PairList({ items, empty }: { items: PairIssue[]; empty: string }) {
-  if (!items.length) return <p className="text-muted-foreground text-sm">{empty}</p>;
+  if (!items.length)
+    return <p className="text-muted-foreground text-sm">{empty}</p>;
   return (
     <ul className="space-y-2">
       {items.map((p) => (
         <li key={`${p.rule_a}-${p.rule_b}`} className="text-sm">
           <RuleLink code={p.rule_a} /> and <RuleLink code={p.rule_b} />
-          <span className="text-muted-foreground"> · similarity {p.similarity.toFixed(2)}</span>
+          <span className="text-muted-foreground">
+            {" "}
+            · similarity {p.similarity.toFixed(2)}
+          </span>
           <p className="text-muted-foreground mt-0.5">{p.explanation}</p>
         </li>
       ))}
@@ -62,14 +78,16 @@ export function ReportCard({
           {problems
             ? `${problems} issue${problems === 1 ? "" : "s"} to review`
             : "No issues found"}{" "}
-          · {report.rules_checked} rules and {report.pairs_checked} similar pairs checked. Fix
-          issues by editing or rejecting rules, then re-run the check.
+          · {report.rules_checked} rules and {report.pairs_checked} similar
+          pairs checked. Fix issues by editing or rejecting rules, then re-run
+          the check.
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-6 md:grid-cols-2">
         <section aria-labelledby="dup-h">
           <h3 id="dup-h" className="mb-2 flex items-center gap-2 font-medium">
-            <Copy className="size-4" aria-hidden /> Duplicates ({report.duplicates.length})
+            <Copy className="size-4" aria-hidden /> Duplicates (
+            {report.duplicates.length})
           </h3>
           <PairList items={report.duplicates} empty="No duplicate rules." />
         </section>
@@ -78,11 +96,15 @@ export function ReportCard({
             <AlertTriangle className="size-4" aria-hidden /> Contradictions (
             {report.contradictions.length})
           </h3>
-          <PairList items={report.contradictions} empty="No contradicting rules." />
+          <PairList
+            items={report.contradictions}
+            empty="No contradicting rules."
+          />
         </section>
         <section aria-labelledby="vague-h">
           <h3 id="vague-h" className="mb-2 flex items-center gap-2 font-medium">
-            <HelpCircle className="size-4" aria-hidden /> Vague rules ({report.vague.length})
+            <HelpCircle className="size-4" aria-hidden /> Vague rules (
+            {report.vague.length})
           </h3>
           {report.vague.length ? (
             <ul className="space-y-3">
@@ -100,7 +122,9 @@ export function ReportCard({
                         size="sm"
                         variant="outline"
                         className="mt-2"
-                        onClick={() => onUseRewrite(v.rule_code, v.suggested_rewrite!)}
+                        onClick={() =>
+                          onUseRewrite(v.rule_code, v.suggested_rewrite!)
+                        }
                       >
                         Use this rewrite
                       </Button>
@@ -110,7 +134,9 @@ export function ReportCard({
               ))}
             </ul>
           ) : (
-            <p className="text-muted-foreground text-sm">Every rule is testable.</p>
+            <p className="text-muted-foreground text-sm">
+              Every rule is testable.
+            </p>
           )}
         </section>
         <section aria-labelledby="miss-h">
@@ -127,7 +153,9 @@ export function ReportCard({
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground text-sm">Every required category has rules.</p>
+            <p className="text-muted-foreground text-sm">
+              Every required category has rules.
+            </p>
           )}
         </section>
       </CardContent>

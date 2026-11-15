@@ -132,9 +132,9 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 - [x] **4.6** `[V]` Admin screen: upload guidelines, view extracted rules grouped by category with their page, the verification report at the top (each issue linked to its rules), edit a rule, approve or reject in bulk.
 
 ### Milestone 5: Facts
-- [ ] **5.1** `[A]` Fact store: add (approved immediately when an admin types it in), edit, import CSV, embed statements, entity-plus-hybrid search (decision 14).
-- [ ] **5.2** `[A]` API: `GET/POST/PATCH /brands/{id}/facts`, `POST /brands/{id}/facts/import`.
-- [ ] **5.3** `[V]` Admin facts screen: a table with search, expiry badges (expired, expiring within 30 days), add, edit and CSV import.
+- [x] **5.1** `[A]` Fact store: add (approved immediately when an admin types it in), edit, import CSV, embed statements, entity-plus-hybrid search (decision 14).
+- [x] **5.2** `[A]` API: `GET/POST/PATCH /brands/{id}/facts`, `POST /brands/{id}/facts/import`.
+- [x] **5.3** `[V]` Admin facts screen: a table with search, expiry badges (expired, expiring within 30 days), add, edit and CSV import.
 
 ### Milestone 6: Review engine for text (core of Round 2)
 - [ ] **6.1** `[A]` Segmentation for text: units with paragraph and character span (decision 15).
