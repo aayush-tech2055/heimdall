@@ -1,6 +1,13 @@
 "use client";
 
-import { CheckCircle2, Loader2, RefreshCw, Send, Undo2 } from "lucide-react";
+import {
+  CheckCheck,
+  CheckCircle2,
+  Loader2,
+  RefreshCw,
+  Send,
+  Undo2,
+} from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
@@ -51,6 +58,7 @@ export function ReviewWorkspace({
   const [showResolved, setShowResolved] = useState(false);
   const [decision, setDecision] = useState("");
   const [commentKey, setCommentKey] = useState(0);
+  const [picked, setPicked] = useState<Set<string>>(new Set());
 
   const oldVersion = !!viewing && viewing !== content?.latest_version_id;
   const visible = useMemo(() => {
@@ -83,13 +91,17 @@ export function ReviewWorkspace({
     );
   }
 
-  async function run<T>(label: string, fn: () => Promise<T>) {
+  async function run<T>(
+    label: string | ((result: T) => string),
+    fn: () => Promise<T>,
+  ) {
     setBusy(true);
     setActionError(null);
     setNotice(null);
     try {
-      await fn();
-      setNotice(label);
+      const result = await fn();
+      setNotice(typeof label === "function" ? label(result) : label);
+      setPicked(new Set());
       setCommentKey((k) => k + 1);
       await reload();
     } catch (e) {
@@ -151,6 +163,28 @@ export function ReviewWorkspace({
   const canDecide =
     mode === "manager" && !oldVersion && content.status === "manager_review";
   const openHigh = content.counts.open_high;
+  const fixable =
+    canEdit && content.format === "text"
+      ? visible.filter((f) => f.status === "open" && f.suggested_fix)
+      : [];
+  const pickedFixable = fixable.filter((f) => picked.has(f.id));
+  const allPicked =
+    fixable.length > 0 && pickedFixable.length === fixable.length;
+
+  function acceptFixes(ids: string[] | null) {
+    void run(
+      (out: { applied: string[]; skipped: string[] }) =>
+        `${out.applied.length} fix${out.applied.length === 1 ? "" : "es"} applied in one new version. Checking it…` +
+        (out.skipped.length
+          ? ` ${out.skipped.length} overlapped a more serious fix on the same words and were left for the re-check.`
+          : ""),
+      () =>
+        api<{ applied: string[]; skipped: string[] }>(
+          `/contents/${content!.id}/accept-fixes`,
+          { json: { flag_ids: ids } },
+        ),
+    );
+  }
   const codeOf = (id: string) =>
     flags?.flags.find((f) => f.id === id)?.source_id;
 
@@ -382,6 +416,47 @@ export function ReviewWorkspace({
                 </div>
               )}
             </div>
+            {fixable.length > 0 && (
+              <div
+                className="bg-muted flex flex-wrap items-center gap-2 rounded-md p-2"
+                role="group"
+                aria-label="Accept several fixes at once"
+              >
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={busy}
+                  aria-pressed={allPicked}
+                  onClick={() =>
+                    setPicked(
+                      allPicked ? new Set() : new Set(fixable.map((f) => f.id)),
+                    )
+                  }
+                >
+                  {allPicked ? "Clear selection" : "Select all"}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={busy || pickedFixable.length === 0}
+                  onClick={() => acceptFixes(pickedFixable.map((f) => f.id))}
+                >
+                  Accept selected fixes ({pickedFixable.length})
+                </Button>
+                <Button
+                  size="sm"
+                  disabled={busy}
+                  onClick={() => acceptFixes(null)}
+                >
+                  <CheckCheck aria-hidden /> Accept all fixes ({fixable.length})
+                </Button>
+                <p className="text-muted-foreground w-full text-xs">
+                  All chosen fixes go into one new version, which is checked
+                  once. Flags without a suggested fix still need an edit or a
+                  dismissal.
+                </p>
+              </div>
+            )}
             {visible.length === 0 ? (
               <p className="text-muted-foreground text-sm">
                 {mode === "manager"
@@ -395,6 +470,18 @@ export function ReviewWorkspace({
                   flag={flag}
                   canFix={content.format === "text"}
                   aiLabel={aiLabelFor(flag.layer)}
+                  picked={picked.has(flag.id)}
+                  onPick={
+                    fixable.some((f) => f.id === flag.id)
+                      ? (on) =>
+                          setPicked((prev) => {
+                            const next = new Set(prev);
+                            if (on) next.add(flag.id);
+                            else next.delete(flag.id);
+                            return next;
+                          })
+                      : undefined
+                  }
                   mode={
                     canEdit ? "creator" : canDecide ? "manager" : "readonly"
                   }

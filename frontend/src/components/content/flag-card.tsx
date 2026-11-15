@@ -14,6 +14,7 @@ import { useState } from "react";
 import { FlagStatusBadge, SeverityBadge } from "@/components/content/badges";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -64,6 +65,8 @@ export function FlagCard({
   onAction,
   canFix = true,
   aiLabel,
+  picked,
+  onPick,
 }: {
   flag: StoredFlag;
   mode: "creator" | "manager" | "readonly";
@@ -71,6 +74,9 @@ export function FlagCard({
   canFix?: boolean;
   /** Which provider and model produced this flag (from the AI call log). */
   aiLabel?: string;
+  /** Ticked for "Accept selected fixes"; the box shows only when onPick is given. */
+  picked?: boolean;
+  onPick?: (on: boolean) => void;
   selected: boolean;
   busy: boolean;
   onSelect: () => void;
@@ -96,6 +102,14 @@ export function FlagCard({
       )}
     >
       <div className="flex flex-wrap items-center gap-2">
+        {onPick && (
+          <Checkbox
+            aria-label={`Select the fix for ${flag.source_id}: ${flag.evidence || "missing text"}`}
+            checked={picked ?? false}
+            onClick={(e) => e.stopPropagation()}
+            onCheckedChange={(v) => onPick(v === true)}
+          />
+        )}
         <SeverityBadge severity={flag.severity} />
         <Badge variant="secondary" className="capitalize">
           {flag.category}

@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, RefreshCw } from "lucide-react";
+import { CheckCheck, Loader2, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { RoleGate } from "@/components/auth/role-gate";
@@ -26,6 +26,7 @@ function GuidelinesWorkspace({ me }: { me: Me }) {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [rechecking, setRechecking] = useState(false);
+  const [confirmAll, setConfirmAll] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -111,6 +112,22 @@ function GuidelinesWorkspace({ me }: { me: Me }) {
     }
   }
 
+  const pendingCodes = (rules ?? [])
+    .filter((r) => r.status === "pending")
+    .map((r) => r.rule_code);
+  const pendingWithIssues = pendingCodes.filter((c) => highlighted.has(c));
+  const allShownSelected =
+    shown.length > 0 && shown.every((r) => selected.has(r.rule_code));
+
+  function approveAllPending() {
+    if (pendingWithIssues.length && !confirmAll) {
+      setConfirmAll(true);
+      return;
+    }
+    setConfirmAll(false);
+    void setStatus(pendingCodes, "approve");
+  }
+
   const counts = (s: Filter) =>
     (rules ?? []).filter((r) => s === "all" || r.status === s).length;
 
@@ -173,8 +190,25 @@ function GuidelinesWorkspace({ me }: { me: Me }) {
               label: `${f[0].toUpperCase()}${f.slice(1)} (${counts(f)})`,
             }))}
           />
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button
+              variant="outline"
+              disabled={!shown.length}
+              aria-pressed={allShownSelected}
+              onClick={() =>
+                setSelected(
+                  allShownSelected
+                    ? new Set()
+                    : new Set(shown.map((r) => r.rule_code)),
+                )
+              }
+            >
+              {allShownSelected
+                ? "Clear selection"
+                : `Select all shown (${shown.length})`}
+            </Button>
+            <Button
+              variant="outline"
               disabled={!selected.size}
               onClick={() => setStatus([...selected], "approve")}
             >
@@ -187,8 +221,52 @@ function GuidelinesWorkspace({ me }: { me: Me }) {
             >
               Reject selected
             </Button>
+            <Button disabled={!pendingCodes.length} onClick={approveAllPending}>
+              <CheckCheck aria-hidden /> Approve all pending (
+              {pendingCodes.length})
+            </Button>
           </div>
         </div>
+        {confirmAll && (
+          <Alert role="alert">
+            <AlertDescription className="space-y-2">
+              <p>
+                {pendingWithIssues.length} of the {pendingCodes.length} pending
+                rules have issues in the verification report (
+                {pendingWithIssues.join(", ")}): duplicates, contradictions or
+                vague wording. Approve all of them anyway?
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" onClick={approveAllPending}>
+                  Approve all {pendingCodes.length}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setConfirmAll(false);
+                    void setStatus(
+                      pendingCodes.filter((c) => !highlighted.has(c)),
+                      "approve",
+                    );
+                  }}
+                  disabled={pendingWithIssues.length === pendingCodes.length}
+                >
+                  Approve only the{" "}
+                  {pendingCodes.length - pendingWithIssues.length} without
+                  issues
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setConfirmAll(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
         {rules === null ? (
           <p
             className="text-muted-foreground flex items-center gap-2"

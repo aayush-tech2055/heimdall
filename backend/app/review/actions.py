@@ -2,6 +2,9 @@
 
 * accept / edit: apply the suggested fix (or the creator's own replacement) to the text,
   create a new version and re-check it; dismissed flags stay dismissed on the new version.
+* accept several (or all) fixes at once: apply every chosen fix to the text in one go, so there
+  is one new version and one re-check. Where fixes overlap, the most severe flag wins; the
+  others stay open on the old version (the re-check raises them again if still relevant).
 * dismiss (creator) and except (manager) always store a reason (decision 2); an exception
   also creates an `approved_exceptions` row, so citation validation drops the same flag later.
 * submit for approval needs every high-severity flag resolved.
@@ -125,6 +128,132 @@ def fix_flag(
           entity_type="flag", entity_id=str(flag_id),
           after={"replacement": new, "new_version_id": str(version_id)})  # fmt: skip
     return flag.content_id, version_id
+
+
+SEVERITY_RANK = {"high": 0, "medium": 1, "low": 2}
+
+
+@dataclass
+class FixCandidate:
+    id: UUID
+    severity: str
+    start: int
+    end: int
+    fix: str
+
+
+@dataclass
+class BulkFixResult:
+    content_id: UUID
+    version_id: UUID
+    applied: list[UUID]
+    skipped: list[UUID]
+
+
+def _overlaps(a: FixCandidate, b: FixCandidate) -> bool:
+    """Two fixes clash if their spans overlap, or both insert at the same point."""
+    if a.start == a.end and b.start == b.end:
+        return a.start == b.start
+    if a.start == a.end:
+        return b.start < a.start < b.end
+    if b.start == b.end:
+        return a.start < b.start < a.end
+    return a.start < b.end and b.start < a.end
+
+
+def choose_fixes(candidates: list[FixCandidate]) -> tuple[list[FixCandidate], list[FixCandidate]]:
+    """Pick a set of non-clashing fixes: most severe first, then the longer span.
+
+    A fix identical to a chosen one (same span, same text) counts as chosen too.
+    Returns (chosen, skipped).
+    """
+    order = sorted(
+        candidates, key=lambda c: (SEVERITY_RANK.get(c.severity, 3), -(c.end - c.start), c.start)
+    )
+    chosen: list[FixCandidate] = []
+    skipped: list[FixCandidate] = []
+    for cand in order:
+        same = next(
+            (c for c in chosen if (c.start, c.end, c.fix) == (cand.start, cand.end, cand.fix)),
+            None,
+        )
+        if same is None and any(_overlaps(cand, c) for c in chosen):
+            skipped.append(cand)
+        else:
+            chosen.append(cand)
+    return chosen, skipped
+
+
+def apply_fixes(text: str, fixes: list[FixCandidate]) -> str:
+    """Apply non-clashing fixes from the end of the text backwards, so offsets stay valid."""
+    unique = {(f.start, f.end, f.fix): f for f in fixes}.values()
+    for fix in sorted(unique, key=lambda f: (f.start, f.end), reverse=True):
+        text = apply_fix(text, fix.start, fix.end, fix.fix)
+    return text
+
+
+def fix_many(
+    conn: psycopg.Connection,
+    user: CurrentUser,
+    content_id: UUID,
+    flag_ids: list[UUID] | None,
+) -> BulkFixResult:
+    """Accept the suggested fixes of `flag_ids` (None: every open flag with a fix) on the
+    latest version, in one new version."""
+    row = conn.execute(
+        "select c.creator_id, c.status, c.format, c.brand_id, v.id, coalesce(v.extracted_text, '') "
+        "from public.contents c join public.content_versions v on v.content_id = c.id "
+        "where c.id = %s and c.brand_id = %s order by v.version_number desc limit 1",
+        (content_id, user.brand_id),
+    ).fetchone()
+    if row is None or (user.role == "creator" and row[0] != user.id):
+        raise NotFoundError("content")
+    creator_id, content_status, fmt, brand_id, version_id, text = row
+    if user.role != "creator" or creator_id != user.id:
+        raise ActionError("Only the content's creator can do this", 403)
+    if content_status not in EDITABLE:
+        raise ActionError(f"Content is {content_status}; flags can't change now")
+    if fmt != "text":
+        raise ActionError(
+            f"Fixes can't be applied inside a {fmt}; upload a corrected file as a new version"
+        )
+    rows = conn.execute(
+        "select id, severity, evidence, suggested_fix, "
+        "(location->>'evidence_start')::int, (location->>'evidence_end')::int "
+        "from public.flags where version_id = %s and status = 'open' "
+        "and suggested_fix is not null",
+        (version_id,),
+    ).fetchall()
+    by_id = {r[0]: r for r in rows}
+    if flag_ids is not None:
+        unknown = [f for f in flag_ids if f not in by_id]
+        if unknown:
+            raise ActionError(
+                f"{len(unknown)} of the chosen flags are not open flags with a fix on the "
+                "latest version; reload and try again"
+            )
+        rows = [by_id[f] for f in dict.fromkeys(flag_ids)]
+    candidates = [
+        FixCandidate(fid, sev, start, end, fix)
+        for fid, sev, evidence, fix, start, end in rows
+        if start is not None and end is not None and text[start:end] == evidence
+    ]
+    if not candidates:
+        raise ActionError("There are no fixes to apply", 422)
+    chosen, skipped = choose_fixes(candidates)
+    new_text = apply_fixes(text, chosen)
+    applied = [c.id for c in chosen]
+    conn.execute(
+        "update public.flags set status = 'accepted', resolved_by = %s, resolved_at = now() "
+        "where id = any(%s)",
+        (user.id, applied),
+    )
+    new_version = add_version(conn, user, content_id, new_text)
+    audit(conn, brand_id=brand_id, actor_id=user.id, action="flag.accepted_bulk",
+          entity_type="content", entity_id=str(content_id),
+          after={"flags": [str(a) for a in applied], "skipped": [str(s.id) for s in skipped],
+                 "new_version_id": str(new_version)})  # fmt: skip
+    return BulkFixResult(content_id, new_version, applied, [s.id for s in skipped])
 
 
 def dismiss_flag(conn: psycopg.Connection, user: CurrentUser, flag_id: UUID, reason: str) -> None:

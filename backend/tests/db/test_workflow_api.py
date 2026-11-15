@@ -210,3 +210,40 @@ def test_another_creator_cannot_act_on_flags(loop, db):
     )
     assert api.post(f"/flags/{flag['id']}/dismiss", json={"reason": "Not mine."}).status_code == 404
     assert api.post(f"/flags/{flag['id']}/accept").status_code == 404
+
+
+def test_accept_all_fixes_makes_one_new_version(loop):
+    api, users, current, db = loop
+    c = api.post(
+        "/contents",
+        data={"title": "Bulk", "text": "That is embarrassing. A cheap course."},
+    ).json()
+    cid = c["id"]
+    c = api.get(f"/contents/{cid}").json()
+    flags = flags_of(api, c)
+    assert {f["source_id"] for f in flags} == {"R-001", "R-002"}
+
+    # A manager can't accept a creator's fixes; an unknown flag id is refused.
+    current.update(user=users["manager"])
+    assert api.post(f"/contents/{cid}/accept-fixes", json={}).status_code == 403
+    current.update(user=users["creator"])
+    bad = api.post(
+        f"/contents/{cid}/accept-fixes",
+        json={"flag_ids": ["00000000-0000-0000-0000-000000000000"]},
+    )
+    assert bad.status_code == 409
+
+    # All fixes: only R-001 has a suggested fix (banned words have none), so one is applied.
+    out = api.post(f"/contents/{cid}/accept-fixes", json={})
+    assert out.status_code == 200, out.text
+    body = out.json()
+    tone = next(f for f in flags if f["source_id"] == "R-001")
+    assert body["applied"] == [tone["id"]] and body["skipped"] == []
+    c = api.get(f"/contents/{cid}").json()
+    assert c["latest_version_number"] == 2 and c["status"] == "creator_review"
+    assert c["text"] == "Everyone starts somewhere. A cheap course."
+    assert [f["source_id"] for f in flags_of(api, c)] == ["R-002"]
+
+    # Nothing left with a fix on the new version.
+    again = api.post(f"/contents/{cid}/accept-fixes", json={})
+    assert again.status_code == 422

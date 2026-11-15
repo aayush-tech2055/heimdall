@@ -17,6 +17,7 @@ from app.review.actions import (
     dismiss_flag,
     except_flag,
     fix_flag,
+    fix_many,
     list_comments,
     open_high_flags,
 )
@@ -32,6 +33,18 @@ class Reason(BaseModel):
 
 class Replacement(BaseModel):
     text: str = Field(max_length=5000)
+
+
+class FixSelection(BaseModel):
+    """Flags whose suggested fixes to accept; omitted or null means every open flag with a fix."""
+
+    flag_ids: list[UUID] | None = Field(default=None, max_length=500)
+
+
+class BulkFixOut(BaseModel):
+    content: ContentDetail
+    applied: list[UUID]
+    skipped: list[UUID]
 
 
 class CommentIn(BaseModel):
@@ -113,6 +126,29 @@ def edit_flag(
 ) -> ContentDetail:  # fmt: skip
     """Replace the flagged words with the creator's own text (new version, checked again)."""
     return _fix(conn, user, flag_id, body.text, background, run)
+
+
+@router.post(
+    "/contents/{content_id}/accept-fixes",
+    response_model=BulkFixOut,
+    dependencies=[Depends(limited("review", 30))],
+)
+def accept_fixes(
+    content_id: UUID, body: FixSelection, user: User, conn: Conn, background: BackgroundTasks,
+    run: Runner,
+) -> BulkFixOut:  # fmt: skip
+    """Accept several suggested fixes (or all of them) at once: one new version, one re-check."""
+    try:
+        result = fix_many(conn, user, content_id, body.flag_ids)
+        transition(conn, content_id, "checking", actor_id=user.id,
+                   detail={"version_id": str(result.version_id)})  # fmt: skip
+    except (NotFoundError, ActionError, InvalidTransitionError) as exc:
+        raise _fail(exc) from exc
+    conn.commit()
+    background.add_task(partial(run, result.version_id, user.id))
+    return BulkFixOut(
+        content=_content(conn, user, content_id), applied=result.applied, skipped=result.skipped
+    )
 
 
 @router.post("/flags/{flag_id}/dismiss", status_code=204)
