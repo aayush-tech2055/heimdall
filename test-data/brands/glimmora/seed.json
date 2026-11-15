@@ -1,0 +1,16 @@
+{
+  "brand": {
+    "name": "Glimmora",
+    "slug": "glimmora"
+  },
+  "settings": {
+    "confidential_terms": ["Project Neelkanth", "Formula GX-7"],
+    "claim_policy_enabled": true,
+    "readability_target": 60
+  },
+  "users": [
+    { "email": "admin@glimmora.example", "role": "admin", "display_name": "Gita Admin" },
+    { "email": "manager@glimmora.example", "role": "manager", "display_name": "Manav Manager" },
+    { "email": "creator@glimmora.example", "role": "creator", "display_name": "Sana Scriptwriter" }
+  ]
+}
