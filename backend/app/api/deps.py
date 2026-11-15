@@ -8,7 +8,6 @@ The backend connects as the database owner, so every route checks brand and role
 
 import ssl
 from collections.abc import Callable, Iterator
-from dataclasses import dataclass
 from functools import lru_cache
 from typing import Annotated
 from uuid import UUID
@@ -21,16 +20,8 @@ from fastapi import Depends, Header, HTTPException, status
 from app.config import get_settings
 from app.db import get_pool
 from app.llm import LLMClient, get_llm_client
+from app.models.users import CurrentUser
 from app.rag.embeddings import Embedder, get_embedder
-
-
-@dataclass(frozen=True)
-class CurrentUser:
-    id: UUID
-    role: str  # admin | creator | manager
-    brand_id: UUID
-    display_name: str | None = None
-    email: str | None = None
 
 
 class TokenVerifier:

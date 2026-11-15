@@ -137,14 +137,14 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 - [x] **5.3** `[V]` Admin facts screen: a table with search, expiry badges (expired, expiring within 30 days), add, edit and CSV import.
 
 ### Milestone 6: Review engine for text (core of Round 2)
-- [ ] **6.1** `[A]` Segmentation for text: units with paragraph and character span (decision 15).
-- [ ] **6.2** `[A]` Redaction (decision 16) with per-brand confidential terms from `brand_settings`.
-- [ ] **6.3** `[A]` Layer (a), the rule engine: banned terms (whole-word, case-insensitive, flag every occurrence with its span) and required phrases (checked across the whole document; if missing, one flag with empty evidence).
-- [ ] **6.4** `[A]` Layer (b): hybrid retrieval (decision 13) plus the batched judge (decisions 18–19).
-- [ ] **6.5** `[A]` Layer (c): claim extraction (keep only claims that are real quotes) → fact lookup → verdicts. Expired supported facts are flagged as outdated, contradicted claims cite the fact, unsupported claims cite `SYS-CLAIM-001`, and a "contradicted" verdict that cites no real fact is dropped.
-- [ ] **6.6** `[A]` Citation validation (decision 20), including absolute evidence offsets for text.
-- [ ] **6.7** `[A]` Orchestrator `review_content(version_id)`: units → redact → (a), (b), (c) → validate → sort by position, then severity → save units, flags and dropped flags → set status to `creator_review`. Runs as a FastAPI background task.
-- [ ] **6.8** `[A]` API: `POST /contents` (upload text or file → new version → start the review), `GET /contents/{id}` (status, versions), `GET /versions/{id}/flags`.
+- [x] **6.1** `[A]` Segmentation for text: units with paragraph and character span (decision 15).
+- [x] **6.2** `[A]` Redaction (decision 16) with per-brand confidential terms from `brand_settings`.
+- [x] **6.3** `[A]` Layer (a), the rule engine: banned terms (whole-word, case-insensitive, flag every occurrence with its span) and required phrases (checked across the whole document; if missing, one flag with empty evidence).
+- [x] **6.4** `[A]` Layer (b): hybrid retrieval (decision 13) plus the batched judge (decisions 18–19).
+- [x] **6.5** `[A]` Layer (c): claim extraction (keep only claims that are real quotes) → fact lookup → verdicts. Expired supported facts are flagged as outdated, contradicted claims cite the fact, unsupported claims cite `SYS-CLAIM-001`, and a "contradicted" verdict that cites no real fact is dropped.
+- [x] **6.6** `[A]` Citation validation (decision 20), including absolute evidence offsets for text.
+- [x] **6.7** `[A]` Orchestrator `review_content(version_id)`: units → redact → (a), (b), (c) → validate → sort by position, then severity → save units, flags and dropped flags → set status to `creator_review`. Runs as a FastAPI background task.
+- [x] **6.8** `[A]` API: `POST /contents` (upload text or file → new version → start the review), `GET /contents/{id}` (status, versions), `GET /versions/{id}/flags`.
   *Done when:* uploading a test blog post returns cited flags within 60 seconds, and every flag passes validation.
 - [ ] **6.9** `[A]` Evaluation script `backend/eval/run_eval.py`: runs every test item, compares the flags with the answer key, and reports recall, precision, retrieval recall (was the expected rule in the retrieved top-k?) and flags without a valid source (must be 0), per category. It writes `docs/eval/<date>.md`.
 
