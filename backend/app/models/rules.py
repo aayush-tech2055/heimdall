@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from typing import Literal
+from uuid import UUID
 
 from pydantic import BaseModel, Field
 
@@ -64,8 +65,19 @@ class VerificationReport(BaseModel):
     rules_checked: int = 0
 
 
-class GuidelineUploadResult(BaseModel):
-    source_doc: str
+class GuidelineJobFile(BaseModel):
+    name: str
     pages: int
-    rules: list[Rule]
-    report: VerificationReport
+
+
+class GuidelineJob(BaseModel):
+    """A guideline upload of one or more files, extracted in the background."""
+
+    id: UUID
+    status: Literal["queued", "running", "done", "failed"]
+    files: list[GuidelineJobFile]
+    files_done: int
+    rules_added: int
+    error: str | None
+    created_at: datetime
+    finished_at: datetime | None

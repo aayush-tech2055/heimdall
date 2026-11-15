@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { useAuth } from "@/components/auth/auth-provider";
+import { GuidelineJobIndicator } from "@/components/guidelines/job-indicator";
 import { Button } from "@/components/ui/button";
 import { NAV_BY_ROLE, ROLE_LABEL } from "@/lib/roles";
 import { cn } from "@/lib/utils";
@@ -37,6 +38,7 @@ export function NavLinks() {
           );
         })}
       </ul>
+      <GuidelineJobIndicator />
       <span className="text-muted-foreground text-sm">
         {me.display_name ?? me.email} · {ROLE_LABEL[me.role]}, {me.brand_name}
       </span>

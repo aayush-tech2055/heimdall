@@ -172,7 +172,7 @@ All features below are built and tested.
 
 | Feature | Round | Where |
 |---|---|---|
-| Guideline import (PDF, Word, PowerPoint, text, Markdown, CSV or pasted text) into one rule per instruction, with page or slide numbers | 2 | Admin › Guidelines |
+| Guideline import (one or several PDF, Word, PowerPoint, text, Markdown or CSV files, or pasted text) into one rule per instruction, with page or slide numbers; extraction runs in the background while the admin keeps working | 2 | Admin › Guidelines |
 | Guideline verification: duplicates, contradictions, vague rules (with a rewrite), missing categories | 2 | Admin › Guidelines |
 | Fact store with sources, expiry badges and CSV import | 2 | Admin › Facts |
 | Four-layer review engine: rules in code, retrieval + AI judge, claims against facts, visual checks | 2 | every review |

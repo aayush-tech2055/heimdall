@@ -1,7 +1,7 @@
 "use client";
 
 import { CheckCheck, Loader2, RefreshCw } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { RoleGate } from "@/components/auth/role-gate";
 import { ReportCard } from "@/components/guidelines/report-card";
@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { FilterTabs } from "@/components/ui/filter-tabs";
 import { api, ApiError } from "@/lib/api";
+import { isActive, useGuidelineJobs } from "@/lib/use-guideline-jobs";
 import type { Me, Rule, RuleStatus, VerificationReport } from "@/types/api";
 
 type Filter = "all" | RuleStatus;
@@ -47,6 +48,35 @@ function GuidelinesWorkspace({ me }: { me: Me }) {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Background uploads: reload the rules as each file finishes, and report the outcome.
+  const { jobs } = useGuidelineJobs(me.brand_id);
+  const seen = useRef<Map<string, string> | null>(null);
+  useEffect(() => {
+    const before = seen.current;
+    const now = new Map(jobs.map((j) => [j.id, `${j.status}:${j.files_done}`]));
+    seen.current = now;
+    if (!before) return; // first load: nothing has changed yet
+    let changed = false;
+    for (const job of jobs) {
+      const was = before.get(job.id);
+      if (was === now.get(job.id)) continue;
+      changed = true;
+      const names = job.files.map((f) => f.name).join(", ");
+      if (job.status === "done") {
+        setFilter("pending");
+        setNotice(
+          `Extracted ${job.rules_added} rule${job.rules_added === 1 ? "" : "s"} from ${names}, and checked the guideline. Review them below.`,
+        );
+      } else if (job.status === "failed") {
+        setError(
+          `Extraction stopped after ${job.files_done} of ${job.files.length} file${job.files.length === 1 ? "" : "s"} (${names}): ${job.error ?? "unknown error"}. Rules from finished files were kept.`,
+        );
+      }
+    }
+    if (changed) void load();
+  }, [jobs, load]);
+  const activeJobs = jobs.filter(isActive);
 
   const shown = useMemo(
     () => (rules ?? []).filter((r) => filter === "all" || r.status === filter),
@@ -139,15 +169,43 @@ function GuidelinesWorkspace({ me }: { me: Me }) {
       />
       <UploadCard
         brandId={me.brand_id}
-        onDone={(result) => {
-          setRules((prev) => [...(prev ?? []), ...result.rules]);
-          setReport(result.report);
-          setFilter("pending");
+        onStarted={(job) => {
+          setError(null);
           setNotice(
-            `Extracted ${result.rules.length} rules from ${result.pages} page${result.pages === 1 ? "" : "s"} of ${result.source_doc}. Review them below.`,
+            `Uploaded ${job.files.map((f) => f.name).join(", ")}. Rules are being extracted in the background: you can keep working, for example import facts, and come back. They appear here as each file finishes.`,
           );
         }}
       />
+      {activeJobs.map((job) => (
+        <Alert key={job.id} role="status">
+          <Loader2 className="size-4 animate-spin" aria-hidden />
+          <AlertDescription>
+            <p className="font-medium">
+              Extracting rules: {job.files_done} of {job.files.length} file
+              {job.files.length === 1 ? "" : "s"} done
+              {job.rules_added
+                ? `, ${job.rules_added} rule${job.rules_added === 1 ? "" : "s"} so far`
+                : ""}
+            </p>
+            <ul className="mt-1 text-sm">
+              {job.files.map((f, i) => (
+                <li key={f.name + i}>
+                  {i < job.files_done ? "✓" : i === job.files_done ? "…" : "·"}{" "}
+                  {f.name} ({f.pages} page{f.pages === 1 ? "" : "s"})
+                  {i < job.files_done
+                    ? ": done"
+                    : i === job.files_done
+                      ? ": extracting"
+                      : ": waiting"}
+                </li>
+              ))}
+              {job.files_done === job.files.length && (
+                <li>… checking the guideline for duplicates and gaps</li>
+              )}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      ))}
       {notice && (
         <Alert role="status">
           <AlertDescription>{notice}</AlertDescription>
