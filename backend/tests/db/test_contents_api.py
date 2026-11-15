@@ -106,9 +106,18 @@ def test_bad_uploads(setup):
     assert ok.status_code == 201
 
 
-def test_recheck_only_when_not_already_checking(setup):
+def test_recheck_only_after_a_failed_check(setup, db):
     api, _, _ = setup
     body = api.post("/contents", data={"title": "T", "text": "Fine text."}).json()
+    # Each upload is checked once: a finished check can't be re-run.
+    done = api.post(f"/contents/{body['id']}/recheck")
+    assert done.status_code == 409 and "Upload a revised version" in done.json()["detail"]
+    # After a failed check, "Try again" works.
+    db.execute("update public.contents set status = 'draft' where id = %s", (body["id"],))
+    db.execute(
+        "update public.content_versions set review_error = 'AI busy' where content_id = %s",
+        (body["id"],),
+    )
     again = api.post(f"/contents/{body['id']}/recheck")
     assert again.status_code == 200 and again.json()["status"] == "checking"  # before the run
     assert api.get(f"/contents/{body['id']}").json()["status"] == "creator_review"  # after it

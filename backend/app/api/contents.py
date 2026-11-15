@@ -305,10 +305,15 @@ def read_content(content_id: UUID, user: User, conn: Conn) -> ContentDetail:
 def recheck(
     content_id: UUID, user: User, conn: Conn, background: BackgroundTasks, run: Runner
 ) -> ContentDetail:
-    """Run the review again on the latest version (for example after a failed review)."""
+    """Run the review again on the latest version, only when its check failed."""
     content = _content_or_404(conn, user, content_id)
     if user.role == "creator" and content.creator_id != user.id:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Content not found")
+    if not content.review_error:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "Each upload is checked once. Upload a revised version to have it checked again.",
+        )
     try:
         transition(conn, content_id, "checking", actor_id=user.id, detail={"recheck": True})
     except InvalidTransitionError as exc:

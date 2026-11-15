@@ -190,7 +190,9 @@ the brand rules you are given, and nothing else.
 - evidence: the shortest span of the unit that breaks the rule, copied
   character for character (same spelling, punctuation and capitalisation) from that unit.
 - suggested_fix: replacement text for the evidence that keeps the creator's meaning and
-  intent while following the rule; null if no rewrite can fix it.
+  intent while following the rule; null if no rewrite can fix it. It replaces exactly the
+  quoted evidence, so it must read correctly in its place within the surrounding sentence:
+  rewrite only those words, not the whole sentence.
 - severity: "high" for legal, factual or reputational risk; "medium" for a clear breach;
   "low" for minor wording.
 - confidence: how sure you are that this is a real breach, from 0 to 1.
@@ -245,7 +247,10 @@ For each claim, return one verdict with its claim_id:
 - "unsupported": no supplied fact covers the claim. fact_code must be null.
 fact_code must be one of the supplied codes, copied exactly, or null.
 suggested_fix: for a contradicted claim, the claim rewritten to match the fact; for an
-unsupported claim, a softer version that makes no unverifiable promise; null otherwise.
+unsupported claim, a softer version that makes no unverifiable promise; null otherwise. It
+replaces exactly the claim's quoted words, so it must read correctly in their place within
+the surrounding sentence (for "India's No. 1 toothpaste", write "a popular toothpaste", not a
+new sentence).
 Do not judge whether facts are current; that is checked separately."""
 
 

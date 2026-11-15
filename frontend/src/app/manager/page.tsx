@@ -72,6 +72,7 @@ function Queue({ me }: { me: Me }) {
           items={shown}
           hrefBase="/manager/content"
           showCreator
+          actionLabel="Review"
           empty="Nothing here right now."
         />
       )}
