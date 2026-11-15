@@ -63,11 +63,14 @@ export function FlagCard({
   onSelect,
   onAction,
   canFix = true,
+  aiLabel,
 }: {
   flag: StoredFlag;
   mode: "creator" | "manager" | "readonly";
   /** False for PDFs and images: fixes are made by uploading a corrected file. */
   canFix?: boolean;
+  /** Which provider and model produced this flag (from the AI call log). */
+  aiLabel?: string;
   selected: boolean;
   busy: boolean;
   onSelect: () => void;
@@ -104,7 +107,9 @@ export function FlagCard({
           ) : (
             <Code2 className="size-3.5" aria-hidden />
           )}
-          {fromAI ? "AI-checked" : "Checked in code"}
+          {fromAI
+            ? `AI used${aiLabel ? `: ${aiLabel}` : ""}`
+            : "Checked in code"}
         </span>
         {!open && <FlagStatusBadge status={flag.status} />}
       </div>

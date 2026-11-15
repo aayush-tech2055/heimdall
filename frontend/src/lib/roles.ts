@@ -16,14 +16,17 @@ export const NAV_BY_ROLE: Record<Role, NavLink[]> = {
     { href: "/admin/facts", label: "Facts" },
     { href: "/admin/settings", label: "Settings" },
     { href: "/insights", label: "Insights" },
+    { href: "/disclosure", label: "AI disclosure" },
   ],
   creator: [
     { href: "/creator", label: "My content" },
     { href: "/creator/new", label: "New check" },
+    { href: "/disclosure", label: "AI disclosure" },
   ],
   manager: [
     { href: "/manager", label: "Review queue" },
     { href: "/insights", label: "Insights" },
+    { href: "/disclosure", label: "AI disclosure" },
   ],
 };
 

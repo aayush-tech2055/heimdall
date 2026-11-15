@@ -157,11 +157,19 @@ def version_flags(conn: psycopg.Connection, user: CurrentUser, version_id: UUID)
                         array_position(array['high','medium','low'], f.severity)""",
             (CLAIM_POLICY_TEXT, version_id),
         ).fetchall()
+        usage = cur.execute(
+            "select purpose, provider, model, count(*) as calls, "
+            "count(*) filter (where cached) as cached from public.ai_calls "
+            "where content_version_id = %s and ok group by purpose, provider, model "
+            "order by purpose, calls desc",
+            (version_id,),
+        ).fetchall()
     return VersionFlags.model_validate(
         v
         | {
             "units": [ReviewUnitOut.model_validate(u) for u in units],
             "flags": [StoredFlag.model_validate(f) for f in flags],
+            "ai_usage": usage,
         }
     )
 
