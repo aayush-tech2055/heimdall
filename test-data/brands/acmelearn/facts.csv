@@ -1,0 +1,18 @@
+entity,attribute,value,unit,statement,source,valid_until
+AcmeLearn Plus,monthly price,299,INR,AcmeLearn Plus costs ₹299 a month.,acmelearn.example/pricing,2027-03-31
+AcmeLearn Pro,monthly price,599,INR,AcmeLearn Pro costs ₹599 a month.,acmelearn.example/pricing,2027-03-31
+AcmeLearn,registered learners,2000000,learners,More than 2 million learners have registered on AcmeLearn.,"Internal dashboard, Q3 2026",2027-06-30
+AcmeLearn,courses,350,courses,AcmeLearn offers 350 courses.,Course catalogue,2027-06-30
+AcmeLearn app,Play Store rating,4.6,stars,The AcmeLearn app is rated 4.6 stars on the Google Play Store.,Google Play listing,2026-12-01
+AcmeLearn Pro,free trial,7,days,AcmeLearn Pro comes with a 7-day free trial.,acmelearn.example/pricing,2027-03-31
+AcmeLearn,course completion rate,68,percent,68% of learners who start a course on AcmeLearn finish it.,Learning analytics report 2026,2027-06-30
+AcmeLearn,founded,2019,,AcmeLearn was founded in 2019.,Company registration,
+AcmeLearn,course languages,6,languages,AcmeLearn courses are available in 6 Indian languages.,Course catalogue,2027-06-30
+Python Bootcamp,duration,12,weeks,The Python Bootcamp runs for 12 weeks.,Course page,2027-06-30
+Python Bootcamp,price,4999,INR,"The Python Bootcamp costs ₹4,999 as a one-time fee.",Course page,2027-03-31
+AcmeLearn,award,EdTech Startup of the Year 2025,,AcmeLearn won EdTech Startup of the Year 2025 at the Bharat EdTech Awards.,Bharat EdTech Awards 2025,
+AcmeLearn,refund window,14,days,AcmeLearn offers a full refund within 14 days of purchase.,Refund policy,2027-12-31
+AcmeLearn Plus,annual price,2999,INR,"AcmeLearn Plus costs ₹2,999 a year when paid annually.",Pricing page (archived),2026-06-30
+AcmeLearn Pro,festive discount,40,percent,New learners get 40% off AcmeLearn Pro in the festive sale.,Diwali campaign brief,2026-10-31
+AcmeLearn,mentors,1200,mentors,"AcmeLearn has 1,200 mentors.",Mentor programme report,2027-06-30
+Data Science Track,projects,10,projects,The Data Science Track includes 10 guided projects.,Course page,2027-06-30

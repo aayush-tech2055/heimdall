@@ -1,0 +1,18 @@
+entity,attribute,value,unit,statement,source,valid_until
+Brewbird Flight Club,monthly price,799,INR,The Brewbird Flight Club costs ₹799 a month for two 250 g bags.,brewbird.example/flight-club,2027-03-31
+Coorg Morning Roast,price,549,INR per 250 g,A 250 g bag of Coorg Morning Roast costs ₹549.,brewbird.example/shop,2027-03-31
+Coorg Morning Roast,estate,Ballur Estate,,Coorg Morning Roast comes from Ballur Estate in Coorg.,Sourcing records,
+Chikmagalur Dark,price,599,INR per 250 g,A 250 g bag of Chikmagalur Dark costs ₹599.,brewbird.example/shop,2027-03-31
+Chikmagalur Dark,estate,Hosur Hills Estate,,Chikmagalur Dark comes from Hosur Hills Estate in Chikmagalur.,Sourcing records,
+Araku Sunrise,estate,Valley Ridge Estate,,Araku Sunrise comes from Valley Ridge Estate in the Araku Valley.,Sourcing records,
+Araku Sunrise,price,649,INR per 250 g,A 250 g bag of Araku Sunrise costs ₹649.,brewbird.example/shop,2027-03-31
+Brewbird,customers,85000,customers,"Brewbird has delivered to more than 85,000 customers.","Order system, October 2026",2027-06-30
+Brewbird,average rating,4.7,stars,Brewbird coffees have an average rating of 4.7 stars from verified buyers.,Review platform export,2026-12-05
+Brewbird,roast-to-door time,72,hours,Brewbird coffee reaches customers within 72 hours of roasting.,Logistics report,2027-06-30
+Brewbird,estate partners,14,estates,Brewbird works with 14 estate partners.,Sourcing records,2027-06-30
+Coorg Morning Roast,award,"Gold, India Coffee Roasters Cup 2025",,Coorg Morning Roast won Gold at the India Coffee Roasters Cup 2025.,India Coffee Roasters Cup 2025 results,
+House Blend,origin,blend of three estates,,House Blend is a blend of beans from three estates.,Product spec,
+Brewbird,free delivery threshold,999,INR,Brewbird offers free delivery on orders above ₹999.,brewbird.example/shipping,2027-03-31
+Monsoon Sale,discount,25,percent,The Monsoon Sale gives 25% off every bag.,Monsoon campaign brief,2026-09-30
+Brewbird Flight Club,launch price,699,INR,The Brewbird Flight Club launch price was ₹699 a month.,Launch announcement,2026-08-31
+Brewbird filter coffee,caffeine per cup,95,mg,An 8 oz cup of Brewbird filter coffee has about 95 mg of caffeine.,"Lab test, 2026",2027-06-30
