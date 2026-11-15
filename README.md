@@ -4,7 +4,7 @@
 
 Heimdall is an AI brand-governance platform. It checks every piece of content against a brand's approved guidelines and facts *before* it is published, explains every issue it finds, cites the exact rule or fact behind it, and suggests a fix while leaving the final decision to people.
 
-> **Status:** Round 1 (planning). The design below is agreed, and development starts in the official build window.
+> **Status:** Rounds 2 and 3 are built and run locally (text, PDF, image and short-video review; the creator → manager loop; website facts; insights). Deployment is the next step. Results: [evaluation](docs/eval/comparison.md) · [performance](docs/performance.md) · [accessibility](docs/accessibility.md) · [security](docs/security.md) · [final report](docs/final-report.md).
 > Built by team **Nobita&Avaneja** for the Inkloom AI brand-governance problem statement.
 
 ---
@@ -19,6 +19,8 @@ Heimdall is an AI brand-governance platform. It checks every piece of content ag
 - [Architecture](#architecture)
 - [Tech stack](#tech-stack)
 - [Project structure](#project-structure)
+- [Results](#results)
+- [Screenshots](#screenshots)
 - [Getting started](#getting-started)
 - [Roadmap](#roadmap)
 - [Responsible AI](#responsible-ai)
@@ -164,20 +166,23 @@ Every flag, from any layer, uses the same structure. This is the contract betwee
 
 ## Features
 
-| Feature | Round |
-|---|---|
-| Guideline import and verification (contradictions, duplicates, vague rules, gaps) | 2 |
-| Fact store with sources and expiry dates | 2 |
-| Four-layer review engine | 2 |
-| Cited flags with suggested fixes | 2 |
-| Review and approval workflow (roles, comments, send-back, revision history) | 2 |
-| Approved exceptions that are remembered | 2 |
-| Redaction before AI calls, and AI disclosure labels | 2 |
-| Review of text, PDF and images | 2 |
-| Short video review (transcript, frames, on-screen text, timestamped flags) | 3 |
-| Website fact import with admin approval | 3 |
-| Asset library (logos, disclaimers, templates) | 3 |
-| Insights dashboard and guideline health | 3 |
+All features below are built and tested.
+
+| Feature | Round | Where |
+|---|---|---|
+| Guideline import (PDF or text) into one rule per instruction, with page numbers | 2 | Admin › Guidelines |
+| Guideline verification: duplicates, contradictions, vague rules (with a rewrite), missing categories | 2 | Admin › Guidelines |
+| Fact store with sources, expiry badges and CSV import | 2 | Admin › Facts |
+| Four-layer review engine: rules in code, retrieval + AI judge, claims against facts, visual checks | 2 | every review |
+| Citation validation: no source, no flag | 2 | every review |
+| Cited flags with suggested fixes; accept, edit or dismiss with a reason | 2 | Creator › review |
+| Workflow: submit, send back with a comment, approve, approved exceptions, comments, version history with diffs | 2 | Creator and Manager |
+| Redaction before every AI call (email, phone, PAN, Aadhaar, cards, confidential terms, names and places) | 2 | every AI call |
+| AI disclosure: which model produced each flag, and a disclosure page | 2 | flags, AI disclosure |
+| PDF and image review with page boxes and image regions; WCAG contrast, alt text and readability checks | 2 | Creator › review |
+| Short video review: speech, on-screen text and frames, flags on a timeline, caption checks | 3 | Creator › review |
+| Website fact check with admin approval (changed facts keep their code), and the asset library | 3 | Admin › Website check, Assets |
+| Insights dashboard and guideline health ("probably unclear" rules) | 3 | Insights |
 
 ---
 
@@ -204,11 +209,11 @@ flowchart TD
 | Frontend | Next.js (React), Tailwind CSS, shadcn/ui, Recharts |
 | Backend | FastAPI (Python), Pydantic |
 | Database, auth, storage | Supabase (PostgreSQL, pgvector, Auth, Storage) |
-| AI models | Google Gemini API (main model + embeddings), Groq (Whisper speech-to-text, Llama fallback), OpenRouter (secondary fallback) |
-| Rule checks | Python regex, textstat, WCAG contrast formula |
-| Privacy | Microsoft Presidio + spaCy |
-| Files | PyMuPDF (PDF), FFmpeg (video frames), Tesseract / EasyOCR (on-screen text) |
-| Website import | Playwright, BeautifulSoup, difflib |
+| AI models | Google Gemini API (`gemini-3.5-flash-lite` chat and vision, `gemini-embedding-001` embeddings), Groq (`openai/gpt-oss-120b` fallback, `whisper-large-v3` speech to text), OpenRouter (`nvidia/nemotron-3.5-super-vl:free` second fallback) |
+| Rule checks | Python regex, WCAG contrast formula, Flesch reading ease (computed in code) |
+| Privacy | Regex redaction; Microsoft Presidio + spaCy `en_core_web_sm` (optional) |
+| Files | PyMuPDF (PDF text, boxes and images), FFmpeg (audio and frames), Tesseract if installed or the vision model (on-screen text) |
+| Website import | httpx + BeautifulSoup; Playwright optional for JavaScript pages |
 | Hosting | Vercel (frontend), Render or Railway (backend) |
 
 ---
@@ -217,25 +222,24 @@ flowchart TD
 
 ```
 heimdall/
-├── frontend/              # Next.js app: admin, creator and manager dashboards
+├── frontend/              # Next.js app: admin, creator and manager screens
 ├── backend/
 │   ├── app/
-│   │   ├── api/           # FastAPI routes
-│   │   ├── review/        # four-layer review engine
-│   │   ├── rag/           # rule extraction, embeddings, hybrid retrieval
-│   │   ├── llm/           # provider-agnostic AI layer (fallback + cache)
-│   │   ├── processing/    # PDF, image and video processing, redaction
-│   │   └── models/        # Pydantic schemas (incl. the flag format)
-│   └── tests/
-├── db/
-│   └── schema.sql         # Postgres + pgvector schema
-├── test-data/             # fictional brands and planted-error test content
-├── docs/                  # Round 1 plan, build log, architecture notes
-├── .github/workflows/     # CI: ruff + pytest, lint + typecheck
-└── README.md
+│   │   ├── api/           # FastAPI routes (auth, guidelines, facts, contents, workflow, website, insights)
+│   │   ├── review/        # segmentation, the four layers, citation validation, orchestrator, workflow
+│   │   ├── rag/           # rule extraction, verification, embeddings, hybrid retrieval, facts, website diff
+│   │   ├── llm/           # one client for every model call (fallback, repair, cache, logging), prompts
+│   │   ├── processing/    # PDF, video and guideline parsing, redaction
+│   │   └── models/        # Pydantic schemas (incl. the flag contract)
+│   ├── eval/              # evaluation against the answer key
+│   ├── scripts/           # seed, demo setup and pre-run, guideline PDF builder
+│   └── tests/             # unit tests; tests/db run against Supabase (opt-in)
+├── db/                    # schema.sql, policies.sql, seed.json, migrations/
+├── test-data/             # fictional brands, facts, 62 content items, answer key, fictional website
+├── docs/                  # build log, eval reports, performance, accessibility, security, screenshots
+└── .github/workflows/     # CI: ruff + pytest, lint + typecheck
 ```
 
-Parts are added milestone by milestone (see `TASKS.md`); folders for later milestones may still be empty.
 
 ---
 
@@ -245,41 +249,54 @@ You will need:
 
 - Node.js 20+ and Python 3.11 or 3.12
 - A Supabase project with the `vector` extension enabled
-- API keys for Gemini (required), and optionally Groq and OpenRouter
+- API keys for Gemini (required for embeddings), Groq, and optionally OpenRouter
+- FFmpeg for video review (`brew install ffmpeg`)
 
-**Backend** (FastAPI, http://localhost:8000):
+**1. Backend** (FastAPI):
 
 ```bash
 cd backend
 python3.12 -m venv .venv
-.venv/bin/pip install -e ".[dev]"
-cp .env.example .env          # then fill in the values
-.venv/bin/uvicorn app.main:app --reload
-.venv/bin/pytest              # tests
-.venv/bin/ruff check . && .venv/bin/ruff format --check .
+.venv/bin/pip install -e ".[dev]"            # add ",privacy" for name and place redaction
+cp .env.example .env                          # then fill in the values
+.venv/bin/uvicorn app.main:app --reload --port 8000
 ```
 
-**Frontend** (Next.js, http://localhost:3000):
+**2. Database** (once per Supabase project; `DATABASE_URL` from `backend/.env`):
+
+```bash
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/schema.sql      # tables, indexes, RLS switched on
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/policies.sql    # who can read and write what
+cd backend
+.venv/bin/python -m scripts.seed          # AcmeLearn + an admin, a manager and two creators
+.venv/bin/python -m scripts.demo_setup    # its guideline, rules and facts, approved, from test-data
+.venv/bin/python -m scripts.demo_prerun   # optional: warm the cache for a fast demo
+```
+
+`schema.sql` is the full current schema; `db/migrations/` holds the same changes as steps for a
+database created earlier. The seed needs `SEED_USER_PASSWORD` in `backend/.env`; the seeded users
+are `admin@`, `manager@`, `creator@` and `creator2@acmelearn.example`, all with that password.
+
+**3. Frontend** (Next.js, http://localhost:3000):
 
 ```bash
 cd frontend
 npm install
-cp .env.example .env.local    # then fill in the values
+cp .env.example .env.local    # NEXT_PUBLIC_API_URL must point at the backend
 npm run dev
-npm run lint && npm run typecheck
 ```
 
-**Database** (Supabase Postgres, once per project; `DATABASE_URL` from `backend/.env`):
+If port 8000 is taken, run the backend on another port (for example `--port 8010`) and set
+`NEXT_PUBLIC_API_URL=http://localhost:8010` in `frontend/.env.local`.
+
+**Checks:**
 
 ```bash
-psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/schema.sql    # tables, indexes, RLS switched on
-psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/policies.sql  # who can read and write what
-cd backend
-.venv/bin/python -m scripts.seed                            # AcmeLearn + one user per role (db/seed.json)
-HEIMDALL_DB_TESTS=1 .venv/bin/pytest tests/db               # opt-in; each test is rolled back
+cd backend && .venv/bin/pytest && .venv/bin/ruff check . && .venv/bin/ruff format --check .
+HEIMDALL_DB_TESTS=1 .venv/bin/pytest tests/db      # against Supabase; every test is rolled back
+.venv/bin/python -m eval.run_eval                  # writes docs/eval/<date>.md
+cd ../frontend && npm run lint && npm run typecheck
 ```
-
-The seed needs `SEED_USER_PASSWORD` in `backend/.env`; every seeded user (`admin@`, `manager@`, `creator@`, `creator2@acmelearn.example`) signs in with it. It is safe to re-run.
 
 Every variable is listed, with empty values, in `backend/.env.example` and `frontend/.env.example`.
 
@@ -297,20 +314,20 @@ Every variable is listed, with empty values, in `backend/.env.example` and `fron
 - [x] Problem understanding, users and solution
 - [x] Workflow, architecture and tech stack
 - [x] Development plan and team roles
-- [ ] Design the planted-error test set
+- [x] Design the planted-error test set
 
 ### Round 2 · The Build
-- [ ] Core loop for text: guidelines → rules → review → cited flags → approval
-- [ ] Claim checks and guideline verification
-- [ ] PDF and image support with visual checks
-- [ ] Roles, comments, send-back, revision history
-- [ ] Redaction and AI disclosure
-- [ ] Test-set run and user testing
+- [x] Core loop for text: guidelines → rules → review → cited flags → approval
+- [x] Claim checks and guideline verification
+- [x] PDF and image support with visual checks
+- [x] Roles, comments, send-back, revision history
+- [x] Redaction and AI disclosure
+- [x] Test-set run · [ ] user testing · [ ] deployment
 
 ### Round 3 · The Finish (three named improvements)
-- [ ] Short video review with timestamped flags
-- [ ] Website fact import with admin approval, plus the asset library
-- [ ] Insights and guideline health, with accuracy gains measured on the same test set
+- [x] Short video review with timestamped flags
+- [x] Website fact import with admin approval, plus the asset library
+- [x] Insights and guideline health, with accuracy measured on the same test set
 
 ### Success targets (for our own testing)
 | Measure | Round 2 | Round 3 |
@@ -319,6 +336,31 @@ Every variable is listed, with empty values, in `backend/.env.example` and `fron
 | Flags that are correct | ≥ 75% | ≥ 85% |
 | Flags shown without a valid source | 0 | 0 |
 | Time to first feedback (one-page document) | < 60 s | < 60 s |
+
+---
+
+## Results
+
+Measured on 2026-11-15 with free-tier models (details in [`docs/`](docs/)):
+
+| Measure | Target R2 / R3 | Result |
+|---|---|---|
+| Planted errors caught (53 in 60 items) | ≥ 75% / ≥ 85% | **96–98%** |
+| Flags that are correct | ≥ 75% / ≥ 85% | **75–79%** (63% before the claims fix; R3 target not met with free-tier models) |
+| Flags shown without a valid source | 0 | **0** in every run |
+| Expected rule retrieved for its unit | – | 95% |
+| Time to first feedback, one-page document | < 60 s | **32 s** (cached re-check 14 s) |
+| Accessibility (axe, WCAG 2.1 AA, 15 screens) | – | **0 violations** |
+| Prompt-injection test items | – | both planted errors still flagged |
+
+## Screenshots
+
+| | |
+|---|---|
+| ![Guidelines](docs/screenshots/02-admin-guidelines.jpg) Guidelines with the verification report | ![Review](docs/screenshots/10-creator-review-pdf.jpg) PDF review with cited flags |
+| ![Video](docs/screenshots/11-creator-review-video.jpg) Video review with a flag timeline | ![Insights](docs/screenshots/14-insights.jpg) Insights and guideline health |
+
+All 15 screens are in [`docs/screenshots/`](docs/screenshots/).
 
 ---
 
@@ -344,6 +386,27 @@ Every variable is listed, with empty values, in `backend/.env.example` and `fron
 
 ## AI and tool disclosure
 
-- Planning documents and parts of this README were drafted with help from an AI assistant (Claude, by Anthropic).
-- The product uses the Gemini, Groq and OpenRouter APIs and the open-source libraries listed above, each under its own licence.
-- Every template, library and AI coding tool used during the build will be listed here and in our Round 2 and Round 3 submissions.
+**AI services the product calls** (each call is logged and shown in the app's AI disclosure page):
+
+| Service | Models | Used for |
+|---|---|---|
+| Google Gemini API | `gemini-3.5-flash-lite` (chat and vision), `gemini-embedding-001` | rule extraction, guideline verification, the judge, claim extraction and verification, image and on-screen text checks, website facts; embeddings for retrieval |
+| Groq | `openai/gpt-oss-120b`, `whisper-large-v3` | fallback model; speech to text for videos |
+| OpenRouter | `nvidia/nemotron-3.5-super-vl:free` | second fallback (text and images) |
+
+Only redacted excerpts are sent; see [`docs/security.md`](docs/security.md).
+
+**Data.** All brands, guidelines, facts, content, the answer key and the website are fictional
+and were written for this project (with AI help) in [`test-data/`](test-data/). No real company,
+customer or person data is used.
+
+**Libraries and services.** Supabase (Postgres, pgvector, Auth, Storage), FastAPI, Pydantic,
+psycopg, httpx, PyJWT, PyMuPDF, BeautifulSoup, Microsoft Presidio and spaCy (optional), Playwright
+(optional), FFmpeg; Next.js, React, Tailwind CSS, shadcn/ui (Radix UI), lucide icons, Recharts,
+supabase-js; axe-core for the accessibility audit. Templates: `create-next-app` and `shadcn`.
+Each is used under its own licence.
+
+**AI coding tools.** The code, tests and documents were written with Claude Code (Anthropic,
+Claude Opus 5.5), driven and reviewed by the team; [`docs/BUILD_LOG.md`](docs/BUILD_LOG.md)
+records each session, who drove it and the tools used. Planning documents were also drafted with
+help from Claude.

@@ -3,9 +3,10 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 
 from app.api.deps import LLM, Admin, AdminOrManager, Conn, Emb, User, check_brand
+from app.api.ratelimit import limited
 from app.llm.errors import LLMUnavailableError
 from app.models.rules import (
     GuidelineUploadResult,
@@ -47,7 +48,11 @@ def _pages_from_upload(file: UploadFile | None, text: str | None) -> tuple[str, 
     raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Send a PDF file or some text")
 
 
-@router.post("/brands/{brand_id}/guidelines", response_model=GuidelineUploadResult)
+@router.post(
+    "/brands/{brand_id}/guidelines",
+    response_model=GuidelineUploadResult,
+    dependencies=[Depends(limited("guideline upload", 10))],
+)
 def upload_guidelines(
     brand_id: UUID,
     user: Admin,
@@ -94,7 +99,11 @@ def get_report(brand_id: UUID, user: AdminOrManager, conn: Conn) -> Verification
     return latest_report(conn, brand_id)
 
 
-@router.post("/brands/{brand_id}/guidelines/verify", response_model=VerificationReport)
+@router.post(
+    "/brands/{brand_id}/guidelines/verify",
+    response_model=VerificationReport,
+    dependencies=[Depends(limited("guideline upload", 10))],
+)
 def reverify(brand_id: UUID, user: Admin, conn: Conn, client: LLM) -> VerificationReport:
     """Re-run verification (for example after rejecting or editing rules)."""
     check_brand(user, brand_id)

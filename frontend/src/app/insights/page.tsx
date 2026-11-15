@@ -34,7 +34,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FilterTabs } from "@/components/ui/filter-tabs";
 import { api, ApiError } from "@/lib/api";
 import type { Me } from "@/types/api";
 
@@ -150,13 +150,16 @@ function Dashboard({ me }: { me: Me }) {
           title="Insights"
           description={`How ${me.brand_name}'s content and guidelines are doing.`}
         />
-        <Tabs value={days} onValueChange={setDays} aria-label="Time range">
-          <TabsList>
-            <TabsTrigger value="30">30 days</TabsTrigger>
-            <TabsTrigger value="90">90 days</TabsTrigger>
-            <TabsTrigger value="365">1 year</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <FilterTabs
+          label="Time range"
+          value={days}
+          onChange={setDays}
+          options={[
+            { value: "30", label: "30 days" },
+            { value: "90", label: "90 days" },
+            { value: "365", label: "1 year" },
+          ]}
+        />
       </div>
       {error && (
         <Alert variant="destructive">

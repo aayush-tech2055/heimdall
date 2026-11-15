@@ -92,7 +92,7 @@ export function FlagCard({
       className={cn(
         "bg-card scroll-mt-24 space-y-2 rounded-lg border p-3 text-sm",
         selected && "ring-ring ring-2",
-        !open && "opacity-80",
+        !open && "bg-muted/40",
       )}
     >
       <div className="flex flex-wrap items-center gap-2">

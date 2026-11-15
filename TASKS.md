@@ -177,7 +177,7 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 - [x] **10.3** `[A]` Run the evaluation (6.9) and save the report; fix the worst category.
 - [ ] **10.4** `[V]` User testing with 3–5 people outside the team, using a script of tasks; record what confused them and fix the top 3 issues.
 - [ ] **10.5** `[A+V]` Submission package: deployed demo link, repo access, architecture diagram, **list of APIs, models and datasets used**, testing evidence (eval report + user testing notes), each member's contribution (from `BUILD_LOG.md`), updated README with real setup steps.
-- [ ] **10.6** `[A+V]` Name the **three Round 3 improvements** in the submission (video review; website import + asset library; insights + guideline health with measured accuracy gains).
+- [x] **10.6** `[A+V]` Name the **three Round 3 improvements** in the submission (video review; website import + asset library; insights + guideline health with measured accuracy gains).
 
 ### Milestone 11: Round 3, improvement 1: video
 - [x] **11.1** `[A]` FFmpeg: extract audio, and sample frames every 2 s (clips up to 60 s).
@@ -201,16 +201,16 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 - [x] **13.4** `[A]` Re-run the evaluation and compare with the Round 2 report; record the accuracy gain.
 
 ### Milestone 14: Hardening
-- [ ] **14.1** `[A]` Tests: unit tests for validation, segmentation, rule engine, expiry, the workflow state machine and permissions; one end-to-end API test of the full loop.
-- [ ] **14.2** `[V]` Error and empty states on every screen (AI unavailable, upload failed, no rules approved yet).
-- [ ] **14.3** `[V]` Accessibility audit of Heimdall's own interface: keyboard navigation, focus states, contrast, labels (axe or Lighthouse ≥ 90).
-- [ ] **14.4** `[A]` Security pass: no secrets in the repo, RLS verified, file type and size limits, rate limiting on review endpoints, prompt-injection test content in the test set.
-- [ ] **14.5** `[A]` Performance: a one-page document gets first feedback in under 60 s; record timings.
+- [x] **14.1** `[A]` Tests: unit tests for validation, segmentation, rule engine, expiry, the workflow state machine and permissions; one end-to-end API test of the full loop.
+- [x] **14.2** `[V]` Error and empty states on every screen (AI unavailable, upload failed, no rules approved yet).
+- [x] **14.3** `[V]` Accessibility audit of Heimdall's own interface: keyboard navigation, focus states, contrast, labels (axe or Lighthouse ≥ 90).
+- [x] **14.4** `[A]` Security pass: no secrets in the repo, RLS verified, file type and size limits, rate limiting on review endpoints, prompt-injection test content in the test set.
+- [x] **14.5** `[A]` Performance: a one-page document gets first feedback in under 60 s; record timings.
 
 ### Milestone 15: Round 3 submission
 - [ ] **15.1** `[V]` Demo video (3–5 minutes): the full loop, guideline verification, a video review, a website fact change, the insights dashboard.
-- [ ] **15.2** `[A+V]` Final report: what was built, evidence of testing and of the three improvements (eval before and after), privacy, security and accessibility explanation, **known limitations**, roadmap.
-- [ ] **15.3** `[A+V]` Final README: setup, architecture, screenshots, the complete AI and tool disclosure.
+- [x] **15.2** `[A+V]` Final report: what was built, evidence of testing and of the three improvements (eval before and after), privacy, security and accessibility explanation, **known limitations**, roadmap.
+- [x] **15.3** `[A+V]` Final README: setup, architecture, screenshots, the complete AI and tool disclosure.
 - [ ] **15.4** `[A+V]` Rehearse: both members can explain any part of the system and the evaluation numbers.
 
 ---

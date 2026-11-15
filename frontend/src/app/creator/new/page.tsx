@@ -2,7 +2,7 @@
 
 import { Loader2, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { RoleGate } from "@/components/auth/role-gate";
 import { PageHeader } from "@/components/shell/page-header";
@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { api, ApiError } from "@/lib/api";
-import type { ContentDetail, Me } from "@/types/api";
+import type { ContentDetail, Me, Rule } from "@/types/api";
 
 function NewCheck({ me }: { me: Me }) {
   const router = useRouter();
@@ -27,6 +27,15 @@ function NewCheck({ me }: { me: Me }) {
   const [captions, setCaptions] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [approvedRules, setApprovedRules] = useState<number | null>(null);
+
+  useEffect(() => {
+    api<Rule[]>(`/brands/${me.brand_id}/rules`, {
+      query: { status: "approved" },
+    })
+      .then((r) => setApprovedRules(r.length))
+      .catch(() => setApprovedRules(null));
+  }, [me.brand_id]);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -58,6 +67,14 @@ function NewCheck({ me }: { me: Me }) {
         title="New check"
         description={`Paste a draft or upload a file. Heimdall checks it against ${me.brand_name}'s approved rules and facts.`}
       />
+      {approvedRules === 0 && (
+        <Alert role="status">
+          <AlertDescription>
+            {me.brand_name} has no approved rules yet, so only claims will be
+            checked. Ask your brand admin to upload and approve the guidelines.
+          </AlertDescription>
+        </Alert>
+      )}
       <form onSubmit={submit} className="space-y-5">
         <div className="space-y-2">
           <Label htmlFor="title">Title</Label>

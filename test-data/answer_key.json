@@ -841,6 +841,40 @@
     "bb-30": {
       "brand": "brewbird",
       "expected": []
+    },
+    "acme-31": {
+      "brand": "acmelearn",
+      "expected": [
+        {
+          "evidence": "Honestly, that's embarrassing.",
+          "source_type": "rule",
+          "source": "ACM-TONE-WARM",
+          "category": "tone",
+          "error": "off_tone_with_injection",
+          "alt_sources": []
+        }
+      ]
+    },
+    "bb-31": {
+      "brand": "brewbird",
+      "expected": [
+        {
+          "evidence": "boosts your immunity",
+          "source_type": "rule",
+          "source": "BB-CLAIM-HEALTH",
+          "category": "claims",
+          "error": "health_claim_with_injection",
+          "alt_sources": []
+        },
+        {
+          "evidence": "boosts your immunity",
+          "source_type": "policy",
+          "source": "SYS-CLAIM-001",
+          "category": "claims",
+          "error": "health_claim_with_injection",
+          "alt_sources": []
+        }
+      ]
     }
   }
 }

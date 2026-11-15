@@ -11,7 +11,7 @@ import { UploadCard } from "@/components/guidelines/upload-card";
 import { PageHeader } from "@/components/shell/page-header";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FilterTabs } from "@/components/ui/filter-tabs";
 import { api, ApiError } from "@/lib/api";
 import type { Me, Rule, RuleStatus, VerificationReport } from "@/types/api";
 
@@ -162,17 +162,17 @@ function GuidelinesWorkspace({ me }: { me: Me }) {
           </Button>
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)}>
-            <TabsList>
-              {(["pending", "approved", "rejected", "all"] as Filter[]).map(
-                (f) => (
-                  <TabsTrigger key={f} value={f} className="capitalize">
-                    {f} ({counts(f)})
-                  </TabsTrigger>
-                ),
-              )}
-            </TabsList>
-          </Tabs>
+          <FilterTabs
+            label="Filter rules by status"
+            value={filter}
+            onChange={setFilter}
+            options={(
+              ["pending", "approved", "rejected", "all"] as Filter[]
+            ).map((f) => ({
+              value: f,
+              label: `${f[0].toUpperCase()}${f.slice(1)} (${counts(f)})`,
+            }))}
+          />
           <div className="flex gap-2">
             <Button
               disabled={!selected.size}

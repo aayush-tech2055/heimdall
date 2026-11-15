@@ -26,6 +26,7 @@ from fastapi import (
 from pydantic import BaseModel
 
 from app.api.deps import Conn, Creator, CurrentUser, User
+from app.api.ratelimit import limited
 from app.audit import audit
 from app.models.contents import ContentDetail, ContentStatus, ContentSummary, VersionFlags
 from app.processing.documents import DocumentError
@@ -199,7 +200,12 @@ def _store_file(
     )
 
 
-@router.post("/contents", response_model=ContentDetail, status_code=201)
+@router.post(
+    "/contents",
+    response_model=ContentDetail,
+    status_code=201,
+    dependencies=[Depends(limited("review", 30))],
+)
 def upload_content(
     user: Creator,
     conn: Conn,
@@ -229,7 +235,12 @@ def upload_content(
     return get_content(conn, user, content_id)
 
 
-@router.post("/contents/{content_id}/versions", response_model=ContentDetail, status_code=201)
+@router.post(
+    "/contents/{content_id}/versions",
+    response_model=ContentDetail,
+    status_code=201,
+    dependencies=[Depends(limited("review", 30))],
+)
 def upload_version(
     content_id: UUID,
     user: Creator,
@@ -286,7 +297,11 @@ def read_content(content_id: UUID, user: User, conn: Conn) -> ContentDetail:
     return _content_or_404(conn, user, content_id)
 
 
-@router.post("/contents/{content_id}/recheck", response_model=ContentDetail)
+@router.post(
+    "/contents/{content_id}/recheck",
+    response_model=ContentDetail,
+    dependencies=[Depends(limited("review", 30))],
+)
 def recheck(
     content_id: UUID, user: User, conn: Conn, background: BackgroundTasks, run: Runner
 ) -> ContentDetail:
