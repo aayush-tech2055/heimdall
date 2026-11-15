@@ -137,3 +137,22 @@ def test_transcribe_retries_rate_limits_and_returns_segments():
     assert segs == [Segment(0.0, 2.5, "Hi!")] and sleeps == [1.0]
     assert b'name="model"' in calls[1].content and b"verbose_json" in calls[1].content
     assert transcribe(b"", api_key="k", model="m") == []
+
+
+def _scene(bg: tuple[float, float, float], text: str) -> bytes:
+    """A 'slide' with centred text, like an ad that reuses one layout across scenes."""
+    doc = pymupdf.open()
+    page = doc.new_page(width=320, height=180)
+    page.draw_rect(page.rect, color=None, fill=bg)
+    page.insert_textbox(pymupdf.Rect(20, 70, 300, 110), text, fontsize=18, color=(1, 1, 1),
+                        align=1)  # fmt: skip
+    png = page.get_pixmap().tobytes("png")
+    doc.close()
+    return png
+
+
+def test_distinct_frames_notice_a_new_background_with_the_same_layout():
+    red, green = _scene((0.85, 0.1, 0.1), "No. 1 app"), _scene((0.1, 0.75, 0.2), "Guaranteed job")
+    black = _scene((0, 0, 0), "Better than Coursify")
+    frames = [Frame(0, red), Frame(2, red), Frame(4, green), Frame(6, green), Frame(8, black)]
+    assert [f.t for f in distinct_frames(frames)] == [0, 4, 8]

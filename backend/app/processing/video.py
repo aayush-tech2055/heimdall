@@ -157,19 +157,54 @@ def _frame_hash(png: bytes) -> int:
     return sum(1 << i for i, c in enumerate(cells) if c > avg)
 
 
+def _colour_thumb(png: bytes) -> bytes:
+    """An 8x8 RGB thumbnail (192 bytes), to notice colour and brightness changes."""
+    pix = pymupdf.Pixmap(png)
+    if pix.alpha:
+        pix = pymupdf.Pixmap(pix, 0)
+    if pix.n != 3:
+        pix = pymupdf.Pixmap(pymupdf.csRGB, pix)
+    while pix.width > 16 and pix.height > 16:
+        pix.shrink(1)
+    w, h, s, n = pix.width, pix.height, pix.samples, pix.n
+    out = bytearray()
+    for gy in range(8):
+        for gx in range(8):
+            x, y = min(w - 1, gx * w // 8), min(h - 1, gy * h // 8)
+            out += s[(y * w + x) * n : (y * w + x) * n + 3]
+    return bytes(out)
+
+
+def _colour_distance(a: bytes, b: bytes) -> float:
+    """Mean absolute difference of two thumbnails, 0-255."""
+    return sum(abs(x - y) for x, y in zip(a, b, strict=True)) / len(a)
+
+
 def distinct_frames(
-    frames: list[Frame], limit: int = MAX_OCR_FRAMES, threshold: int = 6
+    frames: list[Frame],
+    limit: int = MAX_OCR_FRAMES,
+    threshold: int = 6,
+    colour_threshold: float = 12.0,
 ) -> list[Frame]:
-    """Frames that differ from the previous kept one (Hamming distance of the hash)."""
-    kept: list[tuple[Frame, int]] = []
+    """Frames that differ from the previous kept one.
+
+    A frame is new when its layout changed (Hamming distance of the average hash) or its colours
+    or brightness changed (mean difference of a small colour thumbnail). The colour check
+    catches scenes that reuse one layout on a different background, which the hash alone misses.
+    """
+    kept: list[tuple[Frame, int, bytes]] = []
     for f in frames:
-        h = _frame_hash(f.png)
-        if not kept or bin(h ^ kept[-1][1]).count("1") > threshold:
-            kept.append((f, h))
+        h, thumb = _frame_hash(f.png), _colour_thumb(f.png)
+        if (
+            not kept
+            or bin(h ^ kept[-1][1]).count("1") > threshold
+            or _colour_distance(thumb, kept[-1][2]) > colour_threshold
+        ):
+            kept.append((f, h, thumb))
     if len(kept) > limit:  # spread the sample over the whole clip
         step = len(kept) / limit
         kept = [kept[int(i * step)] for i in range(limit)]
-    return [f for f, _ in kept]
+    return [f for f, _, _ in kept]
 
 
 def screen_units(ocr: list[tuple[float, str]], first_index: int = 0) -> list[Unit]:
