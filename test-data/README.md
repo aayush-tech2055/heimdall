@@ -43,7 +43,13 @@ approve all facts.
 
 ## Website (Round 3, task 12)
 
-`website/acmelearn/` is a fictional two-page AcmeLearn site, served by the backend at
-`/demo-site/acmelearn/…` so the website fact check never touches a real company. Compared with
-`facts.csv` it has one changed fact (AcmeLearn Pro: ₹599 → ₹649 a month; also 350 → 420
-courses and 6 → 8 languages) and repeats several unchanged ones.
+`website/` holds fictional brand sites for the website fact check, so it never touches a real
+company. They are published to GitHub Pages by `.github/workflows/demo-site.yml` at
+https://aayush-tech2055.github.io/heimdall/ (the backend also serves them locally at
+`/demo-site/…`).
+
+- `website/acmelearn/` (pricing, about): compared with `facts.csv`, AcmeLearn Pro ₹599 → ₹649 a
+  month, 350 → 420 courses and 6 → 8 languages, plus several unchanged facts.
+- `website/glimmora/` (shop, about): compared with `brands/glimmora/facts.csv`, Active Shield
+  ₹95 → ₹99, Sensitive Relief relief in 14 → 10 days, 400 → 450 cities, one new product
+  (Charcoal Clean, ₹110), plus several unchanged facts.

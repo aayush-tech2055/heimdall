@@ -13,14 +13,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { api, ApiError } from "@/lib/api";
 import type { FactChange, Me } from "@/types/api";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
-const DEMO_URLS = [
-  `${API_URL}/demo-site/acmelearn/pricing.html`,
-  `${API_URL}/demo-site/acmelearn/about.html`,
-];
+/** The fictional demo websites, published to GitHub Pages from test-data/website. */
+const DEMO_SITE_URL = (
+  process.env.NEXT_PUBLIC_DEMO_SITE_URL ||
+  "https://aayush-tech2055.github.io/heimdall"
+).replace(/\/$/, "");
+const DEMO_PAGES: Record<string, string[]> = {
+  acmelearn: ["acmelearn/pricing.html", "acmelearn/about.html"],
+  glimmora: ["glimmora/shop.html", "glimmora/about.html"],
+};
+
+function demoUrls(brandName: string): string {
+  const pages = DEMO_PAGES[brandName.toLowerCase().replace(/[^a-z0-9]/g, "")];
+  return (pages ?? []).map((p) => `${DEMO_SITE_URL}/${p}`).join("\n");
+}
 
 function WebsiteCheck({ me }: { me: Me }) {
-  const [urls, setUrls] = useState(DEMO_URLS.join("\n"));
+  const [urls, setUrls] = useState(() => demoUrls(me.brand_name));
   const [changes, setChanges] = useState<FactChange[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [deciding, setDeciding] = useState<string | null>(null);
