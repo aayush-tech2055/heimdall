@@ -4,7 +4,7 @@ Guidance for Claude Code in this repo. **Sources of truth:** `TASKS.md` (Part 1 
 
 ## The product in 5 lines
 1. Heimdall is an AI brand-governance platform. It is a checkpoint between "draft" and "publish". Tagline: *Nothing crosses unchecked.*
-2. Admins upload brand guidelines (PDF or text). Heimdall splits them into one record per rule, checks the guidelines themselves for duplicates, contradictions, vague rules and gaps, and stores approved facts that have expiry dates.
+2. Admins upload brand guidelines (PDF, Word, PowerPoint, text, Markdown or CSV, or pasted text). Heimdall splits them into one record per rule, checks the guidelines themselves for duplicates, contradictions, vague rules and gaps, and stores approved facts that have expiry dates.
 3. Creators upload content (text, PDF or image in Round 2, short video in Round 3). A four-layer engine (rules in code, retrieval plus an LLM judge, claims against facts, visuals) produces flags that each cite their source.
 4. **No source, no flag:** plain code drops any AI finding that cites a source the model wasn't given or quotes words that aren't in the content. Creators accept, edit or dismiss each flag, and managers approve or send back.
 5. Team Nobita&Avaneja (2 people): **Aayush `[A]`** (AI/ML lead, co-backend) and **Avaneja `[V]`** (frontend, product and QA). Inkloom AI problem statement, built in 3 rounds.

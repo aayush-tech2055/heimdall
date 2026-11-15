@@ -11,7 +11,7 @@ fix. People make every decision.
 
 ## 1. What we built
 
-**Admin: the brand's knowledge.** Upload a guideline PDF or paste text. Heimdall splits it into
+**Admin: the brand's knowledge.** Upload the guideline as a PDF, Word, PowerPoint, text, Markdown or CSV file, or paste it. Heimdall splits it into
 one rule per instruction with its page, marks exact word lists and required lines to be checked in
 code, and checks the guideline itself: duplicate rules, contradicting rules, vague rules (with a
 testable rewrite) and missing categories. Nothing is used until the admin approves it. Facts
