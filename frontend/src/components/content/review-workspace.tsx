@@ -450,7 +450,7 @@ export function ReviewWorkspace({
                 >
                   <CheckCheck aria-hidden /> Accept all fixes ({fixable.length})
                 </Button>
-                <p className="text-muted-foreground w-full text-xs">
+                <p className="w-full text-xs">
                   All chosen fixes go into one new version, which is checked
                   once. Flags without a suggested fix still need an edit or a
                   dismissal.
