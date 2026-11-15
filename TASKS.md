@@ -116,10 +116,10 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 - [x] **2.3** `[A]` A seed script that loads one test brand plus users with each role.
 
 ### Milestone 3: AI layer
-- [ ] **3.1** `[A]` `llm/` module: the `LLMClient.json()` behaviour from decisions 22–26 (Gemini, Groq and OpenRouter providers; schema in the prompt; strip code fences; repair once; fallback; SQLite cache; per-call logging to `ai_calls`).
+- [x] **3.1** `[A]` `llm/` module: the `LLMClient.json()` behaviour from decisions 22–26 (Gemini, Groq and OpenRouter providers; schema in the prompt; strip code fences; repair once; fallback; SQLite cache; per-call logging to `ai_calls`).
   *Done when:* unit tests with fake providers prove that a cache hit makes no call, that a rate limit falls through to the next provider, that invalid JSON is repaired once, and that the error is clear when every provider fails.
-- [ ] **3.2** `[A]` `Embedder`: Gemini embeddings, batches of 100, normalised, cached, with retry and backoff on rate limits.
-- [ ] **3.3** `[A]` `prompts.py`: one place for every prompt (rule extraction, pair check, vagueness check, judge, claim extraction, claim verification, fact extraction).
+- [x] **3.2** `[A]` `Embedder`: Gemini embeddings, batches of 100, normalised, cached, with retry and backoff on rate limits.
+- [x] **3.3** `[A]` `prompts.py`: one place for every prompt (rule extraction, pair check, vagueness check, judge, claim extraction, claim verification, fact extraction).
 
 ### Milestone 4: Guideline ingestion and verification
 - [ ] **4.1** `[A]` Parsing: PDF to pages with PyMuPDF; pasted text to page-sized parts split on paragraphs.

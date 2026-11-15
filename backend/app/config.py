@@ -25,8 +25,8 @@ class Settings(BaseSettings):
     # AI providers (decision 23: tried in this order, providers without a key are skipped)
     llm_provider_order: str = "gemini,groq,openrouter"
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-2.5-flash"
-    gemini_vision_model: str = "gemini-2.5-flash"
+    gemini_model: str = "gemini-3.5-flash"
+    gemini_vision_model: str = "gemini-3.5-flash"
     gemini_embedding_model: str = "gemini-embedding-001"
     groq_api_key: str = ""
     groq_model: str = "openai/gpt-oss-120b"
