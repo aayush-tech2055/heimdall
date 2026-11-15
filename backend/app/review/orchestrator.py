@@ -24,6 +24,8 @@ from uuid import UUID
 import psycopg
 from psycopg_pool import ConnectionPool
 
+from app.config import get_settings
+from app.llm.call_log import DBCallLogger
 from app.llm.client import LLMClient
 from app.models.flag import Flag
 from app.models.llm import ExtractedClaim
@@ -34,13 +36,19 @@ from app.rag.embeddings import Embedder
 from app.rag.facts_store import lookup_facts
 from app.rag.retrieval import search_rules
 from app.rag.rules_store import list_rules
-from app.review.accessibility import check_alt_text, check_contrast, check_readability
+from app.review.accessibility import (
+    check_alt_text,
+    check_captions,
+    check_contrast,
+    check_readability,
+)
 from app.review.claims import run_claims
 from app.review.judge import run_judge
 from app.review.rules_engine import check_deterministic
 from app.review.segment import Unit, segment_text
 from app.review.text import normalise
 from app.review.validation import ApprovedException, validate
+from app.review.video_review import prepare_video
 from app.review.visuals import ImageInput, run_visuals
 from app.review.workflow import transition
 from app.storage import Storage, get_storage
@@ -114,10 +122,15 @@ def review_text(
     use_presidio: bool = True,
     pdf: PdfContent | None = None,
     images: list[ImageInput] = (),
+    units: list[Unit] | None = None,
+    captions: list | None = None,
+    is_video: bool = False,
 ) -> ReviewOutcome:
-    """Review text, or a PDF's units (`pdf`), plus any images, against the brand context."""
+    """Review text, a PDF's units (`pdf`) or prepared video units (`units`), plus any images,
+    against the brand context."""
     started = time.perf_counter()
-    units = pdf.units if pdf is not None else segment_text(text)
+    if units is None:
+        units = pdf.units if pdf is not None else segment_text(text)
     redacted = {
         u.unit_id: redact(u.text, ctx.confidential_terms, use_presidio=use_presidio,
                           exempt_terms=ctx.exempt_terms)
@@ -126,7 +139,8 @@ def review_text(
     image_units = [
         Unit(unit_id=img.image_id, position=len(units) + i, text="",
              location={"image_id": img.image_id,
-                       **({"page": img.page, "bbox": list(img.bbox)} if img.page else {})})
+                       **({"page": img.page, "bbox": list(img.bbox)} if img.page else {}),
+                       **({"start": img.start, "end": img.end} if img.start is not None else {})})
         for i, img in enumerate(images)
     ]  # fmt: skip
 
@@ -152,8 +166,13 @@ def review_text(
             *check_deterministic(units, ctx.rules),
             *check_readability(units, ctx.rules, ctx.readability_target),
             *(check_contrast(pdf.styles, ctx.rules) if pdf is not None else []),
-            *(c for img in images if img.page is None
+            *(c for img in images if img.page is None and img.start is None
               for c in check_alt_text(img.image_id, img.alt_text, ctx.rules)),
+            *(check_captions(
+                [u for u in units if u.location.get("source") == "speech"],
+                [(c.start, c.end, c.text) for c in captions] if captions is not None else None,
+                ctx.rules,
+            ) if is_video else []),
         ]  # fmt: skip
         judge_result, claims_result, visual = judged.result(), claimed.result(), seen.result()
 
@@ -239,14 +258,14 @@ def review_content(
     with pool.connection() as conn:
         row = conn.execute(
             "select v.content_id, v.brand_id, coalesce(v.extracted_text, ''), c.format, "
-            "v.storage_path, v.alt_text from public.content_versions v "
+            "v.storage_path, v.alt_text, v.captions_path from public.content_versions v "
             "join public.contents c on c.id = v.content_id where v.id = %s",
             (version_id,),
         ).fetchone()
         if row is None:
             log.error("review_content: no version %s", version_id)
             return None
-        content_id, brand_id, text, fmt, storage_path, alt_text = row
+        content_id, brand_id, text, fmt, storage_path, alt_text, captions_path = row
         conn.execute(
             "update public.content_versions set review_started_at = now(), "
             "review_finished_at = null, review_error = null where id = %s",
@@ -259,17 +278,31 @@ def review_content(
             transition(conn, content_id, "checking", actor_id=actor_id)
         ctx = load_brand_context(conn, brand_id)
     try:
-        pdf, images = None, []
+        pdf, images, units, cues = None, [], None, None
+        store = storage or (get_storage() if fmt != "text" else None)
         if fmt in ("pdf", "image"):
-            data = (storage or get_storage()).download(storage_path)
+            data = store.download(storage_path)
             if fmt == "pdf":
                 pdf = parse_pdf_content(data)
                 images = [ImageInput(i.image_id, i.data, i.page, i.bbox) for i in pdf.images]
             else:
                 images = [ImageInput("img-1", data, alt_text=alt_text)]
+        elif fmt == "video":
+            captions = (
+                store.download(captions_path).decode("utf-8", "replace") if captions_path else None
+            )
+            video = prepare_video(
+                store.download(storage_path), captions, settings=get_settings(), client=client,
+                logger=DBCallLogger(pool), brand_id=brand_id, version_id=version_id,
+            )  # fmt: skip
+            units, images, cues, text = video.units, video.images, video.cues, video.text
+            with pool.connection() as conn:
+                conn.execute("update public.content_versions set extracted_text = %s where id = %s",
+                             (text, version_id))  # fmt: skip
         outcome = review_text(
             text, ctx, pool=pool, client=client, embedder=embedder, today=today,
             content_version_id=version_id, use_presidio=use_presidio, pdf=pdf, images=images,
+            units=units, captions=cues, is_video=fmt == "video",
         )  # fmt: skip
         with pool.connection() as conn:
             save_outcome(conn, version_id=version_id, content_id=content_id,

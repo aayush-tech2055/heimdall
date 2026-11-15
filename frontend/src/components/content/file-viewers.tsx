@@ -246,3 +246,91 @@ export function ImageViewer({
     </div>
   );
 }
+
+const isVideo = (l: unknown): l is { start: number; end: number } =>
+  typeof l === "object" && l !== null && "start" in l && "end" in l;
+
+const clock = (t: number) =>
+  `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
+
+/** A video with its flags on a timeline; choosing a flag jumps to its time (task 11.6). */
+export function VideoViewer({
+  versionId,
+  flags,
+  transcript,
+  selectedId,
+  onSelect,
+}: {
+  versionId: string;
+  flags: StoredFlag[];
+  transcript: string;
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+}) {
+  const { url, error } = useBlobUrl(`/versions/${versionId}/file`);
+  const [video, setVideo] = useState<HTMLVideoElement | null>(null);
+  const [length, setLength] = useState(0);
+  const timed = flags.filter(
+    (f) =>
+      (f.status === "open" || f.status === "dismissed") && isVideo(f.location),
+  );
+
+  useEffect(() => {
+    const flag = timed.find((f) => f.id === selectedId);
+    if (video && flag && isVideo(flag.location))
+      video.currentTime = flag.location.start;
+  }, [selectedId, video, timed]);
+
+  if (error) return <p className="text-destructive text-sm">{error}</p>;
+  if (!url)
+    return <p className="text-muted-foreground text-sm">Loading the video…</p>;
+  return (
+    <div className="space-y-3">
+      <video
+        ref={setVideo}
+        src={url}
+        controls
+        className="w-full rounded-md border bg-black"
+        onLoadedMetadata={(e) => setLength(e.currentTarget.duration || 0)}
+      />
+      <div
+        aria-label="Flags on the timeline"
+        className="bg-muted relative h-8 w-full rounded-md border"
+      >
+        {length > 0 &&
+          timed.map((f) => {
+            const loc = f.location as { start: number; end: number };
+            const left = (100 * Math.min(loc.start, length)) / length;
+            const width = Math.max(
+              1.5,
+              (100 * (Math.min(loc.end, length) - loc.start)) / length,
+            );
+            return (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => onSelect(f.id)}
+                style={{ left: `${left}%`, width: `${width}%` }}
+                aria-label={`${f.severity} flag ${f.source_id} at ${clock(loc.start)}: ${f.evidence || f.explanation}`}
+                className={cn(
+                  "absolute top-1 bottom-1 rounded-sm border opacity-70 hover:opacity-100 focus-visible:opacity-100",
+                  SEVERITY_STYLE[f.severity].badge,
+                  selectedId === f.id && "ring-ring opacity-100 ring-2",
+                )}
+              />
+            );
+          })}
+      </div>
+      <p className="text-muted-foreground text-xs">
+        {length > 0 ? `0:00 – ${clock(length)}` : ""} · select a flag or a mark
+        to jump to it
+      </p>
+      <details className="rounded-md border p-3">
+        <summary className="cursor-pointer font-medium">
+          Transcript and on-screen text
+        </summary>
+        <p className="mt-2 text-sm whitespace-pre-wrap">{transcript}</p>
+      </details>
+    </div>
+  );
+}
