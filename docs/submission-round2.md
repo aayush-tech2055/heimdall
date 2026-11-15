@@ -4,7 +4,7 @@
 
 | Item | Where |
 |---|---|
-| Deployed demo | *To be added after deployment (task 10.1).* Until then it runs locally: see [Getting started](../README.md#getting-started); demo logins are in `db/seed.json` |
+| Deployed demo | https://heimdall-chi-three.vercel.app (Vercel + Render + Supabase; see [deploy.md](deploy.md)). Demo logins are in `db/seed.json`; the password is shared with the judges separately |
 | Repository | https://github.com/aayush-tech2055/heimdall |
 | Architecture | [README › Architecture](../README.md#architecture) and [Final report › How a review works](final-report.md#how-a-review-works) |
 | APIs, models and datasets | below |
