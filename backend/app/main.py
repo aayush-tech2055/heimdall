@@ -1,7 +1,10 @@
 """FastAPI application entry point. Run with `uvicorn app.main:app --reload`."""
 
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.api.contents import router as contents_router
 from app.api.disclosure import router as disclosure_router
@@ -10,6 +13,7 @@ from app.api.guidelines import router as guidelines_router
 from app.api.health import router as health_router
 from app.api.me import router as me_router
 from app.api.settings import router as settings_router
+from app.api.website import router as website_router
 from app.api.workflow import router as workflow_router
 from app.config import get_settings
 
@@ -33,6 +37,11 @@ def create_app() -> FastAPI:
     app.include_router(workflow_router)
     app.include_router(settings_router)
     app.include_router(disclosure_router)
+    app.include_router(website_router)
+    # A fictional brand website for the website fact check (decision 4: fictional data only).
+    site = Path(__file__).resolve().parents[2] / "test-data" / "website"
+    if site.is_dir():
+        app.mount("/demo-site", StaticFiles(directory=site, html=True), name="demo-site")
     return app
 
 

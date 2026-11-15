@@ -38,3 +38,10 @@ rule codes are assigned at extraction; the evaluation maps each key to the extra
 text matches best. Before an evaluation run, approve every extracted rule except the ones in
 `brands.<brand>.reject` (the vague rules, the duplicate and one side of the contradiction), and
 approve all facts.
+
+## Website (Round 3, task 12)
+
+`website/acmelearn/` is a fictional two-page AcmeLearn site, served by the backend at
+`/demo-site/acmelearn/…` so the website fact check never touches a real company. Compared with
+`facts.csv` it has one changed fact (AcmeLearn Pro: ₹599 → ₹649 a month; also 350 → 420
+courses and 6 → 8 languages) and repeats several unchanged ones.

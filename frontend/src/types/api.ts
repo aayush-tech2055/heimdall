@@ -201,3 +201,31 @@ export interface Disclosure {
     failed: number;
   }[];
 }
+
+export interface FactChange {
+  id: string;
+  kind: "new" | "changed";
+  fact_code: string | null;
+  entity: string;
+  attribute: string;
+  old_value: string | null;
+  new_value: string;
+  unit: string | null;
+  statement: string;
+  source_url: string;
+  status: "pending" | "accepted" | "rejected";
+  created_at: string;
+}
+
+export type AssetKind =
+  "logo" | "disclaimer" | "product_description" | "template" | "other";
+
+export interface Asset {
+  id: string;
+  kind: AssetKind;
+  name: string;
+  description: string;
+  text_content: string | null;
+  has_file: boolean;
+  created_at: string;
+}
