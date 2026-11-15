@@ -4,7 +4,9 @@
 
 Heimdall is an AI brand-governance platform. It checks every piece of content against a brand's approved guidelines and facts *before* it is published, explains every issue it finds, cites the exact rule or fact behind it, and suggests a fix while leaving the final decision to people.
 
-> **Status:** Rounds 2 and 3 are built and run locally (text, PDF, image and short-video review; the creator → manager loop; website facts; insights). Deployment is the next step. Results: [evaluation](docs/eval/comparison.md) · [performance](docs/performance.md) · [accessibility](docs/accessibility.md) · [security](docs/security.md) · [final report](docs/final-report.md).
+> **Live demo:** https://heimdall-chi-three.vercel.app (frontend on Vercel, backend on Render, data in Supabase; the free backend sleeps when idle, so the first request can take about a minute). Demo logins are in `db/seed.json`; ask the team for the password.
+>
+> **Status:** Rounds 2 and 3 are built and deployed (text, PDF, image and short-video review; the creator → manager loop; website facts; insights). Deployment steps: [docs/deploy.md](docs/deploy.md). Results: [evaluation](docs/eval/comparison.md) · [performance](docs/performance.md) · [accessibility](docs/accessibility.md) · [security](docs/security.md) · [final report](docs/final-report.md).
 > Built by team **Nobita&Avaneja** for the Inkloom AI brand-governance problem statement.
 
 ---

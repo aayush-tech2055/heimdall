@@ -131,11 +131,11 @@ site (all three planted changes, nothing unchanged reported); a review with Gemi
 - Fixes cannot be applied inside PDFs, images or videos; the creator uploads a corrected file.
 - The contrast check assumes a white page; only raster images inside PDFs are checked visually.
 - Rate limits are in memory (one backend process); a multi-server deployment needs a shared store.
-- The interface has no dark mode. Not yet deployed or tested with outside users.
+- The interface has no dark mode. Not yet tested with outside users.
+- On the free Render plan the backend sleeps after 15 minutes idle (the first request then takes about a minute), and a video review takes about 70 seconds there instead of 30 locally.
 
 ## 6. Still to do (needs people)
 
-- Deploy (Vercel and Render or Railway) and add the demo link.
 - User testing with 3–5 people outside the team, and fixing the top three issues.
 - A teammate spot-check of 10 answer-key items; the demo video; rehearsal.
 

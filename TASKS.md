@@ -172,7 +172,7 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 - [x] **9.3** `[V]` Brand settings screen: confidential terms, claim policy on/off, readability target.
 
 ### Milestone 10: Round 2 submission
-- [ ] **10.1** `[A]` Deploy: frontend to Vercel, backend to Render or Railway, environment secrets set, seeded with a test brand.
+- [x] **10.1** `[A]` Deploy: frontend to Vercel, backend to Render or Railway, environment secrets set, seeded with a test brand.
 - [x] **10.2** `[A]` Demo mode: pre-run the demo content so results come from the cache; check that fallback works by disabling the Gemini key.
 - [x] **10.3** `[A]` Run the evaluation (6.9) and save the report; fix the worst category.
 - [ ] **10.4** `[V]` User testing with 3–5 people outside the team, using a script of tasks; record what confused them and fix the top 3 issues.
