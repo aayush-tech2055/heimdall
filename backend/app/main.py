@@ -11,6 +11,7 @@ from app.api.disclosure import router as disclosure_router
 from app.api.facts import router as facts_router
 from app.api.guidelines import router as guidelines_router
 from app.api.health import router as health_router
+from app.api.insights import router as insights_router
 from app.api.me import router as me_router
 from app.api.settings import router as settings_router
 from app.api.website import router as website_router
@@ -38,6 +39,7 @@ def create_app() -> FastAPI:
     app.include_router(settings_router)
     app.include_router(disclosure_router)
     app.include_router(website_router)
+    app.include_router(insights_router)
     # A fictional brand website for the website fact check (decision 4: fictional data only).
     site = Path(__file__).resolve().parents[2] / "test-data" / "website"
     if site.is_dir():
