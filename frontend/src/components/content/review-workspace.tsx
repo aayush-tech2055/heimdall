@@ -319,6 +319,52 @@ export function ReviewWorkspace({
         </Alert>
       )}
 
+      {canDecide && (
+        <section
+          aria-labelledby="decide-h"
+          className="bg-card space-y-3 rounded-lg border p-4"
+        >
+          <h2 id="decide-h" className="text-lg font-semibold">
+            Your decision
+          </h2>
+          <Label htmlFor="decision">
+            Comment (required to request changes)
+          </Label>
+          <Textarea
+            id="decision"
+            rows={3}
+            value={decision}
+            onChange={(e) => setDecision(e.target.value)}
+          />
+          <div className="flex flex-wrap gap-2">
+            <Button
+              disabled={busy}
+              onClick={() =>
+                run("Approved.", () =>
+                  api(`/contents/${content.id}/approve`, {
+                    json: { comment: decision.trim() || null },
+                  }),
+                ).then(() => setDecision(""))
+              }
+            >
+              <CheckCircle2 aria-hidden /> Approve
+            </Button>
+            <Button
+              variant="outline"
+              disabled={busy || decision.trim().length < 3}
+              onClick={() =>
+                run("Sent back to the creator.", () =>
+                  api(`/contents/${content.id}/request-changes`, {
+                    json: { comment: decision.trim() },
+                  }),
+                ).then(() => setDecision(""))
+              }
+            >
+              <Undo2 aria-hidden /> Request changes
+            </Button>
+          </div>
+        </section>
+      )}
       {flags && content.status !== "checking" && (
         <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
           <section aria-labelledby="text-h" className="space-y-2">
@@ -496,52 +542,6 @@ export function ReviewWorkspace({
         </div>
       )}
 
-      {canDecide && (
-        <section
-          aria-labelledby="decide-h"
-          className="bg-card space-y-3 rounded-lg border p-4"
-        >
-          <h2 id="decide-h" className="text-lg font-semibold">
-            Your decision
-          </h2>
-          <Label htmlFor="decision">
-            Comment (required to request changes)
-          </Label>
-          <Textarea
-            id="decision"
-            rows={3}
-            value={decision}
-            onChange={(e) => setDecision(e.target.value)}
-          />
-          <div className="flex flex-wrap gap-2">
-            <Button
-              disabled={busy}
-              onClick={() =>
-                run("Approved.", () =>
-                  api(`/contents/${content.id}/approve`, {
-                    json: { comment: decision.trim() || null },
-                  }),
-                ).then(() => setDecision(""))
-              }
-            >
-              <CheckCircle2 aria-hidden /> Approve
-            </Button>
-            <Button
-              variant="outline"
-              disabled={busy || decision.trim().length < 3}
-              onClick={() =>
-                run("Sent back to the creator.", () =>
-                  api(`/contents/${content.id}/request-changes`, {
-                    json: { comment: decision.trim() },
-                  }),
-                ).then(() => setDecision(""))
-              }
-            >
-              <Undo2 aria-hidden /> Request changes
-            </Button>
-          </div>
-        </section>
-      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         {(flags?.version_id ?? content.latest_version_id) && (

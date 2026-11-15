@@ -1,6 +1,11 @@
+"use client";
+
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { ContentStatusBadge } from "@/components/content/badges";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -16,12 +21,16 @@ export function ContentTable({
   hrefBase,
   showCreator = false,
   empty,
+  actionLabel = "Open",
 }: {
   items: ContentSummary[];
   hrefBase: string;
   showCreator?: boolean;
   empty: string;
+  /** Text of the button that opens an item, e.g. "Review" in the manager queue. */
+  actionLabel?: string;
 }) {
+  const router = useRouter();
   if (!items.length) return <p className="text-muted-foreground">{empty}</p>;
   return (
     <div className="rounded-lg border">
@@ -34,15 +43,23 @@ export function ContentTable({
             <TableHead>Open flags</TableHead>
             <TableHead>Version</TableHead>
             <TableHead>Updated</TableHead>
+            <TableHead>
+              <span className="sr-only">Actions</span>
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {items.map((c) => (
-            <TableRow key={c.id}>
+            <TableRow
+              key={c.id}
+              className="cursor-pointer"
+              onClick={() => router.push(`${hrefBase}/${c.id}`)}
+            >
               <TableCell>
                 <Link
                   href={`${hrefBase}/${c.id}`}
-                  className="font-medium underline-offset-2 hover:underline"
+                  className="font-medium underline underline-offset-2"
+                  onClick={(e) => e.stopPropagation()}
                 >
                   {c.title}
                 </Link>
@@ -63,6 +80,23 @@ export function ContentTable({
               <TableCell>v{c.latest_version_number ?? 1}</TableCell>
               <TableCell className="text-muted-foreground text-sm">
                 {new Date(c.updated_at).toLocaleString()}
+              </TableCell>
+              <TableCell className="text-right">
+                <Button
+                  asChild
+                  size="sm"
+                  variant={
+                    c.status === "manager_review" ? "default" : "outline"
+                  }
+                >
+                  <Link
+                    href={`${hrefBase}/${c.id}`}
+                    aria-label={`${actionLabel} ${c.title}`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {actionLabel} <ArrowRight aria-hidden />
+                  </Link>
+                </Button>
               </TableCell>
             </TableRow>
           ))}
