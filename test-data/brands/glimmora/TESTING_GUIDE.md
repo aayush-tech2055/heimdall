@@ -142,5 +142,16 @@ Sign in as **manager** and open the queue.
   Dismiss the same rule's flags across several checks to see it.
 
 ## Optional: website check
-Admin › Website check reads a brand website and proposes fact changes. The demo site in
-`test-data/website/` only covers AcmeLearn, so test this one with the AcmeLearn admin.
+Sign in as **admin** and open **Admin › Website check**. The Glimmora demo pages are already filled
+in (https://aayush-tech2055.github.io/heimdall/glimmora/shop.html and about.html). Press
+**Check website**. Expected proposals, each waiting for your decision:
+
+| Fact | Approved sheet | Website |
+|---|---|---|
+| Active Shield 100 g price | ₹95 | **₹99** |
+| Sensitive Relief relief time | 14 days | **10 days** |
+| Cities | 400 | **450** |
+| Charcoal Clean 100 g price | (none) | **₹110**, a new fact |
+
+Unchanged facts (fluoride, Herbal Care price, founded 2009) should not be listed. Accept a change:
+the fact keeps its code, so anything that cited it stays linked.
