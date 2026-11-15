@@ -78,10 +78,14 @@ def test_users_cannot_touch_another_brand(api):
     assert api.post(f"/brands/{other}/guidelines", data={"text": "Be warm."}).status_code == 403
 
 
-def test_upload_needs_a_pdf_or_text(api):
+def test_upload_refuses_files_that_are_not_documents(api):
     user = sign_in_as("admin")
-    response = api.post(
-        f"/brands/{user.brand_id}/guidelines",
-        files={"file": ("guide.docx", b"PK\x03\x04 not a pdf", "application/octet-stream")},
-    )
+    url = f"/brands/{user.brand_id}/guidelines"
+    png = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR" + b"\x00" * 32
+    response = api.post(url, files={"file": ("guide.png", png, "image/png")})
     assert response.status_code == 415
+    assert "Word (.docx)" in response.json()["detail"]
+    broken = api.post(
+        url, files={"file": ("guide.docx", b"PK\x03\x04 broken", "application/octet-stream")}
+    )
+    assert broken.status_code == 422

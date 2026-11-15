@@ -16,7 +16,13 @@ from app.models.rules import (
     RuleUpdate,
     VerificationReport,
 )
-from app.processing.documents import DocumentError, PageText, parse_pdf, split_text
+from app.processing.documents import (
+    DocumentError,
+    PageText,
+    UnsupportedFileError,
+    parse_guideline_file,
+    split_text,
+)
 from app.rag.embeddings import EmbeddingError
 from app.rag.extraction import extract_rules
 from app.rag.rules_store import (
@@ -36,16 +42,18 @@ MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 
 
 def _pages_from_upload(file: UploadFile | None, text: str | None) -> tuple[str, list[PageText]]:
+    """Read the uploaded file (PDF, Word, PowerPoint, text, Markdown or CSV) or pasted text."""
     if file is not None and file.filename:
         data = file.file.read(MAX_UPLOAD_BYTES + 1)
         if len(data) > MAX_UPLOAD_BYTES:
-            raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "PDF is over 10 MB")
-        if not data.startswith(b"%PDF"):
-            raise HTTPException(status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, "Upload a PDF file")
-        return file.filename, parse_pdf(data)
+            raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "File is over 10 MB")
+        try:
+            return file.filename, parse_guideline_file(file.filename, data)
+        except UnsupportedFileError as exc:
+            raise HTTPException(status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, str(exc)) from exc
     if text and text.strip():
         return "pasted text", split_text(text)
-    raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Send a PDF file or some text")
+    raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Send a file or some text")
 
 
 @router.post(

@@ -19,6 +19,24 @@ import { Textarea } from "@/components/ui/textarea";
 import { api, ApiError } from "@/lib/api";
 import type { GuidelineUploadResult } from "@/types/api";
 
+/** Kinds of guideline file the backend can read (app/processing/documents.py). */
+const GUIDELINE_FILES = [
+  ".pdf",
+  ".docx",
+  ".pptx",
+  ".txt",
+  ".md",
+  ".csv",
+  ".tsv",
+  "application/pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "text/plain",
+  "text/markdown",
+  "text/csv",
+  "text/tab-separated-values",
+].join(",");
+
 export function UploadCard({
   brandId,
   onDone,
@@ -28,7 +46,7 @@ export function UploadCard({
 }) {
   const [file, setFile] = useState<File | null>(null);
   const [text, setText] = useState("");
-  const [mode, setMode] = useState("pdf");
+  const [mode, setMode] = useState("file");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,8 +54,8 @@ export function UploadCard({
     event.preventDefault();
     setError(null);
     const form = new FormData();
-    if (mode === "pdf") {
-      if (!file) return setError("Choose a PDF first.");
+    if (mode === "file") {
+      if (!file) return setError("Choose a file first.");
       form.append("file", file);
     } else {
       if (!text.trim()) return setError("Paste some guideline text first.");
@@ -75,19 +93,26 @@ export function UploadCard({
         <form onSubmit={submit} className="space-y-4">
           <Tabs value={mode} onValueChange={setMode}>
             <TabsList>
-              <TabsTrigger value="pdf">PDF</TabsTrigger>
+              <TabsTrigger value="file">Upload a file</TabsTrigger>
               <TabsTrigger value="text">Paste text</TabsTrigger>
             </TabsList>
-            <TabsContent value="pdf" className="space-y-2 pt-2">
-              <Label htmlFor="guideline-file">
-                Guideline PDF (up to 10 MB)
-              </Label>
+            <TabsContent value="file" className="space-y-2 pt-2">
+              <Label htmlFor="guideline-file">Guideline file</Label>
               <Input
                 id="guideline-file"
                 type="file"
-                accept="application/pdf"
+                accept={GUIDELINE_FILES}
+                aria-describedby="guideline-file-help"
                 onChange={(e) => setFile(e.target.files?.[0] ?? null)}
               />
+              <p
+                id="guideline-file-help"
+                className="text-sm text-muted-foreground"
+              >
+                PDF, Word (.docx), PowerPoint (.pptx), text (.txt, .md) or CSV,
+                up to 10 MB. For a CSV, put one rule per row; a header row such
+                as &ldquo;Category, Rule&rdquo; helps.
+              </p>
             </TabsContent>
             <TabsContent value="text" className="space-y-2 pt-2">
               <Label htmlFor="guideline-text">Guideline text</Label>

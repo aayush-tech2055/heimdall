@@ -49,7 +49,7 @@ A generic AI prompt can comment on tone, but it doesn't know the company's appro
 
 Heimdall sits between **"draft"** and **"publish"**:
 
-- **Admins** upload brand guidelines (PDF or text). Heimdall splits them into individual rules and **checks the guidelines themselves** for contradictions, duplicates and vague wording before they're used. Approved facts can also be fetched from the company website and approved by the admin.
+- **Admins** upload brand guidelines as a PDF, Word, PowerPoint, text, Markdown or CSV file, or paste them. Heimdall splits them into individual rules and **checks the guidelines themselves** for contradictions, duplicates and vague wording before they're used. Approved facts can also be fetched from the company website and approved by the admin.
 - **Creators** upload content as **PDF, text, image or video** and instantly see flagged issues in tone, terminology, facts, unsupported claims, visuals and accessibility. Every flag cites its source and comes with a suggested fix that keeps the creator's intent.
 - **Managers** review only what's left, then approve the content or send it back with comments.
 - Over time, Heimdall reports **recurring mistakes** and **guidelines that confuse people**.
@@ -83,7 +83,7 @@ Heimdall sits between **"draft"** and **"publish"**:
 
 ```mermaid
 flowchart TD
-    A["Upload guidelines<br/>(Admin · PDF or text)"] --> B["Split into rules<br/>ID, category, page"]
+    A["Upload guidelines<br/>(Admin · PDF, Word, PowerPoint, text, CSV)"] --> B["Split into rules<br/>ID, category, page"]
     B --> C["Verify the guidelines<br/>contradictions, duplicates, vague rules"]
     D["Add facts and assets<br/>(Admin · typed in or from website)"] --> E["Fetch and compare<br/>shows what changed"]
     E --> F["Structure the facts<br/>entity, value, source, valid-until"]
@@ -170,7 +170,7 @@ All features below are built and tested.
 
 | Feature | Round | Where |
 |---|---|---|
-| Guideline import (PDF or text) into one rule per instruction, with page numbers | 2 | Admin › Guidelines |
+| Guideline import (PDF, Word, PowerPoint, text, Markdown, CSV or pasted text) into one rule per instruction, with page or slide numbers | 2 | Admin › Guidelines |
 | Guideline verification: duplicates, contradictions, vague rules (with a rewrite), missing categories | 2 | Admin › Guidelines |
 | Fact store with sources, expiry badges and CSV import | 2 | Admin › Facts |
 | Four-layer review engine: rules in code, retrieval + AI judge, claims against facts, visual checks | 2 | every review |
