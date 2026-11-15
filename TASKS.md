@@ -177,7 +177,7 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 - [x] **10.3** `[A]` Run the evaluation (6.9) and save the report; fix the worst category.
 - [ ] **10.4** `[V]` User testing with 3–5 people outside the team, using a script of tasks; record what confused them and fix the top 3 issues.
 - [ ] **10.5** `[A+V]` Submission package: deployed demo link, repo access, architecture diagram, **list of APIs, models and datasets used**, testing evidence (eval report + user testing notes), each member's contribution (from `BUILD_LOG.md`), updated README with real setup steps.
-- [ ] **10.6** `[A+V]` Name the **three Round 3 improvements** in the submission (video review; website import + asset library; insights + guideline health with measured accuracy gains).
+- [x] **10.6** `[A+V]` Name the **three Round 3 improvements** in the submission (video review; website import + asset library; insights + guideline health with measured accuracy gains).
 
 ### Milestone 11: Round 3, improvement 1: video
 - [x] **11.1** `[A]` FFmpeg: extract audio, and sample frames every 2 s (clips up to 60 s).
@@ -209,8 +209,8 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 
 ### Milestone 15: Round 3 submission
 - [ ] **15.1** `[V]` Demo video (3–5 minutes): the full loop, guideline verification, a video review, a website fact change, the insights dashboard.
-- [ ] **15.2** `[A+V]` Final report: what was built, evidence of testing and of the three improvements (eval before and after), privacy, security and accessibility explanation, **known limitations**, roadmap.
-- [ ] **15.3** `[A+V]` Final README: setup, architecture, screenshots, the complete AI and tool disclosure.
+- [x] **15.2** `[A+V]` Final report: what was built, evidence of testing and of the three improvements (eval before and after), privacy, security and accessibility explanation, **known limitations**, roadmap.
+- [x] **15.3** `[A+V]` Final README: setup, architecture, screenshots, the complete AI and tool disclosure.
 - [ ] **15.4** `[A+V]` Rehearse: both members can explain any part of the system and the evaluation numbers.
 
 ---
