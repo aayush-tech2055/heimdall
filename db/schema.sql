@@ -195,6 +195,8 @@ create table public.content_versions (
   brand_id        uuid not null,
   version_number  integer not null check (version_number >= 1),
   storage_path    text,          -- original upload in Supabase Storage (PDF, image, video)
+  mime_type       text,          -- type of the uploaded file
+  alt_text        text,          -- for images: the creator's alt text
   extracted_text  text,          -- full text the review ran on (before redaction)
   review_started_at  timestamptz,
   review_finished_at timestamptz,

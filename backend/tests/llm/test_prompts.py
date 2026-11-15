@@ -32,6 +32,9 @@ def all_prompts() -> dict[str, prompts.Prompt]:
             [*CLAIMS, ClaimRef("c2", "u2", INJECTION, "x")], FACTS
         ),
         "fact_extraction": prompts.fact_extraction(INJECTION, url="https://acmelearn.example"),
+        "visual_check": prompts.visual_check(
+            "p1-i1", RULES, ["Logo: indigo wordmark"], alt_text=INJECTION
+        ),
     }
 
 
@@ -43,7 +46,14 @@ def test_every_task_prompt_exists_with_its_purpose():
 
 @pytest.mark.parametrize(
     "name",
-    ["rule_extraction", "judge", "claim_extraction", "claim_verification", "fact_extraction"],
+    [
+        "rule_extraction",
+        "judge",
+        "claim_extraction",
+        "claim_verification",
+        "fact_extraction",
+        "visual_check",
+    ],
 )
 def test_untrusted_text_is_wrapped_and_neutralised(name):
     p = all_prompts()[name]

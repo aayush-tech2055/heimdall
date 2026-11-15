@@ -46,13 +46,20 @@ REPORT_DIR = ROOT / "docs" / "eval"
 
 
 def setup_brand(
-    conn: psycopg.Connection, slug: str, key_brand: dict, today: date
+    conn: psycopg.Connection,
+    slug: str,
+    key_brand: dict,
+    today: date,
+    *,
+    target_slug: str | None = None,
+    target_name: str | None = None,
 ) -> tuple:  # (brand_id, mapping, rules)
-    eval_slug = f"eval-{slug}"
+    """Prepare a brand from the test data: by default the separate `eval-<slug>` brand;
+    `target_slug` prepares an existing brand instead (the demo brand)."""
     brand_id = conn.execute(
         "insert into public.brands (name, slug) values (%s, %s) on conflict (slug) do update "
         "set name = excluded.name returning id",
-        (f"{key_brand['name']} (eval)", eval_slug),
+        (target_name or f"{key_brand['name']} (eval)", target_slug or f"eval-{slug}"),
     ).fetchone()[0]
     conn.commit()  # AI calls are logged from other connections and reference the brand
     rules = list_rules(conn, brand_id)

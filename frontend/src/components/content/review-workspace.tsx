@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { ContentStatusBadge } from "@/components/content/badges";
 import { CommentsPanel } from "@/components/content/comments-panel";
 import { FlagCard, type FlagAction } from "@/components/content/flag-card";
+import { ImageViewer, PdfViewer } from "@/components/content/file-viewers";
 import { HighlightedText } from "@/components/content/highlighted-text";
 import { VersionHistory } from "@/components/content/version-history";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -115,6 +116,13 @@ export function ReviewWorkspace({
         () =>
           api(`/flags/${flag.id}/except`, { json: { reason: action.reason } }),
       );
+  }
+
+  function selectFlag(id: string) {
+    setSelected(id);
+    document
+      .getElementById(`flag-${id}`)
+      ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 
   const canEdit =
@@ -265,17 +273,67 @@ export function ReviewWorkspace({
             <h2 id="text-h" className="text-lg font-semibold">
               Content
             </h2>
-            <HighlightedText
-              text={flags.text}
-              flags={mode === "manager" ? visible : flags.flags}
-              selectedId={selected}
-              onSelect={(id) => {
-                setSelected(id);
-                document
-                  .getElementById(`flag-${id}`)
-                  ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-              }}
-            />
+            {content.format === "pdf" ? (
+              <PdfViewer
+                versionId={flags.version_id}
+                flags={mode === "manager" ? visible : flags.flags}
+                units={flags.units}
+                selectedId={selected}
+                onSelect={selectFlag}
+              />
+            ) : content.format === "image" ? (
+              <ImageViewer
+                versionId={flags.version_id}
+                flags={mode === "manager" ? visible : flags.flags}
+                selectedId={selected}
+                onSelect={selectFlag}
+              />
+            ) : (
+              <HighlightedText
+                text={flags.text}
+                flags={mode === "manager" ? visible : flags.flags}
+                selectedId={selected}
+                onSelect={selectFlag}
+              />
+            )}
+            {canEdit && content.format !== "text" && (
+              <form
+                className="bg-muted space-y-2 rounded-md p-3"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const input =
+                    (e.currentTarget.elements.namedItem(
+                      "corrected",
+                    ) as HTMLInputElement) ?? null;
+                  const file = input?.files?.[0];
+                  if (!file) return;
+                  const form = new FormData();
+                  form.append("file", file);
+                  void run("New version uploaded. Checking it…", () =>
+                    api(`/contents/${content.id}/versions`, { form }),
+                  );
+                }}
+              >
+                <Label htmlFor="corrected">
+                  Fixes can&apos;t be applied inside a {content.format}. Upload
+                  a corrected file as a new version:
+                </Label>
+                <input
+                  id="corrected"
+                  name="corrected"
+                  type="file"
+                  accept={
+                    content.format === "pdf"
+                      ? "application/pdf"
+                      : "image/png,image/jpeg"
+                  }
+                  className="block text-sm"
+                />
+                <Button size="sm" type="submit" disabled={busy}>
+                  Upload corrected {content.format}
+                </Button>
+              </form>
+            )}
           </section>
           <section aria-labelledby="flags-h" className="space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -309,6 +367,7 @@ export function ReviewWorkspace({
                 <FlagCard
                   key={flag.id}
                   flag={flag}
+                  canFix={content.format === "text"}
                   mode={
                     canEdit ? "creator" : canDecide ? "manager" : "readonly"
                   }

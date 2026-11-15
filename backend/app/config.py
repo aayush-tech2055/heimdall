@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     groq_whisper_model: str = "whisper-large-v3"
     openrouter_api_key: str = ""
     openrouter_model: str = ""
+    openrouter_supports_images: bool = True  # the default free model is vision-language
 
     # LLM cache (decision 24)
     llm_cache_path: str = ".cache/llm_cache.sqlite3"

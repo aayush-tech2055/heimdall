@@ -98,6 +98,22 @@ class ClaimVerification(_Out):
     verdicts: list[ClaimVerdict]
 
 
+class VisualFlag(_Out):
+    rule_code: str
+    severity: Severity
+    evidence: str = Field(min_length=1, description="Short description of the image region")
+    explanation: str = Field(min_length=1)
+    suggested_fix: str | None = None
+    confidence: float = Field(ge=0.0, le=1.0)
+    region: list[float] | None = Field(
+        default=None, description="[x0, y0, x1, y1] as fractions of the image (0 to 1), or null"
+    )
+
+
+class VisualCheck(_Out):
+    flags: list[VisualFlag]
+
+
 # --- Website facts (task 12.2) --------------------------------------------------------------
 
 

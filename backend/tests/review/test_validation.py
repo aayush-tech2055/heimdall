@@ -106,3 +106,28 @@ def test_ai_flags_inside_brand_required_text_are_dropped_but_code_flags_are_kept
     result = validate([ai_inside, ai_outside, code_inside], units, red, [], phrase)
     assert [f.evidence for f in result.flags] == ["Great beans", "caffeine"]
     assert [r for _, r in result.dropped] == ["brand_required_text"]
+
+
+def test_pdf_units_get_page_and_the_evidence_box():
+    from app.review.segment import Unit
+
+    unit = Unit("u1", 0, "Our cheap course", {"page": 2, "bbox": [72.0, 90.0, 300.0, 104.0]})
+    boxes = lambda uid, s, e: (100.0, 90.0, 130.0, 104.0) if (s, e) == (4, 9) else None  # noqa: E731
+    result = validate([cand("cheap", unit_id="u1")], [unit], {"u1": redact(unit.text, use_presidio=False)},
+                      evidence_box=boxes)  # fmt: skip
+    (flag,) = result.flags
+    assert flag.location.page == 2 and flag.location.bbox == (100.0, 90.0, 130.0, 104.0)
+
+
+def test_image_units_take_visual_flags_with_a_region_and_refuse_text_layers():
+    from app.review.segment import Unit
+
+    unit = Unit("p1-i1", 5, "", {"image_id": "p1-i1"})
+    visual = cand("Logo is stretched", unit_id="p1-i1", layer="visuals", category="visuals",
+                  extra={"region": [0.1, 0.1, 0.4, 0.3]})  # fmt: skip
+    text_layer = cand("anything", unit_id="p1-i1")
+    result = validate([visual, text_layer], [unit], {})
+    (flag,) = result.flags
+    assert flag.location.image_id == "p1-i1" and flag.location.region == (0.1, 0.1, 0.4, 0.3)
+    assert flag.evidence == "Logo is stretched"
+    assert [r for _, r in result.dropped] == ["evidence_not_found"]

@@ -62,9 +62,12 @@ export function FlagCard({
   busy,
   onSelect,
   onAction,
+  canFix = true,
 }: {
   flag: StoredFlag;
   mode: "creator" | "manager" | "readonly";
+  /** False for PDFs and images: fixes are made by uploading a corrected file. */
+  canFix?: boolean;
   selected: boolean;
   busy: boolean;
   onSelect: () => void;
@@ -131,7 +134,7 @@ export function FlagCard({
           className="flex flex-wrap gap-2 pt-1"
           onClick={(e) => e.stopPropagation()}
         >
-          {flag.suggested_fix && (
+          {canFix && flag.suggested_fix && (
             <Button
               size="sm"
               disabled={busy}
@@ -145,14 +148,16 @@ export function FlagCard({
               Accept fix
             </Button>
           )}
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={busy}
-            onClick={() => setPanel(panel === "edit" ? null : "edit")}
-          >
-            <Pencil aria-hidden /> Edit
-          </Button>
+          {canFix && (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={busy}
+              onClick={() => setPanel(panel === "edit" ? null : "edit")}
+            >
+              <Pencil aria-hidden /> Edit
+            </Button>
+          )}
           <Button
             size="sm"
             variant="outline"

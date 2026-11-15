@@ -100,6 +100,13 @@ def fix_flag(
     """Accept (replacement None: use the suggested fix) or edit. Returns (content, version)."""
     flag = load_flag(conn, user, flag_id)
     _require_creator_edit(flag, user)
+    fmt = conn.execute(
+        "select format from public.contents where id = %s", (flag.content_id,)
+    ).fetchone()[0]
+    if fmt != "text":
+        raise ActionError(
+            f"Fixes can't be applied inside a {fmt}; upload a corrected file as a new version", 409
+        )
     status = "accepted" if replacement is None else "edited"
     new = flag.suggested_fix if replacement is None else replacement
     if new is None:

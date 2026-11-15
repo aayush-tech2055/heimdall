@@ -129,3 +129,31 @@ def test_retry_after_header_is_carried_on_rate_limit():
     with pytest.raises(RateLimitError) as exc_info:
         GeminiProvider("k", "m", client_for(handler)).complete("s", "p")
     assert exc_info.value.retry_after == 7.0
+
+
+def test_gemini_sends_images_inline_with_the_vision_model():
+    seen = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen["url"] = str(request.url)
+        seen["parts"] = json.loads(request.content)["contents"][0]["parts"]
+        return httpx.Response(200, json={"candidates": [{"content": {"parts": [{"text": "{}"}]}}]})
+
+    provider = GeminiProvider("k", "text-model", client_for(handler), vision_model="vision-model")
+    provider.complete("s", "look", [b"\x89PNGdata"])
+    assert seen["url"].endswith("/models/vision-model:generateContent")
+    assert seen["parts"][1]["inline_data"]["mime_type"] == "image/png"
+
+
+def test_openai_compatible_sends_data_uri_images():
+    seen = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen["content"] = json.loads(request.content)["messages"][1]["content"]
+        return httpx.Response(200, json={"choices": [{"message": {"content": "{}"}}]})
+
+    provider = OpenAICompatibleProvider("openrouter", "https://x", "k", "m", json_mode=False,
+                                        client=client_for(handler), supports_images=True)  # fmt: skip
+    provider.complete("s", "look", [b"\xff\xd8\xffjpeg"])
+    assert seen["content"][0] == {"type": "text", "text": "look"}
+    assert seen["content"][1]["image_url"]["url"].startswith("data:image/jpeg;base64,")

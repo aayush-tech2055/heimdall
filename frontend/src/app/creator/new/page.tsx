@@ -21,6 +21,8 @@ function NewCheck({ me }: { me: Me }) {
   const [mode, setMode] = useState("paste");
   const [text, setText] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [altText, setAltText] = useState("");
+  const isImage = !!file && /\.(png|jpe?g)$/i.test(file.name);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,6 +37,7 @@ function NewCheck({ me }: { me: Me }) {
     } else {
       if (!file) return setError("Choose a file to check.");
       form.append("file", file);
+      if (isImage && altText.trim()) form.append("alt_text", altText.trim());
     }
     setBusy(true);
     try {
@@ -83,14 +86,30 @@ function NewCheck({ me }: { me: Me }) {
           </TabsContent>
           <TabsContent value="file" className="space-y-2 pt-2">
             <Label htmlFor="content-file">
-              Text or Markdown file (.txt, .md)
+              PDF, PNG or JPEG image, or a text file (.txt, .md)
             </Label>
             <Input
               id="content-file"
               type="file"
-              accept=".txt,.md,.markdown,text/plain,text/markdown"
+              accept=".pdf,.png,.jpg,.jpeg,.txt,.md,.markdown,application/pdf,image/png,image/jpeg,text/plain,text/markdown"
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             />
+            <p className="text-muted-foreground text-sm">
+              PDFs up to 20 MB, images up to 10 MB. Images and PDF pictures are
+              also checked against the brand&apos;s visual rules.
+            </p>
+            {isImage && (
+              <div className="space-y-2">
+                <Label htmlFor="alt-text">
+                  Alt text (describe the image for screen readers)
+                </Label>
+                <Input
+                  id="alt-text"
+                  value={altText}
+                  onChange={(e) => setAltText(e.target.value)}
+                />
+              </div>
+            )}
           </TabsContent>
         </Tabs>
         <p className="text-muted-foreground flex items-start gap-2 text-sm">

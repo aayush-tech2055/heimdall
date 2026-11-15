@@ -1,8 +1,9 @@
 """The review pipeline (task 6.7).
 
-    units -> redact -> (a) rules in code [original text]
+    units -> redact -> (a) rules in code [original text], accessibility checks in code
                      -> (b) retrieval + judge  } in parallel, on redacted text
                      -> (c) claims vs facts    }
+                     -> (d) visual checks on images (PDF images or an uploaded image)
           -> citation validation -> sort by position, then severity
           -> save units, flags and dropped flags -> status creator_review
 
@@ -27,18 +28,22 @@ from app.llm.client import LLMClient
 from app.models.flag import Flag
 from app.models.llm import ExtractedClaim
 from app.models.rules import Rule
+from app.processing.pdf_content import PdfContent, parse_pdf_content
 from app.processing.redaction import Redacted, redact
 from app.rag.embeddings import Embedder
 from app.rag.facts_store import lookup_facts
 from app.rag.retrieval import search_rules
 from app.rag.rules_store import list_rules
+from app.review.accessibility import check_alt_text, check_contrast, check_readability
 from app.review.claims import run_claims
 from app.review.judge import run_judge
 from app.review.rules_engine import check_deterministic
 from app.review.segment import Unit, segment_text
 from app.review.text import normalise
 from app.review.validation import ApprovedException, validate
+from app.review.visuals import ImageInput, run_visuals
 from app.review.workflow import transition
+from app.storage import Storage, get_storage
 
 log = logging.getLogger(__name__)
 
@@ -51,6 +56,8 @@ class BrandContext:
     claim_policy_enabled: bool = True
     exceptions: list[ApprovedException] = field(default_factory=list)
     exempt_terms: list[str] = field(default_factory=list)  # brand and product names
+    readability_target: float | None = None
+    assets: list[str] = field(default_factory=list)  # asset library descriptions (layer d)
 
 
 @dataclass
@@ -66,10 +73,14 @@ class ReviewOutcome:
 
 def load_brand_context(conn: psycopg.Connection, brand_id: UUID) -> BrandContext:
     settings = conn.execute(
-        "select confidential_terms, claim_policy_enabled from public.brand_settings "
-        "where brand_id = %s",
+        "select confidential_terms, claim_policy_enabled, readability_target "
+        "from public.brand_settings where brand_id = %s",
         (brand_id,),
     ).fetchone()
+    assets = conn.execute(
+        "select kind, name, description from public.assets where brand_id = %s order by name",
+        (brand_id,),
+    ).fetchall()
     exceptions = conn.execute(
         "select source_id, evidence from public.approved_exceptions where brand_id = %s",
         (brand_id,),
@@ -86,6 +97,8 @@ def load_brand_context(conn: psycopg.Connection, brand_id: UUID) -> BrandContext
         claim_policy_enabled=settings[1] if settings else True,
         exceptions=[ApprovedException(s, e) for s, e in exceptions],
         exempt_terms=[n[0] for n in names],
+        readability_target=settings[2] if settings else None,
+        assets=[f"{kind}: {name}. {desc}".strip() for kind, name, desc in assets],
     )
 
 
@@ -99,14 +112,23 @@ def review_text(
     today: date,
     content_version_id: UUID | None = None,
     use_presidio: bool = True,
+    pdf: PdfContent | None = None,
+    images: list[ImageInput] = (),
 ) -> ReviewOutcome:
+    """Review text, or a PDF's units (`pdf`), plus any images, against the brand context."""
     started = time.perf_counter()
-    units = segment_text(text)
+    units = pdf.units if pdf is not None else segment_text(text)
     redacted = {
         u.unit_id: redact(u.text, ctx.confidential_terms, use_presidio=use_presidio,
                           exempt_terms=ctx.exempt_terms)
         for u in units
     }  # fmt: skip
+    image_units = [
+        Unit(unit_id=img.image_id, position=len(units) + i, text="",
+             location={"image_id": img.image_id,
+                       **({"page": img.page, "bbox": list(img.bbox)} if img.page else {})})
+        for i, img in enumerate(images)
+    ]  # fmt: skip
 
     def search(query: str, vector: list[float], k: int) -> list[str]:
         with pool.connection() as conn:
@@ -117,24 +139,32 @@ def review_text(
             return lookup_facts(conn, ctx.brand_id, entity=claim.entity, claim=claim.claim,
                                 vector=vector, today=today)  # fmt: skip
 
-    common = {"embedder": embedder, "client": client, "brand_id": ctx.brand_id,
-              "content_version_id": content_version_id}  # fmt: skip
-    with ThreadPoolExecutor(max_workers=2) as pool_exec:
-        judged = pool_exec.submit(run_judge, units, redacted, ctx.rules, search=search, **common)
+    common = {"client": client, "brand_id": ctx.brand_id, "content_version_id": content_version_id}
+    with ThreadPoolExecutor(max_workers=3) as pool_exec:
+        judged = pool_exec.submit(run_judge, units, redacted, ctx.rules, search=search,
+                                  embedder=embedder, **common)  # fmt: skip
         claimed = pool_exec.submit(
-            run_claims, units, redacted, lookup=lookup,
+            run_claims, units, redacted, lookup=lookup, embedder=embedder,
             claim_policy_enabled=ctx.claim_policy_enabled, **common,
         )  # fmt: skip
-        coded = check_deterministic(units, ctx.rules)
-        judge_result, claims_result = judged.result(), claimed.result()
+        seen = pool_exec.submit(run_visuals, list(images), ctx.rules, assets=ctx.assets, **common)
+        coded = [
+            *check_deterministic(units, ctx.rules),
+            *check_readability(units, ctx.rules, ctx.readability_target),
+            *(check_contrast(pdf.styles, ctx.rules) if pdf is not None else []),
+            *(c for img in images if img.page is None
+              for c in check_alt_text(img.image_id, img.alt_text, ctx.rules)),
+        ]  # fmt: skip
+        judge_result, claims_result, visual = judged.result(), claimed.result(), seen.result()
 
     required = [t for r in ctx.rules if r.det_kind == "required_phrase" for t in r.terms]
     validated = validate(
-        [*coded, *judge_result.candidates, *claims_result.candidates],
-        units, redacted, ctx.exceptions, required,
+        [*coded, *judge_result.candidates, *claims_result.candidates, *visual],
+        [*units, *image_units], redacted, ctx.exceptions, required,
+        evidence_box=pdf.evidence_bbox if pdf is not None else None,
     )  # fmt: skip
     return ReviewOutcome(
-        units=units, redacted=redacted, flags=validated.flags,
+        units=[*units, *image_units], redacted=redacted, flags=validated.flags,
         dropped=[*claims_result.dropped, *validated.dropped],
         retrieved=judge_result.retrieved, claims=claims_result.claims,
         seconds=time.perf_counter() - started,
@@ -203,18 +233,20 @@ def review_content(
     today: date,
     actor_id: UUID | None = None,
     use_presidio: bool = True,
+    storage: Storage | None = None,
 ) -> ReviewOutcome | None:
     """Review one content version end to end. Never raises: failures are recorded."""
     with pool.connection() as conn:
         row = conn.execute(
-            "select v.content_id, v.brand_id, coalesce(v.extracted_text, '') from "
-            "public.content_versions v where v.id = %s",
+            "select v.content_id, v.brand_id, coalesce(v.extracted_text, ''), c.format, "
+            "v.storage_path, v.alt_text from public.content_versions v "
+            "join public.contents c on c.id = v.content_id where v.id = %s",
             (version_id,),
         ).fetchone()
         if row is None:
             log.error("review_content: no version %s", version_id)
             return None
-        content_id, brand_id, text = row
+        content_id, brand_id, text, fmt, storage_path, alt_text = row
         conn.execute(
             "update public.content_versions set review_started_at = now(), "
             "review_finished_at = null, review_error = null where id = %s",
@@ -227,9 +259,17 @@ def review_content(
             transition(conn, content_id, "checking", actor_id=actor_id)
         ctx = load_brand_context(conn, brand_id)
     try:
+        pdf, images = None, []
+        if fmt in ("pdf", "image"):
+            data = (storage or get_storage()).download(storage_path)
+            if fmt == "pdf":
+                pdf = parse_pdf_content(data)
+                images = [ImageInput(i.image_id, i.data, i.page, i.bbox) for i in pdf.images]
+            else:
+                images = [ImageInput("img-1", data, alt_text=alt_text)]
         outcome = review_text(
             text, ctx, pool=pool, client=client, embedder=embedder, today=today,
-            content_version_id=version_id, use_presidio=use_presidio,
+            content_version_id=version_id, use_presidio=use_presidio, pdf=pdf, images=images,
         )  # fmt: skip
         with pool.connection() as conn:
             save_outcome(conn, version_id=version_id, content_id=content_id,
