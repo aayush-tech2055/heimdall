@@ -28,6 +28,7 @@ from app.review.content_store import (
     list_contents,
     version_flags,
 )
+from app.review.workflow import InvalidTransitionError, transition
 
 router = APIRouter(tags=["contents"])
 
@@ -95,7 +96,8 @@ def upload_content(
     content_id, version_id = create_content(conn, user, title=title.strip(), fmt=fmt, text=body)
     audit(conn, brand_id=user.brand_id, actor_id=user.id, action="content.create",
           entity_type="content", entity_id=str(content_id),
-          after={"status": "checking"})  # fmt: skip
+          after={"status": "draft"})  # fmt: skip
+    transition(conn, content_id, "checking", actor_id=user.id)
     conn.commit()  # the background review reads these rows from another connection
     background.add_task(partial(run, version_id, user.id))
     return get_content(conn, user, content_id)
@@ -129,14 +131,12 @@ def recheck(
 ) -> ContentDetail:
     """Run the review again on the latest version (for example after a failed review)."""
     content = _content_or_404(conn, user, content_id)
-    if content.status not in ("draft", "creator_review", "changes_requested"):
-        raise HTTPException(status.HTTP_409_CONFLICT, f"Cannot re-check while {content.status}")
     if user.role == "creator" and content.creator_id != user.id:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Content not found")
-    conn.execute("update public.contents set status = 'checking' where id = %s", (content_id,))
-    audit(conn, brand_id=user.brand_id, actor_id=user.id, action="content.recheck",
-          entity_type="content", entity_id=str(content_id),
-          before={"status": content.status}, after={"status": "checking"})  # fmt: skip
+    try:
+        transition(conn, content_id, "checking", actor_id=user.id, detail={"recheck": True})
+    except InvalidTransitionError as exc:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
     conn.commit()
     background.add_task(partial(run, content.latest_version_id, user.id))
     return _content_or_404(conn, user, content_id)

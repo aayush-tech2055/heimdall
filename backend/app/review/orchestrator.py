@@ -23,7 +23,6 @@ from uuid import UUID
 import psycopg
 from psycopg_pool import ConnectionPool
 
-from app.audit import audit
 from app.llm.client import LLMClient
 from app.models.flag import Flag
 from app.models.llm import ExtractedClaim
@@ -39,6 +38,7 @@ from app.review.rules_engine import check_deterministic
 from app.review.segment import Unit, segment_text
 from app.review.text import normalise
 from app.review.validation import ApprovedException, validate
+from app.review.workflow import transition
 
 log = logging.getLogger(__name__)
 
@@ -128,9 +128,10 @@ def review_text(
         coded = check_deterministic(units, ctx.rules)
         judge_result, claims_result = judged.result(), claimed.result()
 
+    required = [t for r in ctx.rules if r.det_kind == "required_phrase" for t in r.terms]
     validated = validate(
         [*coded, *judge_result.candidates, *claims_result.candidates],
-        units, redacted, ctx.exceptions,
+        units, redacted, ctx.exceptions, required,
     )  # fmt: skip
     return ReviewOutcome(
         units=units, redacted=redacted, flags=validated.flags,
@@ -219,7 +220,11 @@ def review_content(
             "review_finished_at = null, review_error = null where id = %s",
             (version_id,),
         )
-        conn.execute("update public.contents set status = 'checking' where id = %s", (content_id,))
+        (status,) = conn.execute(
+            "select status from public.contents where id = %s", (content_id,)
+        ).fetchone()
+        if status != "checking":  # the API moves content to checking before scheduling us
+            transition(conn, content_id, "checking", actor_id=actor_id)
         ctx = load_brand_context(conn, brand_id)
     try:
         outcome = review_text(
@@ -233,19 +238,10 @@ def review_content(
                 "update public.content_versions set review_finished_at = now() where id = %s",
                 (version_id,),
             )
-            conn.execute(
-                "update public.contents set status = 'creator_review' where id = %s",
-                (content_id,),
-            )
-            summary = {
-                "status": "creator_review",
-                "version_id": str(version_id),
-                "flags": len(outcome.flags),
+            transition(conn, content_id, "creator_review", actor_id=actor_id, detail={
+                "version_id": str(version_id), "flags": len(outcome.flags),
                 "seconds": round(outcome.seconds, 1),
-            }
-            audit(conn, brand_id=brand_id, actor_id=actor_id, action="content.review_done",
-                  entity_type="content", entity_id=str(content_id),
-                  before={"status": "checking"}, after=summary)  # fmt: skip
+            })  # fmt: skip
         return outcome
     except Exception as exc:  # noqa: BLE001 - recorded for the creator, never lost
         log.exception("review of version %s failed", version_id)
@@ -255,9 +251,6 @@ def review_content(
                 "review_finished_at = now() where id = %s",
                 (str(exc)[:1000], version_id),
             )
-            conn.execute("update public.contents set status = 'draft' where id = %s", (content_id,))
-            failure = {"status": "draft", "error": str(exc)[:300]}
-            audit(conn, brand_id=brand_id, actor_id=actor_id, action="content.review_failed",
-                  entity_type="content", entity_id=str(content_id),
-                  before={"status": "checking"}, after=failure)  # fmt: skip
+            transition(conn, content_id, "draft", actor_id=actor_id,
+                       detail={"error": str(exc)[:300]})  # fmt: skip
         return None

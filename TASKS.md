@@ -146,18 +146,18 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 - [x] **6.7** `[A]` Orchestrator `review_content(version_id)`: units → redact → (a), (b), (c) → validate → sort by position, then severity → save units, flags and dropped flags → set status to `creator_review`. Runs as a FastAPI background task.
 - [x] **6.8** `[A]` API: `POST /contents` (upload text or file → new version → start the review), `GET /contents/{id}` (status, versions), `GET /versions/{id}/flags`.
   *Done when:* uploading a test blog post returns cited flags within 60 seconds, and every flag passes validation.
-- [ ] **6.9** `[A]` Evaluation script `backend/eval/run_eval.py`: runs every test item, compares the flags with the answer key, and reports recall, precision, retrieval recall (was the expected rule in the retrieved top-k?) and flags without a valid source (must be 0), per category. It writes `docs/eval/<date>.md`.
+- [x] **6.9** `[A]` Evaluation script `backend/eval/run_eval.py`: runs every test item, compares the flags with the answer key, and reports recall, precision, retrieval recall (was the expected rule in the retrieved top-k?) and flags without a valid source (must be 0), per category. It writes `docs/eval/<date>.md`.
 
 ### Milestone 7: Creator and manager workflow
-- [ ] **7.1** `[A]` The workflow state machine from Part 1, enforced in the API (an invalid transition returns 409). Every transition is written to `audit_log`.
-- [ ] **7.2** `[A]` Flag actions: `POST /flags/{id}/accept` (apply the fix to the text and create a new version), `/edit`, `/dismiss` (reason required). Re-running the review on the new version keeps resolved flags resolved.
-- [ ] **7.3** `[A]` Manager actions: `POST /contents/{id}/approve`, `/request-changes` (comment required), `POST /flags/{id}/except` (reason required, creates an `approved_exceptions` row).
-- [ ] **7.4** `[A]` Comments: `GET/POST /versions/{id}/comments`, optionally tied to a flag.
-- [ ] **7.5** `[V]` Sign-in with Supabase Auth, and routing by role.
-- [ ] **7.6** `[V]` Creator upload screen: paste text or upload a file, choose a brand, and see the processing state.
-- [ ] **7.7** `[V]` Creator review screen: the content with highlighted evidence spans (colour by severity), a flag list beside it (category, severity, source chip that shows the rule or fact text on hover, explanation, suggested fix), Accept / Edit / Dismiss-with-reason, and "Submit for approval" once no high-severity flags are open (or each one has a reason).
-- [ ] **7.8** `[V]` Manager queue and review screen: a list of content waiting for review; the content with only unresolved and dismissed flags plus their reasons; comments; approve, request changes or approve an exception.
-- [ ] **7.9** `[V]` Version history: a list of versions, a diff between versions, and the flags per version.
+- [x] **7.1** `[A]` The workflow state machine from Part 1, enforced in the API (an invalid transition returns 409). Every transition is written to `audit_log`.
+- [x] **7.2** `[A]` Flag actions: `POST /flags/{id}/accept` (apply the fix to the text and create a new version), `/edit`, `/dismiss` (reason required). Re-running the review on the new version keeps resolved flags resolved.
+- [x] **7.3** `[A]` Manager actions: `POST /contents/{id}/approve`, `/request-changes` (comment required), `POST /flags/{id}/except` (reason required, creates an `approved_exceptions` row).
+- [x] **7.4** `[A]` Comments: `GET/POST /versions/{id}/comments`, optionally tied to a flag.
+- [x] **7.5** `[V]` Sign-in with Supabase Auth, and routing by role.
+- [x] **7.6** `[V]` Creator upload screen: paste text or upload a file, choose a brand, and see the processing state.
+- [x] **7.7** `[V]` Creator review screen: the content with highlighted evidence spans (colour by severity), a flag list beside it (category, severity, source chip that shows the rule or fact text on hover, explanation, suggested fix), Accept / Edit / Dismiss-with-reason, and "Submit for approval" once no high-severity flags are open (or each one has a reason).
+- [x] **7.8** `[V]` Manager queue and review screen: a list of content waiting for review; the content with only unresolved and dismissed flags plus their reasons; comments; approve, request changes or approve an exception.
+- [x] **7.9** `[V]` Version history: a list of versions, a diff between versions, and the flags per version.
   *Done when (M7):* a full loop works in the browser: admin sets rules → creator uploads → fixes → submits → manager sends back → creator fixes → manager approves, with every step in the audit log.
 
 ### Milestone 8: PDF and images
@@ -174,7 +174,7 @@ Next.js + Tailwind + shadcn/ui + Recharts · FastAPI + Pydantic · Supabase (Pos
 ### Milestone 10: Round 2 submission
 - [ ] **10.1** `[A]` Deploy: frontend to Vercel, backend to Render or Railway, environment secrets set, seeded with a test brand.
 - [ ] **10.2** `[A]` Demo mode: pre-run the demo content so results come from the cache; check that fallback works by disabling the Gemini key.
-- [ ] **10.3** `[A]` Run the evaluation (6.9) and save the report; fix the worst category.
+- [x] **10.3** `[A]` Run the evaluation (6.9) and save the report; fix the worst category.
 - [ ] **10.4** `[V]` User testing with 3–5 people outside the team, using a script of tasks; record what confused them and fix the top 3 issues.
 - [ ] **10.5** `[A+V]` Submission package: deployed demo link, repo access, architecture diagram, **list of APIs, models and datasets used**, testing evidence (eval report + user testing notes), each member's contribution (from `BUILD_LOG.md`), updated README with real setup steps.
 - [ ] **10.6** `[A+V]` Name the **three Round 3 improvements** in the submission (video review; website import + asset library; insights + guideline health with measured accuracy gains).

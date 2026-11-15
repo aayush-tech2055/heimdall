@@ -55,3 +55,14 @@ def test_totals_overall_and_by_category():
     assert overall.recall == 0.5 and overall.precision == 0.5
     assert by_cat["claims"].recall == 0.0 and by_cat["tone"].precision == 0.0
     assert by_cat["terminology"].recall == 1.0
+
+
+def test_spans_that_intersect_in_the_text_overlap_even_if_neither_contains_the_other():
+    text = "Brewbird has delivered to over 2 lakh customers across India."
+    assert evidence_overlaps(
+        "delivered to over 2 lakh customers", "over 2 lakh customers across India", text
+    )
+    assert not evidence_overlaps(
+        "delivered to over 2 lakh customers", "over 2 lakh customers across India"
+    )
+    assert not evidence_overlaps("Brewbird has", "across India", text)

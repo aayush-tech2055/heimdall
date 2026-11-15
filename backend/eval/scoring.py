@@ -1,6 +1,7 @@
 """Scoring the review engine against the answer key (task 6.9). Pure functions, no I/O.
 
-* A planted error is **caught** if some flag on the item has overlapping evidence (normalised;
+* A planted error is **caught** if some flag on the item has overlapping evidence (spans in the
+  item text intersect; quotes are matched leniently;
   for a missing required phrase: a flag with empty evidence citing the expected rule).
 * It is caught **with the right source** if that flag cites the expected source or one of
   its alternatives.
@@ -15,7 +16,7 @@ import re
 from collections import defaultdict
 from dataclasses import dataclass, field
 
-from app.review.text import normalise
+from app.review.text import find_normalised, normalise
 
 
 def words(text: str) -> set[str]:
@@ -49,10 +50,16 @@ def map_rule_keys(key_rules: dict[str, str], extracted: dict[str, str]) -> dict[
     return mapping
 
 
-def evidence_overlaps(expected: str, actual: str) -> bool:
+def evidence_overlaps(expected: str, actual: str, text: str | None = None) -> bool:
+    """Do the two quotes overlap? With the item text, by their character spans in it;
+    otherwise (or if either cannot be found) by containment."""
     e, a = normalise(expected), normalise(actual)
     if not e or not a:
         return False
+    if text is not None:
+        es, as_ = find_normalised(text, expected), find_normalised(text, actual)
+        if es and as_:
+            return es[0] < as_[1] and as_[0] < es[1]
     return e in a or a in e
 
 
@@ -84,19 +91,21 @@ class ItemScore:
     correct: list[bool] = field(default_factory=list)
 
 
-def _matches(exp: ExpectedFlag, act: ActualFlag) -> bool:
+def _matches(exp: ExpectedFlag, act: ActualFlag, text: str | None) -> bool:
     if exp.evidence == "":
         return act.evidence == "" and act.source_id in exp.sources
-    return evidence_overlaps(exp.evidence, act.evidence)
+    return evidence_overlaps(exp.evidence, act.evidence, text)
 
 
-def score_item(item_id: str, expected: list[ExpectedFlag], actual: list[ActualFlag]) -> ItemScore:
+def score_item(
+    item_id: str, expected: list[ExpectedFlag], actual: list[ActualFlag], text: str | None = None
+) -> ItemScore:
     s = ItemScore(item_id, expected, actual)
     for exp in expected:
-        hits = [a for a in actual if _matches(exp, a)]
+        hits = [a for a in actual if _matches(exp, a, text)]
         s.caught.append(bool(hits))
         s.caught_with_source.append(any(a.source_id in exp.sources for a in hits))
-    s.correct = [any(_matches(e, a) for e in expected) for a in actual]
+    s.correct = [any(_matches(e, a, text) for e in expected) for a in actual]
     return s
 
 

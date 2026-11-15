@@ -209,7 +209,7 @@ def main(argv: list[str] | None = None) -> int:
                     if unit:
                         retrieval[1] += 1
                         retrieval[0] += code in outcome.retrieved.get(unit.unit_id, [])
-            s = score_item(item["id"], expected, actual)
+            s = score_item(item["id"], expected, actual, item["text"])
             scores.append(s)
             print(f"[{slug} {n}/{len(items)}] {item['id']}: {sum(s.caught)}/{len(expected)} caught, "
                   f"{sum(s.correct)}/{len(actual)} flags correct ({outcome.seconds:.1f}s)", flush=True)  # fmt: skip

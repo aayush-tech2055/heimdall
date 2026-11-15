@@ -101,10 +101,10 @@ def create_content(
     conn: psycopg.Connection, user: CurrentUser, *, title: str, fmt: str, text: str,
     storage_path: str | None = None,
 ) -> tuple[UUID, UUID]:  # fmt: skip
-    """Create the content (status checking) and its version 1; return (content, version)."""
+    """Create the content (status draft) and its version 1; return (content, version)."""
     content_id = conn.execute(
         "insert into public.contents (brand_id, title, format, status, creator_id) "
-        "values (%s, %s, %s, 'checking', %s) returning id",
+        "values (%s, %s, %s, 'draft', %s) returning id",
         (user.brand_id, title, fmt, user.id),
     ).fetchone()[0]
     version_id = add_version(conn, user, content_id, text, storage_path=storage_path)
