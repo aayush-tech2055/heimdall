@@ -1,0 +1,48 @@
+# Render Blueprint for the Heimdall backend (New > Blueprint in the Render dashboard).
+# Secrets are marked sync: false, so Render asks for them during setup; they never live here.
+services:
+  - type: web
+    name: heimdall-api
+    runtime: docker
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    region: singapore
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: CORS_ORIGINS
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: OPENROUTER_MODEL
+        sync: false
+      - key: LLM_PROVIDER_ORDER
+        value: gemini,groq,openrouter
+      - key: GEMINI_MODEL
+        value: gemini-3.5-flash-lite
+      - key: GEMINI_VISION_MODEL
+        value: gemini-3.5-flash
+      - key: GEMINI_EMBEDDING_MODEL
+        value: gemini-embedding-001
+      - key: GROQ_MODEL
+        value: openai/gpt-oss-120b
+      - key: GROQ_WHISPER_MODEL
+        value: whisper-large-v3
+      - key: PRESIDIO_SPACY_MODEL
+        value: en_core_web_sm
