@@ -1,0 +1,15 @@
+entity,attribute,value,unit,statement,source,valid_until
+Glimmora Active Shield,germ protection,99,%,Glimmora Active Shield fights 99% of mouth germs in lab tests.,Glimmora Lab Report GL-2026-04,2027-06-30
+Glimmora Active Shield,cavity protection,12,hours,Glimmora Active Shield protects against cavity-causing germs for up to 12 hours after brushing.,Glimmora Lab Report GL-2026-04,2027-06-30
+Glimmora Active Shield,fluoride,1450,ppm,Glimmora Active Shield contains 1450 ppm fluoride.,Product specification sheet,2027-12-31
+Glimmora Active Shield,price (100 g),95,INR,Glimmora Active Shield 100 g costs ₹95.,glimmora.example/shop,2027-03-31
+Glimmora Sensitive Relief,relief time,14,days,Glimmora Sensitive Relief gives noticeable relief from sensitivity after 14 days of twice-daily brushing.,Glimmora Clinical Study GCS-2025,2027-06-30
+Glimmora Sensitive Relief,price (70 g),140,INR,Glimmora Sensitive Relief 70 g costs ₹140.,glimmora.example/shop,2027-03-31
+Glimmora Herbal Care,ingredients,neem and clove,,Glimmora Herbal Care contains neem and clove extracts.,Product specification sheet,2027-12-31
+Glimmora Herbal Care,price (150 g),120,INR,Glimmora Herbal Care 150 g costs ₹120.,glimmora.example/shop,2027-03-31
+Glimmora Kids Strawberry,fluoride,500,ppm,Glimmora Kids Strawberry contains 500 ppm fluoride.,Product specification sheet,2027-12-31
+Glimmora Kids Strawberry,age range,2 to 6,years,Glimmora Kids Strawberry is made for children aged 2 to 6.,Product specification sheet,2027-12-31
+Glimmora Active Shield,dentist survey,7 out of 10,dentists,7 out of 10 dentists in the Glimmora Dentist Survey 2025 would recommend Glimmora Active Shield.,Glimmora Dentist Survey 2025 (500 dentists),2026-12-10
+Glimmora,award,HealthWise Readers' Choice 2024,,Glimmora won the HealthWise Readers' Choice Award for oral care in 2024.,HealthWise India magazine,2025-12-31
+Glimmora,distribution,400,cities,Glimmora is sold in more than 400 cities across India.,Sales report Q3 2026,2027-06-30
+Glimmora,founded,2009,year,Glimmora was founded in 2009.,Company profile,2030-12-31
