@@ -10,6 +10,7 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ScrollPanel } from "@/components/ui/scroll-panel";
 import {
   Card,
   CardContent,
@@ -23,29 +24,49 @@ function RuleLink({ code }: { code: string }) {
   return (
     <a
       href={`#rule-${code}`}
-      className="focus-visible:ring-ring rounded font-mono text-sm font-medium underline underline-offset-2 focus-visible:ring-2 focus-visible:outline-none"
+      onClick={(e) => {
+        // Scroll the rules list (its own scroll panel) to the rule and flash it.
+        const el = document.getElementById(`rule-${code}`);
+        if (!el) return;
+        e.preventDefault();
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.classList.remove("hd-pulse");
+        void el.offsetWidth;
+        el.classList.add("hd-pulse");
+      }}
+      className="focus-visible:ring-ring text-primary rounded font-mono text-sm font-medium underline underline-offset-2 focus-visible:ring-2 focus-visible:outline-none"
     >
       {code}
     </a>
   );
 }
 
-function PairList({ items, empty }: { items: PairIssue[]; empty: string }) {
+function PairList({
+  items,
+  empty,
+  label,
+}: {
+  items: PairIssue[];
+  empty: string;
+  label: string;
+}) {
   if (!items.length)
     return <p className="text-muted-foreground text-sm">{empty}</p>;
   return (
-    <ul className="space-y-2">
-      {items.map((p) => (
-        <li key={`${p.rule_a}-${p.rule_b}`} className="text-sm">
-          <RuleLink code={p.rule_a} /> and <RuleLink code={p.rule_b} />
-          <span className="text-muted-foreground">
-            {" "}
-            · similarity {p.similarity.toFixed(2)}
-          </span>
-          <p className="text-muted-foreground mt-0.5">{p.explanation}</p>
-        </li>
-      ))}
-    </ul>
+    <ScrollPanel label={label} surface="var(--card)" className="max-h-72 pr-2">
+      <ul className="space-y-2">
+        {items.map((p) => (
+          <li key={`${p.rule_a}-${p.rule_b}`} className="text-sm">
+            <RuleLink code={p.rule_a} /> and <RuleLink code={p.rule_b} />
+            <span className="text-muted-foreground">
+              {" "}
+              · similarity {p.similarity.toFixed(2)}
+            </span>
+            <p className="text-muted-foreground mt-0.5">{p.explanation}</p>
+          </li>
+        ))}
+      </ul>
+    </ScrollPanel>
   );
 }
 
@@ -62,7 +83,7 @@ export function ReportCard({
     report.vague.length +
     report.missing_categories.length;
   return (
-    <Card>
+    <Card className="hd-rise">
       <CardHeader>
         <CardTitle>
           <h2 className="flex items-center gap-2">
@@ -89,7 +110,11 @@ export function ReportCard({
             <Copy className="size-4" aria-hidden /> Duplicates (
             {report.duplicates.length})
           </h3>
-          <PairList items={report.duplicates} empty="No duplicate rules." />
+          <PairList
+            items={report.duplicates}
+            empty="No duplicate rules."
+            label="Duplicate rules"
+          />
         </section>
         <section aria-labelledby="con-h">
           <h3 id="con-h" className="mb-2 flex items-center gap-2 font-medium">
@@ -99,6 +124,7 @@ export function ReportCard({
           <PairList
             items={report.contradictions}
             empty="No contradicting rules."
+            label="Contradicting rules"
           />
         </section>
         <section aria-labelledby="vague-h">
@@ -107,32 +133,38 @@ export function ReportCard({
             {report.vague.length})
           </h3>
           {report.vague.length ? (
-            <ul className="space-y-3">
-              {report.vague.map((v) => (
-                <li key={v.rule_code} className="text-sm">
-                  <RuleLink code={v.rule_code} />
-                  <span className="text-muted-foreground"> · {v.reason}</span>
-                  {v.suggested_rewrite && (
-                    <div className="bg-muted mt-1 rounded-md p-2">
-                      <p>
-                        <span className="font-medium">Suggested: </span>
-                        {v.suggested_rewrite}
-                      </p>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="mt-2"
-                        onClick={() =>
-                          onUseRewrite(v.rule_code, v.suggested_rewrite!)
-                        }
-                      >
-                        Use this rewrite
-                      </Button>
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
+            <ScrollPanel
+              label="Vague rules"
+              surface="var(--card)"
+              className="max-h-80 pr-2"
+            >
+              <ul className="space-y-3">
+                {report.vague.map((v) => (
+                  <li key={v.rule_code} className="text-sm">
+                    <RuleLink code={v.rule_code} />
+                    <span className="text-muted-foreground"> · {v.reason}</span>
+                    {v.suggested_rewrite && (
+                      <div className="bg-muted mt-1 rounded-md p-2">
+                        <p>
+                          <span className="font-medium">Suggested: </span>
+                          {v.suggested_rewrite}
+                        </p>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="mt-2"
+                          onClick={() =>
+                            onUseRewrite(v.rule_code, v.suggested_rewrite!)
+                          }
+                        >
+                          Use this rewrite
+                        </Button>
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </ScrollPanel>
           ) : (
             <p className="text-muted-foreground text-sm">
               Every rule is testable.

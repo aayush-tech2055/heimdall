@@ -23,6 +23,13 @@ export type FlagAction =
   | { kind: "dismiss"; reason: string }
   | { kind: "except"; reason: string };
 
+/** Coloured left edge by severity (the severity is also written on the card). */
+const SEVERITY_EDGE = {
+  high: "border-l-red-500",
+  medium: "border-l-amber-500",
+  low: "border-l-sky-500",
+} as const;
+
 const SOURCE_LABEL = { rule: "Rule", fact: "Fact", policy: "Policy" } as const;
 
 export function SourceChip({ flag }: { flag: StoredFlag }) {
@@ -60,6 +67,7 @@ export function FlagCard({
   onPick,
   stagedEdit,
   onStageEdit,
+  index = 0,
 }: {
   flag: StoredFlag;
   mode: "creator" | "manager" | "readonly";
@@ -73,6 +81,8 @@ export function FlagCard({
   /** The creator's own wording for this flag in the fix round, if any. */
   stagedEdit?: string;
   onStageEdit?: (text: string | null) => void;
+  /** Position in the list, used to stagger the entrance animation. */
+  index?: number;
   selected: boolean;
   busy: boolean;
   onSelect: () => void;
@@ -91,9 +101,11 @@ export function FlagCard({
       id={`flag-${flag.id}`}
       aria-label={`${flag.severity} ${flag.category} flag, ${flag.source_id}`}
       onClick={onSelect}
+      style={{ animationDelay: `${Math.min(index, 12) * 40}ms` }}
       className={cn(
-        "bg-card scroll-mt-24 space-y-2 rounded-lg border p-3 text-sm",
-        selected && "ring-ring ring-2",
+        "bg-card hd-rise hd-lift scroll-mt-4 space-y-2 rounded-xl border border-l-4 p-3 text-sm",
+        SEVERITY_EDGE[flag.severity],
+        selected && "ring-ring hd-pulse ring-2",
         !open && "bg-muted/40",
       )}
     >

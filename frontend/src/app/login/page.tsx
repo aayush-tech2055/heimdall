@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { useAuth } from "@/components/auth/auth-provider";
+import { BifrostScene } from "@/components/shell/bifrost-scene";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,11 +45,23 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="mx-auto max-w-sm pt-8">
-      <Card>
+    <div className="mx-auto max-w-sm pt-10">
+      <BifrostScene />
+      <div className="hd-rise mb-6 text-center">
+        <p className="text-primary text-xs font-semibold tracking-[0.2em] uppercase">
+          AI brand governance
+        </p>
+        <p className="hd-gradient-text mt-2 text-4xl font-bold tracking-tight">
+          Nothing crosses unchecked.
+        </p>
+      </div>
+      <Card
+        className="hd-pop border-white/70 shadow-[0_24px_60px_-28px_oklch(0.208_0.042_265.755_/_0.45)]"
+        style={{ animationDelay: "120ms" }}
+      >
         <CardHeader>
           <CardTitle>
-            <h1>Sign in to Heimdall</h1>
+            <h1 className="text-xl font-semibold">Sign in to Heimdall</h1>
           </CardTitle>
           <CardDescription>
             Use the account your brand admin gave you.

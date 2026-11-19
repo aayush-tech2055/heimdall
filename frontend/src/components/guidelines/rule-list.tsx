@@ -5,6 +5,7 @@ import { Check, Pencil, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollPanel } from "@/components/ui/scroll-panel";
 import { cn } from "@/lib/utils";
 import type { Rule, RuleStatus } from "@/types/api";
 import { CATEGORIES } from "@/types/flag";
@@ -61,102 +62,107 @@ export function RuleList({
           Select all {rules.length} shown
         </label>
       </div>
-      {CATEGORIES.filter((c) => rules.some((r) => r.category === c)).map(
-        (category) => (
-          <section key={category} aria-labelledby={`cat-${category}`}>
-            <h3
-              id={`cat-${category}`}
-              className="mb-2 text-lg font-semibold capitalize"
-            >
-              {category}
-            </h3>
-            <ul className="divide-y rounded-lg border">
-              {rules
-                .filter((r) => r.category === category)
-                .map((rule) => (
-                  <li
-                    key={rule.rule_code}
-                    id={`rule-${rule.rule_code}`}
-                    className={cn(
-                      "flex scroll-mt-24 gap-3 p-3",
-                      highlighted.has(rule.rule_code) && "bg-amber-50",
-                      rule.status === "rejected" && "bg-muted/40",
-                    )}
-                  >
-                    <Checkbox
-                      className="mt-1"
-                      aria-label={`Select ${rule.rule_code}`}
-                      checked={selected.has(rule.rule_code)}
-                      onCheckedChange={() => onToggle(rule.rule_code)}
-                    />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-mono text-sm font-semibold">
-                          {rule.rule_code}
-                        </span>
-                        <StatusBadge status={rule.status} />
-                        <Badge variant="secondary">
-                          {rule.check_type === "deterministic"
-                            ? rule.det_kind === "banned_terms"
-                              ? "banned words · checked in code"
-                              : "required phrase · checked in code"
-                            : "checked by AI"}
-                        </Badge>
-                        {rule.always_on && (
-                          <Badge variant="outline">always on</Badge>
+      <ScrollPanel label="Rules" className="max-h-[68vh] space-y-8 pr-2">
+        {CATEGORIES.filter((c) => rules.some((r) => r.category === c)).map(
+          (category) => (
+            <section key={category} aria-labelledby={`cat-${category}`}>
+              <h3
+                id={`cat-${category}`}
+                className="bg-background/90 sticky top-0 z-10 mb-2 py-1 text-lg font-semibold capitalize backdrop-blur"
+              >
+                {category}
+              </h3>
+              <ul className="divide-y rounded-lg border">
+                {rules
+                  .filter((r) => r.category === category)
+                  .map((rule, i) => (
+                    <li
+                      key={rule.rule_code}
+                      id={`rule-${rule.rule_code}`}
+                      style={{ animationDelay: `${Math.min(i, 10) * 30}ms` }}
+                      className={cn(
+                        "hd-rise flex scroll-mt-12 gap-3 p-3 transition-colors hover:bg-primary/5",
+                        highlighted.has(rule.rule_code) && "bg-amber-50",
+                        rule.status === "rejected" && "bg-muted/40",
+                      )}
+                    >
+                      <Checkbox
+                        className="mt-1"
+                        aria-label={`Select ${rule.rule_code}`}
+                        checked={selected.has(rule.rule_code)}
+                        onCheckedChange={() => onToggle(rule.rule_code)}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-mono text-sm font-semibold">
+                            {rule.rule_code}
+                          </span>
+                          <StatusBadge status={rule.status} />
+                          <Badge variant="secondary">
+                            {rule.check_type === "deterministic"
+                              ? rule.det_kind === "banned_terms"
+                                ? "banned words · checked in code"
+                                : "required phrase · checked in code"
+                              : "checked by AI"}
+                          </Badge>
+                          {rule.always_on && (
+                            <Badge variant="outline">always on</Badge>
+                          )}
+                          <span className="text-muted-foreground text-xs">
+                            {rule.source_doc}
+                            {rule.source_page
+                              ? `, page ${rule.source_page}`
+                              : ""}
+                          </span>
+                        </div>
+                        <p className="mt-1">{rule.text}</p>
+                        {rule.terms.length > 0 && (
+                          <p className="text-muted-foreground mt-1 text-sm">
+                            Terms: {rule.terms.map((t) => `“${t}”`).join(", ")}
+                          </p>
                         )}
-                        <span className="text-muted-foreground text-xs">
-                          {rule.source_doc}
-                          {rule.source_page ? `, page ${rule.source_page}` : ""}
-                        </span>
                       </div>
-                      <p className="mt-1">{rule.text}</p>
-                      {rule.terms.length > 0 && (
-                        <p className="text-muted-foreground mt-1 text-sm">
-                          Terms: {rule.terms.map((t) => `“${t}”`).join(", ")}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex shrink-0 items-start gap-1">
-                      {rule.status !== "approved" && (
+                      <div className="flex shrink-0 items-start gap-1">
+                        {rule.status !== "approved" && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            aria-label={`Approve ${rule.rule_code}`}
+                            onClick={() =>
+                              onSetStatus([rule.rule_code], "approve")
+                            }
+                          >
+                            <Check aria-hidden />
+                          </Button>
+                        )}
+                        {rule.status !== "rejected" && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            aria-label={`Reject ${rule.rule_code}`}
+                            onClick={() =>
+                              onSetStatus([rule.rule_code], "reject")
+                            }
+                          >
+                            <X aria-hidden />
+                          </Button>
+                        )}
                         <Button
                           size="icon"
                           variant="ghost"
-                          aria-label={`Approve ${rule.rule_code}`}
-                          onClick={() =>
-                            onSetStatus([rule.rule_code], "approve")
-                          }
+                          aria-label={`Edit ${rule.rule_code}`}
+                          onClick={() => onEdit(rule)}
                         >
-                          <Check aria-hidden />
+                          <Pencil aria-hidden />
                         </Button>
-                      )}
-                      {rule.status !== "rejected" && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          aria-label={`Reject ${rule.rule_code}`}
-                          onClick={() =>
-                            onSetStatus([rule.rule_code], "reject")
-                          }
-                        >
-                          <X aria-hidden />
-                        </Button>
-                      )}
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        aria-label={`Edit ${rule.rule_code}`}
-                        onClick={() => onEdit(rule)}
-                      >
-                        <Pencil aria-hidden />
-                      </Button>
-                    </div>
-                  </li>
-                ))}
-            </ul>
-          </section>
-        ),
-      )}
+                      </div>
+                    </li>
+                  ))}
+              </ul>
+            </section>
+          ),
+        )}
+      </ScrollPanel>
     </div>
   );
 }

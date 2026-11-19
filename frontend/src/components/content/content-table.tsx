@@ -52,7 +52,7 @@ export function ContentTable({
           {items.map((c) => (
             <TableRow
               key={c.id}
-              className="cursor-pointer"
+              className="hover:bg-primary/5 cursor-pointer transition-colors"
               onClick={() => router.push(`${hrefBase}/${c.id}`)}
             >
               <TableCell>

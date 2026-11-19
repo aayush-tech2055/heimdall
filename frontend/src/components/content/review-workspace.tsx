@@ -25,6 +25,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { ScrollPanel } from "@/components/ui/scroll-panel";
 import { Textarea } from "@/components/ui/textarea";
 import { api, ApiError } from "@/lib/api";
 import { useContent } from "@/lib/use-content";
@@ -211,7 +212,7 @@ export function ReviewWorkspace({
           >
             ← Back
           </Link>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+          <h1 className="hd-gradient-text mt-1 text-3xl font-bold tracking-tight">
             {content.title}
           </h1>
           <div className="mt-1 flex flex-wrap items-center gap-2 text-sm">
@@ -396,115 +397,126 @@ export function ReviewWorkspace({
         </section>
       )}
       {flags && content.status !== "checking" && (
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-          <section aria-labelledby="text-h" className="space-y-2">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
+          <section
+            aria-labelledby="text-h"
+            className="flex flex-col gap-2 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)]"
+          >
             <h2 id="text-h" className="text-lg font-semibold">
               Content
             </h2>
-            {content.format === "pdf" ? (
-              <PdfViewer
-                versionId={flags.version_id}
-                flags={mode === "manager" ? visible : flags.flags}
-                units={flags.units}
-                selectedId={selected}
-                onSelect={selectFlag}
-              />
-            ) : content.format === "video" ? (
-              <VideoViewer
-                versionId={flags.version_id}
-                flags={mode === "manager" ? visible : flags.flags}
-                transcript={flags.text}
-                selectedId={selected}
-                onSelect={selectFlag}
-              />
-            ) : content.format === "image" ? (
-              <ImageViewer
-                versionId={flags.version_id}
-                flags={mode === "manager" ? visible : flags.flags}
-                selectedId={selected}
-                onSelect={selectFlag}
-              />
-            ) : (
-              <HighlightedText
-                text={flags.text}
-                flags={mode === "manager" ? visible : flags.flags}
-                selectedId={selected}
-                onSelect={selectFlag}
-              />
-            )}
-            {canEdit && content.format === "text" && (
-              <form
-                className="bg-muted space-y-2 rounded-md p-3"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const el = e.currentTarget.elements.namedItem(
-                    "revised",
-                  ) as HTMLTextAreaElement | null;
-                  const text = el?.value.trim();
-                  if (!text) return;
-                  const form = new FormData();
-                  form.append("text", text);
-                  void run(
-                    "Revised script uploaded. The AI is checking it…",
-                    () => api(`/contents/${content.id}/versions`, { form }),
-                  );
-                }}
-              >
-                <Label htmlFor="revised">
-                  Want the AI to check it again? Paste a revised script. It
-                  becomes a new version and gets a new check.
-                </Label>
-                <Textarea id="revised" name="revised" rows={4} />
-                <Button
-                  size="sm"
-                  type="submit"
-                  variant="outline"
-                  disabled={busy}
-                >
-                  Upload revised script
-                </Button>
-              </form>
-            )}
-            {canEdit && content.format !== "text" && (
-              <form
-                className="bg-muted space-y-2 rounded-md p-3"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const input =
-                    (e.currentTarget.elements.namedItem(
-                      "corrected",
-                    ) as HTMLInputElement) ?? null;
-                  const file = input?.files?.[0];
-                  if (!file) return;
-                  const form = new FormData();
-                  form.append("file", file);
-                  void run("New version uploaded. Checking it…", () =>
-                    api(`/contents/${content.id}/versions`, { form }),
-                  );
-                }}
-              >
-                <Label htmlFor="corrected">
-                  Fixes can&apos;t be applied inside a {content.format}. Upload
-                  a corrected file as a new version:
-                </Label>
-                <input
-                  id="corrected"
-                  name="corrected"
-                  type="file"
-                  accept={
-                    content.format === "pdf"
-                      ? "application/pdf"
-                      : "image/png,image/jpeg"
-                  }
-                  className="block text-sm"
+            <ScrollPanel
+              label="Content being reviewed"
+              className="max-h-[75vh] min-h-0 space-y-3 pr-1 lg:max-h-none lg:flex-1"
+            >
+              {content.format === "pdf" ? (
+                <PdfViewer
+                  versionId={flags.version_id}
+                  flags={mode === "manager" ? visible : flags.flags}
+                  units={flags.units}
+                  selectedId={selected}
+                  onSelect={selectFlag}
                 />
-                <Button size="sm" type="submit" disabled={busy}>
-                  Upload corrected {content.format}
-                </Button>
-              </form>
-            )}
+              ) : content.format === "video" ? (
+                <VideoViewer
+                  versionId={flags.version_id}
+                  flags={mode === "manager" ? visible : flags.flags}
+                  transcript={flags.text}
+                  selectedId={selected}
+                  onSelect={selectFlag}
+                />
+              ) : content.format === "image" ? (
+                <ImageViewer
+                  versionId={flags.version_id}
+                  flags={mode === "manager" ? visible : flags.flags}
+                  selectedId={selected}
+                  onSelect={selectFlag}
+                />
+              ) : (
+                <HighlightedText
+                  text={flags.text}
+                  flags={mode === "manager" ? visible : flags.flags}
+                  selectedId={selected}
+                  onSelect={selectFlag}
+                />
+              )}
+              {canEdit && content.format === "text" && (
+                <form
+                  className="bg-muted space-y-2 rounded-md p-3"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const el = e.currentTarget.elements.namedItem(
+                      "revised",
+                    ) as HTMLTextAreaElement | null;
+                    const text = el?.value.trim();
+                    if (!text) return;
+                    const form = new FormData();
+                    form.append("text", text);
+                    void run(
+                      "Revised script uploaded. The AI is checking it…",
+                      () => api(`/contents/${content.id}/versions`, { form }),
+                    );
+                  }}
+                >
+                  <Label htmlFor="revised">
+                    Want the AI to check it again? Paste a revised script. It
+                    becomes a new version and gets a new check.
+                  </Label>
+                  <Textarea id="revised" name="revised" rows={4} />
+                  <Button
+                    size="sm"
+                    type="submit"
+                    variant="outline"
+                    disabled={busy}
+                  >
+                    Upload revised script
+                  </Button>
+                </form>
+              )}
+              {canEdit && content.format !== "text" && (
+                <form
+                  className="bg-muted space-y-2 rounded-md p-3"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const input =
+                      (e.currentTarget.elements.namedItem(
+                        "corrected",
+                      ) as HTMLInputElement) ?? null;
+                    const file = input?.files?.[0];
+                    if (!file) return;
+                    const form = new FormData();
+                    form.append("file", file);
+                    void run("New version uploaded. Checking it…", () =>
+                      api(`/contents/${content.id}/versions`, { form }),
+                    );
+                  }}
+                >
+                  <Label htmlFor="corrected">
+                    Fixes can&apos;t be applied inside a {content.format}.
+                    Upload a corrected file as a new version:
+                  </Label>
+                  <input
+                    id="corrected"
+                    name="corrected"
+                    type="file"
+                    accept={
+                      content.format === "pdf"
+                        ? "application/pdf"
+                        : "image/png,image/jpeg"
+                    }
+                    className="block text-sm"
+                  />
+                  <Button size="sm" type="submit" disabled={busy}>
+                    Upload corrected {content.format}
+                  </Button>
+                </form>
+              )}
+            </ScrollPanel>
           </section>
-          <section aria-labelledby="flags-h" className="space-y-3">
+          <section
+            aria-labelledby="flags-h"
+            className="flex flex-col gap-3 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)]"
+          >
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 id="flags-h" className="text-lg font-semibold">
                 {mode === "manager"
@@ -568,53 +580,63 @@ export function ReviewWorkspace({
                 </p>
               </div>
             )}
-            {visible.length === 0 ? (
-              <p className="text-muted-foreground text-sm">
-                {mode === "manager"
-                  ? "Nothing unresolved: every flag was fixed."
-                  : "No open flags. Nothing crosses unchecked, and this passed."}
-              </p>
-            ) : (
-              visible.map((flag) => (
-                <FlagCard
-                  key={flag.id}
-                  flag={flag}
-                  canFix={canFixRound}
-                  aiLabel={aiLabelFor(flag.layer)}
-                  picked={picked.has(flag.id)}
-                  onPick={
-                    fixable.some((f) => f.id === flag.id)
-                      ? (on) =>
-                          setPicked((prev) => {
-                            const next = new Set(prev);
-                            if (on) next.add(flag.id);
-                            else next.delete(flag.id);
-                            return next;
-                          })
-                      : undefined
-                  }
-                  stagedEdit={edits.get(flag.id)}
-                  onStageEdit={
-                    canFixRound
-                      ? (text) =>
-                          setEdits((prev) => {
-                            const next = new Map(prev);
-                            if (text === null) next.delete(flag.id);
-                            else next.set(flag.id, text);
-                            return next;
-                          })
-                      : undefined
-                  }
-                  mode={
-                    canEdit ? "creator" : canDecide ? "manager" : "readonly"
-                  }
-                  selected={selected === flag.id}
-                  busy={busy}
-                  onSelect={() => setSelected(flag.id)}
-                  onAction={(a) => onAction(flag, a)}
-                />
-              ))
-            )}
+            <ScrollPanel
+              label={
+                mode === "manager"
+                  ? "Unresolved and dismissed flags"
+                  : "Issues in this content"
+              }
+              className="max-h-[70vh] min-h-0 space-y-3 p-1 pr-2 lg:max-h-none lg:flex-1"
+            >
+              {visible.length === 0 ? (
+                <p className="text-muted-foreground text-sm">
+                  {mode === "manager"
+                    ? "Nothing unresolved: every flag was fixed."
+                    : "No open flags. Nothing crosses unchecked, and this passed."}
+                </p>
+              ) : (
+                visible.map((flag, index) => (
+                  <FlagCard
+                    key={flag.id}
+                    index={index}
+                    flag={flag}
+                    canFix={canFixRound}
+                    aiLabel={aiLabelFor(flag.layer)}
+                    picked={picked.has(flag.id)}
+                    onPick={
+                      fixable.some((f) => f.id === flag.id)
+                        ? (on) =>
+                            setPicked((prev) => {
+                              const next = new Set(prev);
+                              if (on) next.add(flag.id);
+                              else next.delete(flag.id);
+                              return next;
+                            })
+                        : undefined
+                    }
+                    stagedEdit={edits.get(flag.id)}
+                    onStageEdit={
+                      canFixRound
+                        ? (text) =>
+                            setEdits((prev) => {
+                              const next = new Map(prev);
+                              if (text === null) next.delete(flag.id);
+                              else next.set(flag.id, text);
+                              return next;
+                            })
+                        : undefined
+                    }
+                    mode={
+                      canEdit ? "creator" : canDecide ? "manager" : "readonly"
+                    }
+                    selected={selected === flag.id}
+                    busy={busy}
+                    onSelect={() => setSelected(flag.id)}
+                    onAction={(a) => onAction(flag, a)}
+                  />
+                ))
+              )}
+            </ScrollPanel>
           </section>
         </div>
       )}
