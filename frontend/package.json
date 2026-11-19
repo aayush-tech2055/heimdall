@@ -18,7 +18,8 @@
     "radix-ui": "^1.8.1",
     "react": "19.1.10",
     "react-dom": "19.1.10",
-    "recharts": "^2.15.4"
+    "recharts": "^2.15.4",
+    "three": "0.187.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -26,6 +27,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/three": "0.187.0",
     "eslint": "^9",
     "eslint-config-next": "15.5.29",
     "shadcn": "^4.23.0",

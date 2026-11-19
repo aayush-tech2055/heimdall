@@ -45,14 +45,16 @@
 }
 
 :root {
-  --radius: 0.625rem;
+  --radius: 0.7rem;
+  --brand-navy: oklch(0.208 0.042 265.755);
+  --brand-gold: oklch(0.795 0.134 74.5);
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  --primary: oklch(0.511 0.262 276.966);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -63,7 +65,7 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --ring: oklch(0.585 0.233 277.117);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -122,4 +124,81 @@
     @apply bg-background text-foreground;
     @apply bg-background text-foreground;
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* Heimdall design system: surfaces, motion and scroll panels          */
+/* ------------------------------------------------------------------ */
+
+body {
+  background:
+    radial-gradient(1200px 520px at 85% -10%, oklch(0.93 0.05 277 / 0.55), transparent 60%),
+    radial-gradient(900px 420px at -5% 0%, oklch(0.96 0.05 80 / 0.5), transparent 55%),
+    var(--background);
+  background-attachment: fixed;
+}
+
+@keyframes hd-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes hd-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes hd-pop {
+  0% { opacity: 0; transform: scale(0.96); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes hd-pulse-ring {
+  0% { box-shadow: 0 0 0 0 oklch(0.585 0.233 277.117 / 0.45); }
+  100% { box-shadow: 0 0 0 10px oklch(0.585 0.233 277.117 / 0); }
+}
+@keyframes hd-shimmer { from { background-position: -200% 0; } to { background-position: 200% 0; } }
+
+/* Page transition (app/template.tsx) */
+.hd-page { animation: hd-rise 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+/* List items that arrive one after another; delay set inline */
+.hd-rise { animation: hd-rise 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.hd-fade { animation: hd-fade 0.35s ease-out both; }
+.hd-pop { animation: hd-pop 0.3s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.hd-pulse { animation: hd-pulse-ring 0.9s ease-out 1; }
+/* Lift on hover for interactive cards */
+.hd-lift { transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; }
+.hd-lift:hover { transform: translateY(-2px); box-shadow: 0 10px 24px -12px oklch(0.208 0.042 265.755 / 0.28); }
+/* Brand gradient text and divider */
+.hd-gradient-text {
+  background: linear-gradient(90deg, var(--brand-navy), oklch(0.511 0.262 276.966) 60%, oklch(0.62 0.16 60));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.hd-shimmer {
+  background: linear-gradient(90deg, transparent, oklch(1 0 0 / 0.55), transparent) 0 0 / 200% 100%;
+  animation: hd-shimmer 1.6s linear infinite;
+}
+
+/* Scroll panel: scrolls inside itself, with soft shadows at the edges that only show
+   when there is more to scroll (background-attachment: local trick). */
+.hd-scroll {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.8 0.03 277) transparent;
+  background:
+    linear-gradient(var(--hd-scroll-bg, var(--background)) 30%, transparent) center top,
+    linear-gradient(transparent, var(--hd-scroll-bg, var(--background)) 70%) center bottom,
+    radial-gradient(farthest-side at 50% 0, oklch(0.208 0.042 265.755 / 0.16), transparent) center top,
+    radial-gradient(farthest-side at 50% 100%, oklch(0.208 0.042 265.755 / 0.16), transparent) center bottom;
+  background-repeat: no-repeat;
+  background-size: 100% 28px, 100% 28px, 100% 10px, 100% 10px;
+  background-attachment: local, local, scroll, scroll;
+}
+.hd-scroll::-webkit-scrollbar { width: 8px; }
+.hd-scroll::-webkit-scrollbar-thumb { background: oklch(0.82 0.03 277); border-radius: 8px; }
+.hd-scroll::-webkit-scrollbar-thumb:hover { background: oklch(0.7 0.08 277); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .hd-lift:hover { transform: none; }
 }

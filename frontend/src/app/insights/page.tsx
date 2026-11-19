@@ -92,7 +92,7 @@ function Stat({
   note?: string;
 }) {
   return (
-    <Card>
+    <Card className="hd-rise hd-lift">
       <CardContent className="pt-6">
         <p className="text-muted-foreground text-sm">{label}</p>
         <p className="text-3xl font-semibold tabular-nums">{value}</p>
