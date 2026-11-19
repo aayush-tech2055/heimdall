@@ -12,7 +12,7 @@ export function PageHeader({
       </h1>
       <div
         aria-hidden
-        className="mt-2 h-1 w-14 rounded-full bg-gradient-to-r from-[var(--brand-navy)] via-primary to-[var(--brand-gold)]"
+        className="mt-2 h-1 w-14 rounded-full bg-gradient-to-r from-black via-indigo-500 to-amber-400"
       />
       <p className="text-muted-foreground mt-3">{description}</p>
     </div>
