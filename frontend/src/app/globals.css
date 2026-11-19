@@ -54,7 +54,7 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.511 0.262 276.966);
+  --primary: oklch(0.145 0 0);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -65,7 +65,7 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.585 0.233 277.117);
+  --ring: oklch(0.556 0 0);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -130,13 +130,15 @@
 /* Heimdall design system: surfaces, motion and scroll panels          */
 /* ------------------------------------------------------------------ */
 
+html { scroll-behavior: auto; }
 body {
   background:
-    radial-gradient(1200px 520px at 85% -10%, oklch(0.93 0.05 277 / 0.55), transparent 60%),
-    radial-gradient(900px 420px at -5% 0%, oklch(0.96 0.05 80 / 0.5), transparent 55%),
+    radial-gradient(1100px 500px at 90% -12%, oklch(0.94 0.04 277 / 0.45), transparent 60%),
+    radial-gradient(800px 380px at -8% 0%, oklch(0.96 0.04 80 / 0.4), transparent 55%),
     var(--background);
   background-attachment: fixed;
 }
+::selection { background: oklch(0.145 0 0); color: oklch(0.985 0 0); }
 
 @keyframes hd-rise {
   from { opacity: 0; transform: translateY(10px); }
@@ -148,8 +150,8 @@ body {
   100% { opacity: 1; transform: none; }
 }
 @keyframes hd-pulse-ring {
-  0% { box-shadow: 0 0 0 0 oklch(0.585 0.233 277.117 / 0.45); }
-  100% { box-shadow: 0 0 0 10px oklch(0.585 0.233 277.117 / 0); }
+  0% { box-shadow: 0 0 0 0 oklch(0.145 0 0 / 0.35); }
+  100% { box-shadow: 0 0 0 10px oklch(0.145 0 0 / 0); }
 }
 @keyframes hd-shimmer { from { background-position: -200% 0; } to { background-position: 200% 0; } }
 
@@ -165,7 +167,7 @@ body {
 .hd-lift:hover { transform: translateY(-2px); box-shadow: 0 10px 24px -12px oklch(0.208 0.042 265.755 / 0.28); }
 /* Brand gradient text and divider */
 .hd-gradient-text {
-  background: linear-gradient(90deg, var(--brand-navy), oklch(0.511 0.262 276.966) 60%, oklch(0.62 0.16 60));
+  background: linear-gradient(90deg, oklch(0.145 0 0), oklch(0.32 0 0) 55%, oklch(0.42 0.1 277));
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 .hd-shimmer {
@@ -179,7 +181,7 @@ body {
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
-  scrollbar-color: oklch(0.8 0.03 277) transparent;
+  scrollbar-color: oklch(0.8 0 0) transparent;
   background:
     linear-gradient(var(--hd-scroll-bg, var(--background)) 30%, transparent) center top,
     linear-gradient(transparent, var(--hd-scroll-bg, var(--background)) 70%) center bottom,
@@ -190,8 +192,8 @@ body {
   background-attachment: local, local, scroll, scroll;
 }
 .hd-scroll::-webkit-scrollbar { width: 8px; }
-.hd-scroll::-webkit-scrollbar-thumb { background: oklch(0.82 0.03 277); border-radius: 8px; }
-.hd-scroll::-webkit-scrollbar-thumb:hover { background: oklch(0.7 0.08 277); }
+.hd-scroll::-webkit-scrollbar-thumb { background: oklch(0.82 0 0); border-radius: 8px; }
+.hd-scroll::-webkit-scrollbar-thumb:hover { background: oklch(0.6 0 0); }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -201,4 +203,25 @@ body {
     scroll-behavior: auto !important;
   }
   .hd-lift:hover { transform: none; }
+}
+
+/* Landing: moving marquee and a cursor spotlight for cards */
+@keyframes hd-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.hd-marquee { animation: hd-marquee 38s linear infinite; }
+.hd-spotlight { position: relative; isolation: isolate; }
+.hd-spotlight::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: -1; opacity: 0;
+  background: radial-gradient(420px circle at var(--x, 50%) var(--y, 50%), oklch(1 0 0 / 0.12), transparent 45%);
+  transition: opacity 0.3s ease;
+}
+.hd-spotlight:hover::before { opacity: 1; }
+.hd-grid-bg {
+  background-image: linear-gradient(oklch(1 0 0 / 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(1 0 0 / 0.06) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+.hd-grid-bg-light {
+  background-image: linear-gradient(oklch(0 0 0 / 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(0 0 0 / 0.05) 1px, transparent 1px);
+  background-size: 56px 56px;
 }

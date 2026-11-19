@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { AppShell } from "@/components/shell/app-shell";
+import { SmoothScroll } from "@/components/shell/smooth-scroll";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 import "./globals.css";
@@ -28,7 +29,9 @@ export default function RootLayout({
       >
         <AuthProvider>
           <TooltipProvider delayDuration={200}>
-            <AppShell>{children}</AppShell>
+            <SmoothScroll>
+              <AppShell>{children}</AppShell>
+            </SmoothScroll>
           </TooltipProvider>
         </AuthProvider>
       </body>

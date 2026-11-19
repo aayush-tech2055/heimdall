@@ -24,6 +24,7 @@ export function ScrollPanel({
       aria-label={label}
       tabIndex={0}
       data-slot="scroll-panel"
+      data-lenis-prevent
       className={cn(
         "hd-scroll focus-visible:ring-ring/50 rounded-lg outline-none focus-visible:ring-[3px]",
         className,
