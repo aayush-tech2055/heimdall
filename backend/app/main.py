@@ -6,13 +6,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from app.api.accounts import router as accounts_router
 from app.api.contents import router as contents_router
 from app.api.disclosure import router as disclosure_router
 from app.api.facts import router as facts_router
 from app.api.guidelines import router as guidelines_router
 from app.api.health import router as health_router
 from app.api.insights import router as insights_router
-from app.api.me import router as me_router
 from app.api.settings import router as settings_router
 from app.api.website import router as website_router
 from app.api.workflow import router as workflow_router
@@ -31,7 +31,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
     app.include_router(health_router)
-    app.include_router(me_router)
+    app.include_router(accounts_router)
     app.include_router(guidelines_router)
     app.include_router(facts_router)
     app.include_router(contents_router)

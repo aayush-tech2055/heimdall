@@ -33,13 +33,19 @@ _COUNTS = (
 )
 
 _SUMMARY_SQL = f"""
-select c.id, c.title, c.format, c.status, c.creator_id, p.display_name as creator_name,
+select c.id, c.brand_id, c.title, c.format, c.status, c.creator_id,
+       p.display_name as creator_name,
+       cu.email as creator_email, c.assigned_manager_id as manager_id,
+       mp.display_name as manager_name, mu.email as manager_email,
        c.created_at, c.updated_at, lv.id as latest_version_id,
        lv.version_number as latest_version_number,
        (select row_to_json(x) from (select {_COUNTS} from public.flags f
                                     where f.version_id = lv.id) x) as counts
 from public.contents c
 left join public.profiles p on p.id = c.creator_id
+left join auth.users cu on cu.id = c.creator_id
+left join public.profiles mp on mp.id = c.assigned_manager_id
+left join auth.users mu on mu.id = c.assigned_manager_id
 left join lateral (select v.id, v.version_number from public.content_versions v
                    where v.content_id = c.id order by v.version_number desc limit 1) lv on true
 """
@@ -48,6 +54,11 @@ left join lateral (select v.id, v.version_number from public.content_versions v
 def _visible(user: CurrentUser) -> tuple[str, list[object]]:
     if user.role == "creator":
         return "c.brand_id = %s and c.creator_id = %s", [user.brand_id, user.id]
+    if user.role == "manager":  # what was sent to them (and older, unassigned items)
+        return (
+            "c.brand_id = %s and (c.assigned_manager_id = %s or c.assigned_manager_id is null)",
+            [user.brand_id, user.id],
+        )
     return "c.brand_id = %s", [user.brand_id]
 
 

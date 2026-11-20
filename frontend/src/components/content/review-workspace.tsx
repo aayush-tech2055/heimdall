@@ -4,7 +4,9 @@ import {
   CheckCheck,
   CheckCircle2,
   Loader2,
+  Mail,
   RefreshCw,
+  RotateCcw,
   Send,
   Undo2,
 } from "lucide-react";
@@ -20,6 +22,7 @@ import {
   VideoViewer,
 } from "@/components/content/file-viewers";
 import { HighlightedText } from "@/components/content/highlighted-text";
+import { SubmitDialog } from "@/components/content/submit-dialog";
 import { VersionHistory } from "@/components/content/version-history";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -58,6 +61,7 @@ export function ReviewWorkspace({
   const [notice, setNotice] = useState<string | null>(null);
   const [showResolved, setShowResolved] = useState(false);
   const [decision, setDecision] = useState("");
+  const [submitOpen, setSubmitOpen] = useState(false);
   const [commentKey, setCommentKey] = useState(0);
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [edits, setEdits] = useState<Map<string, string>>(new Map());
@@ -204,6 +208,22 @@ export function ReviewWorkspace({
 
   return (
     <div className="space-y-6">
+      {mode === "creator" && (
+        <SubmitDialog
+          open={submitOpen}
+          onOpenChange={setSubmitOpen}
+          brandId={content.brand_id}
+          lastManagerEmail={content.manager_email}
+          busy={busy}
+          onSubmit={(managerEmail) =>
+            run(`Sent to ${managerEmail} for approval.`, () =>
+              api(`/contents/${content.id}/submit`, {
+                json: { manager_email: managerEmail },
+              }),
+            ).then(() => setSubmitOpen(false))
+          }
+        />
+      )}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <Link
@@ -222,19 +242,38 @@ export function ReviewWorkspace({
               {content.creator_name ? ` · by ${content.creator_name}` : ""}
             </span>
           </div>
+          {(mode === "manager"
+            ? content.creator_email
+            : content.manager_email) && (
+            <p className="text-muted-foreground mt-1.5 flex items-center gap-1.5 text-sm">
+              <Mail className="size-4" aria-hidden />
+              {mode === "manager" ? (
+                <>
+                  From{" "}
+                  <a
+                    href={`mailto:${content.creator_email}`}
+                    className="text-foreground font-medium underline underline-offset-2"
+                  >
+                    {content.creator_email}
+                  </a>
+                </>
+              ) : (
+                <>
+                  Submitted to{" "}
+                  <span className="text-foreground font-medium">
+                    {content.manager_name ?? content.manager_email}
+                  </span>{" "}
+                  ({content.manager_email})
+                </>
+              )}
+            </p>
+          )}
         </div>
         <div className="flex flex-wrap gap-2">
           {mode === "creator" &&
             content.status === "creator_review" &&
             !oldVersion && (
-              <Button
-                disabled={busy}
-                onClick={() =>
-                  run("Sent to your manager for approval.", () =>
-                    api(`/contents/${content.id}/submit`, { method: "POST" }),
-                  )
-                }
-              >
+              <Button disabled={busy} onClick={() => setSubmitOpen(true)}>
                 <Send aria-hidden /> Submit to manager
               </Button>
             )}
@@ -393,7 +432,26 @@ export function ReviewWorkspace({
             >
               <Undo2 aria-hidden /> Request changes
             </Button>
+            <Button
+              variant="outline"
+              disabled={busy}
+              onClick={() =>
+                run(
+                  `Sent back to ${content.creator_email ?? "the creator"} with a fresh AI check.`,
+                  () =>
+                    api(`/contents/${content.id}/reevaluate`, {
+                      json: { comment: decision.trim() || null },
+                    }),
+                ).then(() => setDecision(""))
+              }
+            >
+              <RotateCcw aria-hidden /> Re-evaluate
+            </Button>
           </div>
+          <p className="text-muted-foreground text-xs">
+            Re-evaluate runs the AI check again on the latest version and
+            returns it to the same creator with fresh flags.
+          </p>
         </section>
       )}
       {flags && content.status !== "checking" && (

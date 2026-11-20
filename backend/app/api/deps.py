@@ -8,6 +8,7 @@ The backend connects as the database owner, so every route checks brand and role
 
 import ssl
 from collections.abc import Callable, Iterator
+from dataclasses import dataclass
 from functools import lru_cache
 from typing import Annotated
 from uuid import UUID
@@ -83,20 +84,18 @@ LLM = Annotated[LLMClient, Depends(llm_client)]
 Emb = Annotated[Embedder, Depends(embedder)]
 
 
-def load_user(conn: psycopg.Connection, user_id: UUID, email: str | None = None) -> CurrentUser:
-    row = conn.execute(
-        "select role, brand_id, display_name from public.profiles where id = %s", (user_id,)
-    ).fetchone()
-    if row is None:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "No Heimdall profile for this account")
-    return CurrentUser(id=user_id, role=row[0], brand_id=row[1], display_name=row[2], email=email)
+@dataclass(frozen=True)
+class Identity:
+    """A verified sign-in (Supabase token), whether or not a Heimdall profile exists yet."""
+
+    user_id: UUID
+    email: str | None
 
 
-def get_current_user(
-    conn: Conn,
+def get_identity(
     authorization: Annotated[str | None, Header()] = None,
     verifier: TokenVerifier = Depends(get_verifier),  # noqa: B008
-) -> CurrentUser:
+) -> Identity:
     if not authorization or not authorization.lower().startswith("bearer "):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Sign in first (missing bearer token)")
     claims = verifier.verify(authorization.split(" ", 1)[1].strip())
@@ -104,7 +103,27 @@ def get_current_user(
         user_id = UUID(claims["sub"])
     except ValueError as exc:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid token subject") from exc
-    return load_user(conn, user_id, claims.get("email"))
+    return Identity(user_id, claims.get("email"))
+
+
+Ident = Annotated[Identity, Depends(get_identity)]
+
+
+def load_user(conn: psycopg.Connection, user_id: UUID, email: str | None = None) -> CurrentUser:
+    """The profile, with the active brand kept only while the user is still on its team."""
+    row = conn.execute(
+        "select p.role, case when exists (select 1 from public.brand_members m "
+        "where m.user_id = p.id and m.brand_id = p.brand_id) then p.brand_id end, "
+        "p.display_name from public.profiles p where p.id = %s",
+        (user_id,),
+    ).fetchone()
+    if row is None:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "No Heimdall profile for this account")
+    return CurrentUser(id=user_id, role=row[0], brand_id=row[1], display_name=row[2], email=email)
+
+
+def get_current_user(conn: Conn, ident: Ident) -> CurrentUser:
+    return load_user(conn, ident.user_id, ident.email)
 
 
 User = Annotated[CurrentUser, Depends(get_current_user)]
@@ -128,6 +147,6 @@ Creator = Annotated[CurrentUser, Depends(require_roles("creator"))]
 
 
 def check_brand(user: CurrentUser, brand_id: UUID) -> None:
-    """A user only ever works on their own brand."""
-    if user.brand_id != brand_id:
+    """A user works on their active brand (one they are a team member of)."""
+    if user.brand_id is None or user.brand_id != brand_id:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "You do not have access to this brand")

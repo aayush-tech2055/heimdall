@@ -1,12 +1,15 @@
 """Workflow API: flag actions (7.2), manager actions (7.3), comments (7.4)."""
 
 from datetime import datetime
+from functools import partial
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, HTTPException, status
 from pydantic import BaseModel, Field
 
+from app.api.accounts import find_manager
+from app.api.contents import Runner
 from app.api.deps import Conn, Manager, User
 from app.models.contents import ContentDetail
 from app.review.actions import (
@@ -133,17 +136,34 @@ def dismiss(flag_id: UUID, body: Reason, user: User, conn: Conn) -> None:
         raise _fail(exc) from exc
 
 
+class SubmitIn(BaseModel):
+    manager_email: str = Field(min_length=3, max_length=200)
+
+
 @router.post("/contents/{content_id}/submit", response_model=ContentDetail)
-def submit_for_approval(content_id: UUID, user: User, conn: Conn) -> ContentDetail:
-    """Creator sends the content to a manager. Open flags (including high-severity ones) go
-    with it: the manager sees them and decides."""
+def submit_for_approval(content_id: UUID, body: SubmitIn, user: User, conn: Conn) -> ContentDetail:
+    """Creator sends the content to a manager on the brand's team, chosen by email. Open flags
+    (including high-severity ones) go with it: the manager sees them and decides."""
     content = _content(conn, user, content_id)
     if user.role != "creator" or content.creator_id != user.id:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Only the creator can submit")
+    (brand_id,) = conn.execute(
+        "select brand_id from public.contents where id = %s", (content_id,)
+    ).fetchone()
+    manager = find_manager(conn, brand_id, body.manager_email)
+    if manager is None:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY, "No manager with this email on this brand's team"
+        )
     try:
-        transition(conn, content_id, "manager_review", actor_id=user.id)
+        transition(conn, content_id, "manager_review", actor_id=user.id,
+                   detail={"manager": body.manager_email.strip().lower()})  # fmt: skip
     except InvalidTransitionError as exc:
         raise _fail(exc) from exc
+    conn.execute(
+        "update public.contents set assigned_manager_id = %s where id = %s",
+        (manager[0], content_id),
+    )
     return _content(conn, user, content_id)
 
 
@@ -188,6 +208,35 @@ def request_changes(
     except InvalidTransitionError as exc:
         raise _fail(exc) from exc
     add_comment(conn, user, content.latest_version_id, body.comment)
+    return _content(conn, user, content_id)
+
+
+class Reevaluate(BaseModel):
+    comment: str | None = Field(default=None, max_length=4000)
+
+
+@router.post("/contents/{content_id}/reevaluate", response_model=ContentDetail)
+def reevaluate(
+    content_id: UUID,
+    body: Reevaluate,
+    user: Manager,
+    conn: Conn,
+    background: BackgroundTasks,
+    run: Runner,
+) -> ContentDetail:
+    """Run a fresh AI check on the latest version and send it back to the same creator, with
+    the manager's comment."""
+    content = _content(conn, user, content_id)
+    try:
+        transition(conn, content_id, "checking", actor_id=user.id,
+                   detail={"reevaluate": True, "comment": body.comment})  # fmt: skip
+    except InvalidTransitionError as exc:
+        raise _fail(exc) from exc
+    note = (body.comment or "").strip()
+    add_comment(conn, user, content.latest_version_id,
+                f"Re-evaluation requested. {note}".strip())  # fmt: skip
+    conn.commit()
+    background.add_task(partial(run, content.latest_version_id, user.id))
     return _content(conn, user, content_id)
 
 

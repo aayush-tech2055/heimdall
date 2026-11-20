@@ -1,4 +1,4 @@
-import type { Role } from "@/types/api";
+import type { MeRaw, Role } from "@/types/api";
 
 export type NavLink = { href: string; label: string };
 
@@ -9,6 +9,12 @@ export const HOME_BY_ROLE: Record<Role, string> = {
   manager: "/manager",
 };
 
+/** Where to send a signed-in person: onboarding first, then their role's portal. */
+export function homeFor(me: MeRaw): string {
+  if (me.needs_onboarding || !me.role) return "/onboarding";
+  return HOME_BY_ROLE[me.role];
+}
+
 /** Navigation shown to each role. */
 export const NAV_BY_ROLE: Record<Role, NavLink[]> = {
   admin: [
@@ -16,6 +22,7 @@ export const NAV_BY_ROLE: Record<Role, NavLink[]> = {
     { href: "/admin/facts", label: "Facts" },
     { href: "/admin/website", label: "Website check" },
     { href: "/admin/assets", label: "Assets" },
+    { href: "/admin/team", label: "Team" },
     { href: "/admin/settings", label: "Settings" },
     { href: "/insights", label: "Insights" },
     { href: "/disclosure", label: "AI disclosure" },

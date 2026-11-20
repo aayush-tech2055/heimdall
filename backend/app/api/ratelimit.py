@@ -9,7 +9,7 @@ import time
 from collections import defaultdict, deque
 from collections.abc import Callable
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 
 from app.api.deps import CurrentUser, get_current_user
 
@@ -47,5 +47,23 @@ def limited(action: str, limit: int, window: float = 600.0) -> Callable[..., Cur
                 headers={"Retry-After": str(int(wait) + 1)},
             )
         return user
+
+    return dependency
+
+
+def limited_by_ip(action: str, limit: int, window: float = 600.0) -> Callable[..., None]:
+    """A dependency for public endpoints (sign-up): at most `limit` calls per client IP."""
+
+    def dependency(request: Request) -> None:
+        ip = request.headers.get("x-forwarded-for", "").split(",")[0].strip() or (
+            request.client.host if request.client else "unknown"
+        )
+        wait = check((f"ip:{ip}", action), limit, window)
+        if wait > 0:
+            raise HTTPException(
+                status.HTTP_429_TOO_MANY_REQUESTS,
+                f"Too many {action} requests; try again in {int(wait) + 1} s",
+                headers={"Retry-After": str(int(wait) + 1)},
+            )
 
     return dependency

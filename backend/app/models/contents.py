@@ -32,11 +32,16 @@ class VersionInfo(BaseModel):
 
 class ContentSummary(BaseModel):
     id: UUID
+    brand_id: UUID | None = None
     title: str
     format: str
     status: ContentStatus
     creator_id: UUID
     creator_name: str | None
+    creator_email: str | None = None
+    manager_id: UUID | None = None
+    manager_name: str | None = None
+    manager_email: str | None = None
     created_at: datetime
     updated_at: datetime
     latest_version_id: UUID | None
