@@ -12,22 +12,28 @@ import {
 
 import { api, ApiError } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
-import type { Me } from "@/types/api";
+import type { MeRaw } from "@/types/api";
 
 type AuthState = {
   session: Session | null;
-  me: Me | null;
+  me: MeRaw | null;
   loading: boolean;
   error: string | null;
   signIn: (email: string, password: string) => Promise<void>;
+  /** Sign in or sign up with Google; Supabase returns to /auth/callback. */
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
+  /** Reload `/me` (after onboarding or a team change). */
+  refresh: () => Promise<void>;
+  /** Switch the brand whose guidelines you work under. */
+  switchBrand: (brandId: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
-  const [me, setMe] = useState<Me | null>(null);
+  const [me, setMe] = useState<MeRaw | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,7 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     try {
-      setMe(await api<Me>("/me"));
+      setMe(await api<MeRaw>("/me"));
       setError(null);
     } catch (e) {
       setMe(null);
@@ -77,8 +83,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           throw new Error(signInError.message);
         }
       },
+      signInWithGoogle: async () => {
+        const { error: oauthError } = await supabase().auth.signInWithOAuth({
+          provider: "google",
+          options: { redirectTo: `${window.location.origin}/auth/callback` },
+        });
+        if (oauthError) throw new Error(oauthError.message);
+      },
       signOut: async () => {
         await supabase().auth.signOut();
+      },
+      refresh: async () => {
+        setMe(await api<MeRaw>("/me"));
+      },
+      switchBrand: async (brandId) => {
+        setMe(
+          await api<MeRaw>("/me/active-brand", { json: { brand_id: brandId } }),
+        );
       },
     }),
     [session, me, loading, error],

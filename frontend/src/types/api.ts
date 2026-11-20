@@ -4,13 +4,51 @@ import type { Category, Flag } from "@/types/flag";
 
 export type Role = "admin" | "creator" | "manager";
 
-export interface Me {
+export interface Membership {
+  brand_id: string;
+  brand_name: string;
+  role: Role;
+}
+
+/** The signed-in person as `/me` returns it. `role` is null until onboarding (Google sign-in);
+ * `brand_id` is the active brand, null until an admin adds them to a team. */
+export interface MeRaw {
   id: string;
   email: string | null;
   display_name: string | null;
+  role: Role | null;
+  brand_id: string | null;
+  brand_name: string | null;
+  memberships: Membership[];
+  needs_onboarding: boolean;
+}
+
+/** A person with a role who is working under an active brand (what portal pages receive). */
+export interface Me extends MeRaw {
   role: Role;
   brand_id: string;
   brand_name: string;
+}
+
+export interface TeamMember {
+  user_id: string;
+  email: string | null;
+  display_name: string | null;
+  role: Role;
+  added_at: string;
+}
+
+export interface Person {
+  user_id: string;
+  email: string | null;
+  display_name: string | null;
+  role: Role;
+}
+
+export interface ManagerCheck {
+  found: boolean;
+  display_name: string | null;
+  message: string;
 }
 
 export type RuleStatus = "pending" | "approved" | "rejected";
@@ -107,11 +145,16 @@ export interface FlagCounts {
 
 export interface ContentSummary {
   id: string;
+  brand_id: string | null;
   title: string;
   format: string;
   status: ContentStatus;
   creator_id: string;
   creator_name: string | null;
+  creator_email: string | null;
+  manager_id: string | null;
+  manager_name: string | null;
+  manager_email: string | null;
   created_at: string;
   updated_at: string;
   latest_version_id: string | null;

@@ -8,6 +8,6 @@ from uuid import UUID
 class CurrentUser:
     id: UUID
     role: str  # admin | creator | manager
-    brand_id: UUID
+    brand_id: UUID | None  # the active brand; None until an admin adds them to a team
     display_name: str | None = None
     email: str | None = None

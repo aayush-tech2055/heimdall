@@ -21,7 +21,7 @@ from app.models.users import CurrentUser
 from app.rag.extraction import RuleDraft
 from app.rag.rules_store import set_rule_status, store_rules
 from app.review.orchestrator import review_content
-from tests.db.helpers import NoCommit, make_brand, make_user
+from tests.db.helpers import NoCommit, email_of, make_brand, make_user
 from tests.rag.fakes import FakeEmbedder
 
 
@@ -88,6 +88,10 @@ def loop(db):
     app.dependency_overrides.clear()
 
 
+def submit_to(db, users):
+    return {"manager_email": email_of(db, users["manager"].id)}
+
+
 def flags_of(api, content):
     return api.get(f"/versions/{content['latest_version_id']}/flags").json()["flags"]
 
@@ -129,7 +133,10 @@ def test_full_loop(loop):
     assert again.status_code == 409 and "already applied" in again.json()["detail"]
 
     # Submit.
-    assert api.post(f"/contents/{cid}/submit").json()["status"] == "manager_review"
+    assert (
+        api.post(f"/contents/{cid}/submit", json=submit_to(db, users)).json()["status"]
+        == "manager_review"
+    )
 
     # Manager sends it back with a comment.
     as_("manager")
@@ -157,7 +164,10 @@ def test_full_loop(loop):
         json={"body": "Kept it as a quote.", "flag_id": cheap["id"]},
     )
     assert note.status_code == 201 and note.json()["flag_id"] == cheap["id"]
-    assert api.post(f"/contents/{cid}/submit").json()["status"] == "manager_review"
+    assert (
+        api.post(f"/contents/{cid}/submit", json=submit_to(db, users)).json()["status"]
+        == "manager_review"
+    )
 
     # Creators cannot except; the manager approves an exception, then the content.
     assert (
@@ -267,8 +277,50 @@ def test_fix_round_applies_accepted_and_reworded_fixes_at_once(loop):
 
 
 def test_submit_with_open_high_flags_leaves_them_to_the_manager(loop):
-    api, users, current, _ = loop
+    api, users, current, db = loop
     c = api.post("/contents", data={"title": "Direct", "text": "That is embarrassing."}).json()
     assert api.get(f"/contents/{c['id']}").json()["counts"]["open_high"] == 1
-    sent = api.post(f"/contents/{c['id']}/submit")
+    sent = api.post(f"/contents/{c['id']}/submit", json=submit_to(db, users))
     assert sent.status_code == 200 and sent.json()["status"] == "manager_review"
+
+
+def test_submit_needs_a_manager_on_the_team(loop):
+    api, users, current, db = loop
+    c = api.post("/contents", data={"title": "Who", "text": "That is embarrassing."}).json()
+    bad = api.post(f"/contents/{c['id']}/submit", json={"manager_email": "nobody@example.com"})
+    assert bad.status_code == 422 and "No manager" in bad.json()["detail"]
+    other_brand = make_brand(db)
+    outsider = make_user(db, other_brand, "manager")  # a manager, but on another team
+    out = api.post(f"/contents/{c['id']}/submit", json={"manager_email": email_of(db, outsider)})
+    assert out.status_code == 422
+    ok = api.post(f"/contents/{c['id']}/submit", json=submit_to(db, users)).json()
+    assert ok["status"] == "manager_review"
+    assert ok["manager_id"] == str(users["manager"].id)
+    assert ok["creator_email"] == email_of(db, users["creator"].id)
+
+
+def test_managers_see_only_what_was_sent_to_them(loop):
+    api, users, current, db = loop
+    brand = users["creator"].brand_id
+    second = CurrentUser(make_user(db, brand, "manager"), "manager", brand)
+    c = api.post("/contents", data={"title": "Mine", "text": "Fine words."}).json()
+    api.post(f"/contents/{c['id']}/submit", json=submit_to(db, users))
+    current.update(user=users["manager"])
+    assert [x["id"] for x in api.get("/contents").json()] == [c["id"]]
+    current.update(user=second)
+    assert api.get("/contents").json() == []
+
+
+def test_manager_reevaluates_back_to_the_same_creator(loop):
+    api, users, current, db = loop
+    c = api.post("/contents", data={"title": "Again", "text": "That is embarrassing."}).json()
+    api.post(f"/contents/{c['id']}/submit", json=submit_to(db, users))
+    current.update(user=users["creator"])
+    assert api.post(f"/contents/{c['id']}/reevaluate", json={}).status_code == 403
+    current.update(user=users["manager"])
+    out = api.post(f"/contents/{c['id']}/reevaluate", json={"comment": "Check the tone again."})
+    assert out.status_code == 200, out.text
+    after = api.get(f"/contents/{c['id']}").json()
+    assert after["status"] == "creator_review" and after["creator_id"] == str(users["creator"].id)
+    comments = api.get(f"/versions/{after['latest_version_id']}/comments").json()
+    assert comments[-1]["body"] == "Re-evaluation requested. Check the tone again."

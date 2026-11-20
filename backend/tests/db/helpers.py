@@ -28,7 +28,15 @@ def make_user(conn: psycopg.Connection, brand_id: uuid.UUID, role: str) -> uuid.
         "insert into public.profiles (id, brand_id, role) values (%s, %s, %s)",
         (user_id, brand_id, role),
     )
+    conn.execute(
+        "insert into public.brand_members (brand_id, user_id, role) values (%s, %s, %s)",
+        (brand_id, user_id, role),
+    )
     return user_id
+
+
+def email_of(conn: psycopg.Connection, user_id: uuid.UUID) -> str:
+    return conn.execute("select email from auth.users where id = %s", (user_id,)).fetchone()[0]
 
 
 def make_content(

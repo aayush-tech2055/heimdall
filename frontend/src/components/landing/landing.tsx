@@ -41,7 +41,7 @@ import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { HeroScene } from "@/components/landing/hero-scene";
 import { BrandMark } from "@/components/shell/brand-mark";
-import { HOME_BY_ROLE } from "@/lib/roles";
+import { homeFor } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 
 const ease = [0.2, 0.7, 0.2, 1] as const;
@@ -146,7 +146,7 @@ function Nav() {
         <div className="flex items-center gap-2">
           {me ? (
             <Link
-              href={HOME_BY_ROLE[me.role]}
+              href={homeFor(me)}
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-transform active:scale-95",
                 solid ? "bg-black text-white" : "bg-white text-black",

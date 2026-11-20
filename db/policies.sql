@@ -28,7 +28,7 @@ create function private.is_brand_member(b uuid) returns boolean
 language sql stable security definer set search_path = ''
 as $$
   select exists (
-    select 1 from public.profiles p where p.id = (select auth.uid()) and p.brand_id = b
+    select 1 from public.brand_members m where m.user_id = (select auth.uid()) and m.brand_id = b
   );
 $$;
 
@@ -37,8 +37,8 @@ create function private.has_brand_role(b uuid, roles text[]) returns boolean
 language sql stable security definer set search_path = ''
 as $$
   select exists (
-    select 1 from public.profiles p
-    where p.id = (select auth.uid()) and p.brand_id = b and p.role = any (roles)
+    select 1 from public.brand_members m
+    where m.user_id = (select auth.uid()) and m.brand_id = b and m.role = any (roles)
   );
 $$;
 
@@ -49,8 +49,8 @@ as $$
   select exists (
     select 1
     from public.contents ct
-    join public.profiles p on p.id = (select auth.uid()) and p.brand_id = ct.brand_id
-    where ct.id = c and (ct.creator_id = p.id or p.role in ('admin', 'manager'))
+    join public.brand_members m on m.user_id = (select auth.uid()) and m.brand_id = ct.brand_id
+    where ct.id = c and (ct.creator_id = m.user_id or m.role in ('admin', 'manager'))
   );
 $$;
 
@@ -76,6 +76,9 @@ grant execute on function private.can_see_version(uuid) to authenticated;
 -- ---------------------------------------------------------------------------
 -- Brand, people, settings
 -- ---------------------------------------------------------------------------
+
+create policy brand_members_select on public.brand_members
+  for select to authenticated using (private.is_brand_member(brand_id));
 
 create policy brands_select on public.brands
   for select to authenticated using (private.is_brand_member(id));

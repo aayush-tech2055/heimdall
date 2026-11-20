@@ -64,7 +64,16 @@ export function ContentTable({
                   {c.title}
                 </Link>
               </TableCell>
-              {showCreator && <TableCell>{c.creator_name ?? "—"}</TableCell>}
+              {showCreator && (
+                <TableCell>
+                  <span className="block">{c.creator_name ?? "—"}</span>
+                  {c.creator_email && (
+                    <span className="text-muted-foreground block text-xs">
+                      {c.creator_email}
+                    </span>
+                  )}
+                </TableCell>
+              )}
               <TableCell>
                 <ContentStatusBadge status={c.status} />
               </TableCell>

@@ -5,7 +5,7 @@ Guidance for Claude Code in this repo. **Sources of truth:** `TASKS.md` (Part 1 
 ## The product in 5 lines
 1. Heimdall is an AI brand-governance platform. It is a checkpoint between "draft" and "publish". Tagline: *Nothing crosses unchecked.*
 2. Admins upload brand guidelines (PDF, Word, PowerPoint, text, Markdown or CSV, or pasted text). Heimdall splits them into one record per rule, checks the guidelines themselves for duplicates, contradictions, vague rules and gaps, and stores approved facts that have expiry dates.
-3. Creators upload content (text, PDF or image in Round 2, short video in Round 3). A four-layer engine (rules in code, retrieval plus an LLM judge, claims against facts, visuals) produces flags that each cite their source.
+3. People sign up (email and password, or Google) as an admin, manager or creator and land in their own portal. An admin owns a brand and adds creators and managers to its team from the Team tab; a creator can be on several brands' teams and picks whose guidelines to follow. Creators upload content (text, PDF or image in Round 2, short video in Round 3). A four-layer engine (rules in code, retrieval plus an LLM judge, claims against facts, visuals) produces flags that each cite their source.
 4. **No source, no flag:** plain code drops any AI finding that cites a source the model wasn't given or quotes words that aren't in the content. Creators accept, edit or dismiss each flag, and managers approve or send back.
 5. Team Nobita&Avaneja (2 people): **Aayush `[A]`** (AI/ML lead, co-backend) and **Avaneja `[V]`** (frontend, product and QA). Inkloom AI problem statement, built in 3 rounds.
 
@@ -70,7 +70,7 @@ Guidance for Claude Code in this repo. **Sources of truth:** `TASKS.md` (Part 1 
 ```
 `location` by format: text `{paragraph, char_start, char_end, evidence_start, evidence_end}`, PDF `{page, bbox}`, video `{start, end}` (seconds), image `{image_id, region}`. The Pydantic model (`backend/app/models/`) and the TypeScript type (`frontend/`) must stay identical.
 
-**Workflow states:** `draft → checking → creator_review → manager_review → approved`, and `manager_review → changes_requested → creator_review`. An invalid transition returns 409, and every transition is written to `audit_log`. Each upload or edit creates a new content version, and flags belong to a version. **Flag statuses:** `open`, `accepted`, `edited`, `dismissed` (reason required), `excepted` (manager, reason required).
+**Workflow states:** `draft → checking → creator_review → manager_review → approved`, `manager_review → changes_requested → creator_review`, and `manager_review → checking → creator_review` (a manager's "re-evaluate": a fresh AI check, back to the same creator). A creator submits to a manager by email, checked live against the brand's team (`contents.assigned_manager_id`); a manager sees only what was sent to them. An invalid transition returns 409, and every transition is written to `audit_log`. Each upload or edit creates a new content version, and flags belong to a version. **Flag statuses:** `open`, `accepted`, `edited`, `dismissed` (reason required), `excepted` (manager, reason required).
 
 ## Coding conventions
 

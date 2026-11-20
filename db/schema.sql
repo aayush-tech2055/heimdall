@@ -45,13 +45,25 @@ create table public.brands (
 -- One row per signed-in user: their role and the brand they work on.
 create table public.profiles (
   id            uuid primary key references auth.users (id) on delete cascade,
-  brand_id      uuid not null references public.brands (id) on delete cascade,
+  brand_id      uuid references public.brands (id) on delete set null,  -- the ACTIVE brand
   role          text not null check (role in ('admin', 'creator', 'manager')),
   display_name  text,
   created_at    timestamptz not null default now(),
   unique (id, brand_id)
 );
 create index profiles_brand_idx on public.profiles (brand_id, role);
+
+-- Teams (007): a user has one role (profiles.role) and can belong to several brands.
+create table public.brand_members (
+  brand_id    uuid not null references public.brands (id) on delete cascade,
+  user_id     uuid not null references public.profiles (id) on delete cascade,
+  role        text not null check (role in ('admin', 'creator', 'manager')),
+  added_by    uuid references public.profiles (id) on delete set null,
+  created_at  timestamptz not null default now(),
+  primary key (brand_id, user_id)
+);
+create index brand_members_user_idx on public.brand_members (user_id);
+alter table public.brands add column owner_id uuid references public.profiles (id) on delete set null;
 
 create table public.brand_settings (
   brand_id              uuid primary key references public.brands (id) on delete cascade,
@@ -212,13 +224,13 @@ create table public.contents (
   status      text not null default 'draft' check (status in
                 ('draft', 'checking', 'creator_review', 'manager_review',
                  'changes_requested', 'approved')),
-  creator_id  uuid not null,
+  creator_id  uuid not null references public.profiles (id),
+  assigned_manager_id uuid references public.profiles (id) on delete set null,  -- 007
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now(),
-  unique (id, brand_id),
-  -- The creator must belong to the same brand as the content.
-  foreign key (creator_id, brand_id) references public.profiles (id, brand_id)
+  unique (id, brand_id)
 );
+create index contents_manager_idx on public.contents (assigned_manager_id);
 create index contents_brand_status_idx on public.contents (brand_id, status);
 create index contents_creator_idx on public.contents (creator_id);
 create trigger contents_updated_at before update on public.contents
@@ -403,6 +415,7 @@ alter table public.audit_log           enable row level security;
 alter table public.ai_calls            enable row level security;
 alter table public.guideline_reports   enable row level security;
 alter table public.guideline_jobs      enable row level security;
+alter table public.brand_members       enable row level security;
 alter table public.fact_changes        enable row level security;
 
 commit;

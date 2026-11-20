@@ -24,6 +24,7 @@ TRANSITIONS: dict[tuple[str, str], str] = {
     ("creator_review", "manager_review"): "content.submit_for_approval",
     ("manager_review", "approved"): "content.approve",
     ("manager_review", "changes_requested"): "content.request_changes",
+    ("manager_review", "checking"): "content.reevaluate",
     ("changes_requested", "creator_review"): "content.reopen",
     ("changes_requested", "checking"): "content.new_version",
 }

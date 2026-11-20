@@ -1,5 +1,7 @@
 """db/schema.sql: tables exist, RLS is on, and the constraints encode the locked decisions."""
 
+import uuid
+
 import psycopg
 import pytest
 from psycopg import errors
@@ -18,7 +20,7 @@ pytestmark = pytest.mark.db
 TABLES = {
     "brands", "profiles", "brand_settings", "rules", "facts", "assets", "approved_exceptions",
     "contents", "content_versions", "review_units", "flags", "dropped_flags", "comments",
-    "audit_log", "ai_calls", "guideline_reports", "fact_changes", "guideline_jobs",
+    "audit_log", "ai_calls", "guideline_reports", "fact_changes", "guideline_jobs", "brand_members",
 }  # fmt: skip
 
 
@@ -64,11 +66,12 @@ def test_embedding_must_have_768_dimensions(db):
     insert_rule(db, brand, embedding=str([0.0] * 767 + [1.0]))
 
 
-def test_content_creator_must_belong_to_the_brand(db):
-    brand, other = make_brand(db), make_brand(db)
-    outsider = make_user(db, other, "creator")
+def test_content_creator_must_be_a_heimdall_user(db):
+    # Teams (007): a creator can work for several brands, so the database only requires a
+    # real profile; team membership is checked by the API when content is created.
+    brand = make_brand(db)
     with pytest.raises(errors.ForeignKeyViolation), db.transaction():
-        make_content(db, brand, outsider)
+        make_content(db, brand, uuid.uuid4())
 
 
 def test_version_cannot_point_at_content_from_another_brand(db):

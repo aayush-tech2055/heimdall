@@ -8,7 +8,7 @@ import { BrandMark } from "@/components/shell/brand-mark";
 import { NavLinks } from "@/components/shell/nav-links";
 
 /** Pages with their own full-bleed layout and navigation (the public home page). */
-const BARE = new Set(["/", "/signup"]);
+const BARE = new Set(["/", "/signup", "/onboarding", "/auth/callback"]);
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

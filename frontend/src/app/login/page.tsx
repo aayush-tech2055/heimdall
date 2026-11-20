@@ -1,10 +1,12 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { useAuth } from "@/components/auth/auth-provider";
+import { GoogleButton, OrDivider } from "@/components/auth/google-button";
 import { BifrostScene } from "@/components/shell/bifrost-scene";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -17,7 +19,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { HOME_BY_ROLE } from "@/lib/roles";
+import { homeFor } from "@/lib/roles";
 
 export default function LoginPage() {
   const { me, signIn, loading, error: profileError } = useAuth();
@@ -28,7 +30,7 @@ export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (me) router.replace(HOME_BY_ROLE[me.role]);
+    if (me) router.replace(homeFor(me));
   }, [me, router]);
 
   async function onSubmit(event: React.FormEvent) {
@@ -64,10 +66,13 @@ export default function LoginPage() {
             <h1 className="text-xl font-semibold">Sign in to Heimdall</h1>
           </CardTitle>
           <CardDescription>
-            Use the account your brand admin gave you.
+            Admins, managers and creators sign in here and land in their own
+            portal.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <GoogleButton onError={setError} />
+          <OrDivider />
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -105,6 +110,15 @@ export default function LoginPage() {
               Sign in
             </Button>
           </form>
+          <p className="text-muted-foreground text-center text-sm">
+            New to Heimdall?{" "}
+            <Link
+              href="/signup"
+              className="text-foreground font-semibold underline underline-offset-2"
+            >
+              Create an account
+            </Link>
+          </p>
         </CardContent>
       </Card>
     </div>
