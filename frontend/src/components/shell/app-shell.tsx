@@ -4,11 +4,18 @@ import Link from "next/link";
 
 import { usePathname } from "next/navigation";
 
+import { HelpChat } from "@/components/help/help-chat";
 import { BrandMark } from "@/components/shell/brand-mark";
 import { NavLinks } from "@/components/shell/nav-links";
 
 /** Pages with their own full-bleed layout and navigation (the public home page). */
-const BARE = new Set(["/", "/signup", "/onboarding", "/auth/callback"]);
+const BARE = new Set([
+  "/",
+  "/guide",
+  "/signup",
+  "/onboarding",
+  "/auth/callback",
+]);
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -55,6 +62,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
         {children}
       </main>
+      <HelpChat />
     </div>
   );
 }

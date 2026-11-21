@@ -37,6 +37,7 @@ const PURPOSE: Record<string, string> = {
   fact_embedding: "Indexing facts",
   unit_embedding: "Matching content to rules",
   claim_embedding: "Matching claims to facts",
+  help: "Answering questions in the help assistant",
 };
 
 function DisclosureView() {

@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     groq_api_key: str = ""
     groq_model: str = "openai/gpt-oss-120b"
     groq_whisper_model: str = "whisper-large-v3"
+    # In-app help assistant: a smaller, faster Groq model, tried before the usual chain
+    groq_help_model: str = "openai/gpt-oss-20b"
     openrouter_api_key: str = ""
     openrouter_model: str = ""
     openrouter_supports_images: bool = True  # the default free model is vision-language

@@ -39,6 +39,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { useAuth } from "@/components/auth/auth-provider";
+import { RoleGuide } from "@/components/guide/role-guide";
 import { HeroScene } from "@/components/landing/hero-scene";
 import { BrandMark } from "@/components/shell/brand-mark";
 import { homeFor } from "@/lib/roles";
@@ -103,6 +104,7 @@ function Nav() {
     ["Product", "#product"],
     ["How it works", "#how"],
     ["Features", "#features"],
+    ["Role guide", "#guide"],
     ["Who it's for", "#teams"],
   ];
   return (
@@ -788,6 +790,39 @@ function SourceDemo() {
 /* Who it's for                                                        */
 /* ------------------------------------------------------------------ */
 
+function GuideSection() {
+  return (
+    <section
+      id="guide"
+      aria-labelledby="guide-h"
+      className="relative overflow-hidden bg-black py-28 text-white"
+    >
+      <div
+        aria-hidden
+        className="absolute top-0 left-1/2 size-[44rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-500/15 blur-3xl"
+      />
+      <div className="relative mx-auto max-w-6xl px-4">
+        <Reveal className="text-center">
+          <Kicker dark>Role guide</Kicker>
+          <h2
+            id="guide-h"
+            className="mx-auto mt-3 max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl"
+          >
+            Three roles. One checkpoint. Here is exactly how each one works.
+          </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-white/70">
+            Pick your role to see every step, with real screens from the
+            product.
+          </p>
+        </Reveal>
+        <div className="mt-12">
+          <RoleGuide />
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function Teams() {
   const people = [
     {
@@ -1061,6 +1096,7 @@ export function Landing() {
       <HowItWorks />
       <Features />
       <SourceDemo />
+      <GuideSection />
       <Teams />
       <Privacy />
       <Cta />
