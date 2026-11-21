@@ -11,6 +11,7 @@ import { GoogleButton, OrDivider } from "@/components/auth/google-button";
 import { DARK_INPUT, RolePicker } from "@/components/auth/role-picker";
 import { BrandMark } from "@/components/shell/brand-mark";
 import { api, ApiError } from "@/lib/api";
+import { guideSeen } from "@/lib/guide";
 import { homeFor } from "@/lib/roles";
 import type { Role } from "@/types/api";
 
@@ -25,10 +26,17 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     if (me) router.replace(homeFor(me));
   }, [me, router]);
+
+  // First visit: explain the roles before the form.
+  useEffect(() => {
+    if (guideSeen()) setReady(true);
+    else router.replace("/guide");
+  }, [router]);
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -59,6 +67,8 @@ export default function SignupPage() {
     }
   }
 
+  if (!ready) return <div className="min-h-[100svh] bg-black" />;
+
   return (
     <div className="relative flex min-h-[100svh] items-center justify-center overflow-hidden bg-black px-4 py-12 text-white">
       <div className="hd-grid-bg absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,black,transparent_70%)]" />
@@ -85,7 +95,13 @@ export default function SignupPage() {
           Create your Heimdall account
         </h1>
         <p className="mt-2 text-white/65">
-          Pick your role. You land in your own portal every time you sign in.
+          Pick your role. You land in your own portal every time you sign in.{" "}
+          <Link
+            href="/guide"
+            className="font-medium text-white underline underline-offset-2"
+          >
+            See the role guide
+          </Link>
         </p>
 
         <form onSubmit={onSubmit} className="mt-6 space-y-5">

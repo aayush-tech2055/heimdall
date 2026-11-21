@@ -173,3 +173,20 @@ def build_providers(settings: Settings, client: httpx.Client | None = None) -> l
             supports_images=settings.openrouter_supports_images,
         )  # fmt: skip
     return [available[name] for name in settings.provider_order if name in available]
+
+
+def build_help_providers(settings: Settings, client: httpx.Client | None = None) -> list[Provider]:
+    """The help assistant: Groq's small help model first, then the usual chain as a fallback."""
+    first: list[Provider] = []
+    if settings.groq_api_key and settings.groq_help_model:
+        first.append(
+            OpenAICompatibleProvider(
+                "groq",
+                GROQ_BASE_URL,
+                settings.groq_api_key,
+                settings.groq_help_model,
+                json_mode=True,
+                client=client,
+            )  # fmt: skip
+        )
+    return first + build_providers(settings, client)

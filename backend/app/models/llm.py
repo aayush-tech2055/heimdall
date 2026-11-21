@@ -131,3 +131,10 @@ class ExtractedFact(_Out):
 
 class FactExtraction(_Out):
     facts: list[ExtractedFact]
+
+
+# --- In-app help assistant -----------------------------------------------------------------
+
+
+class HelpAnswer(_Out):
+    answer: str = Field(min_length=1, max_length=2000)

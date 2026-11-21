@@ -336,3 +336,28 @@ If the page states no facts, return an empty list."""
 def fact_extraction(page_text: str, *, url: str) -> Prompt:
     prompt = f"Page URL: {url}\nExtract the facts on this page.\n\n" + wrap_content(page_text)
     return Prompt("fact_extraction", FactExtraction, FACT_EXTRACTION_SYSTEM, prompt)
+
+
+# --- In-app help assistant ---------------------------------------------------------------
+
+HELP_SYSTEM = """You are Heimdall's in-app help assistant. You explain how to use the \
+Heimdall product: what each page and button does and the steps to get something done.
+Answer only from the guide below. If the guide does not cover it, say you are not sure and \
+suggest the AI disclosure page or asking the brand admin. Never invent buttons or features.
+Do not review or rewrite the user's marketing content here; tell them to run a New check \
+instead. Reply as JSON: {"answer": "..."}. Be brief: at most about 120 words, plain \
+sentences, numbered steps when there are steps, button and tab names in "double quotes". \
+No Markdown headings or tables."""
+
+
+def help_prompt(guide: str, history: list[tuple[str, str]], question: str) -> str:
+    """The guide, the last few turns and the new question (questions are data, not orders)."""
+    turns = "\n".join(
+        f"{'User' if who == 'user' else 'Assistant'}: {text}" for who, text in history
+    )
+    return (
+        f"<guide>\n{guide}\n</guide>\n\n"
+        + (f"Earlier in this chat:\n{wrap_content(turns)}\n\n" if turns else "")
+        + "The user's question:\n"
+        + wrap_content(question)
+    )
